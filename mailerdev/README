@@ -1,0 +1,37 @@
+django-mailer by James Tauber <http://jtauber.com/>
+http://code.google.com/p/django-mailer/
+
+
+TO SEE DEMO IN ACTION
+(won't send any real email at this stage)
+
+1.  `python manage.py syncdb` and create superuser for admin
+    
+2.  `python manage.py loaddata test1` to load some test data from a fixture
+    
+3.  `python manage.py runserver` to fire up the development server
+    
+4.  go to http://localhost:8000/admin/ and check out the mailer models
+    
+5.  open a separate shell and run `python manage.py shell`
+    
+6.  at the interactive prompt, type `from mailer.engine import send_loop`
+    
+7.  start the send loop with `send_loop()`
+    
+    You will see four mail sends are simulated and one is skipped because
+    the addressee is on the don't send list.
+    
+    The loop will then sleep for (by default) 30 seconds before checking
+    the queue again. It will continue this indefinitely.
+    
+8.  with the send loop still running, go back to the django admin console
+    
+9.  notice that the message model is now empty and the messages have moved
+    to the message log model
+    
+10. add a new message (the addresses don't matter--no email will be sent)
+    
+    Watch the interactive console and, within the sleep period, you should
+    see the message you added picked up and a send simulated.
+
