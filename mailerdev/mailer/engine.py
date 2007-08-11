@@ -11,12 +11,30 @@ EMPTY_QUEUE_SLEEP = 30
 
 
 
+def prioritize():
+    """
+    Yield the messages in the queue in the order they should be sent.
+    """
+    
+    while True:
+        while Message.objects.high_priority().count() or Message.objects.medium_priority().count():
+            while Message.objects.high_priority().count():
+                for message in Message.objects.high_priority().order_by('when_added'):
+                    yield message
+            while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count():
+                yield Message.objects.medium_priority().order_by('when_added')[0]
+        while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count() == 0 and Message.objects.low_priority().count():
+            yield Message.objects.low_priority().order_by('when_added')[0]
+        if Message.objects.all().count() == 0:
+            break
+
+
 def send_all():
     """
     Send all eligible messages in the queue.
     """
     
-    for message in Message.objects.send_order():
+    for message in prioritize():
         if DontSendEntry.objects.has_address(message.to_address):
             print "skipping email to %s as on don't send list " % message.to_address
             MessageLog.objects.log(message, 2) # @@@ avoid using literal result code

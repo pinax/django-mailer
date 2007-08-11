@@ -14,12 +14,27 @@ PRIORITIES = (
 
 class MessageManager(models.Manager):
     
-    def send_order(self):
+    def high_priority(self):
         """
-        the messages in the queue in the order they should be sent
+        the high priority messages in the queue
         """
         
-        return self.order_by('priority', 'when_added')
+        return self.filter(priority='1')
+    
+    def medium_priority(self):
+        """
+        the medium priority messages in the queue
+        """
+        
+        return self.filter(priority='2')
+    
+    def low_priority(self):
+        """
+        the low priority messages in the queue
+        """
+        
+        return self.filter(priority='3')
+
 
 
 class Message(models.Model):
