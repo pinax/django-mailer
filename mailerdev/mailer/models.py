@@ -3,11 +3,11 @@ from datetime import datetime
 from django.db import models
 
 
-
 PRIORITIES = (
     ('1', 'high'),
     ('2', 'medium'),
     ('3', 'low'),
+    ('4', 'deferred'),
 )
 
 
@@ -34,6 +34,20 @@ class MessageManager(models.Manager):
         """
         
         return self.filter(priority='3')
+    
+    def non_deferred(self):
+        """
+        the messages in the queue not deferred
+        """
+        
+        return self.filter(priority__lt='4')
+    
+    def deferred(self):
+        """
+        the deferred messages in the queue
+        """
+
+        return self.filter(priority='4')
 
 
 
@@ -49,6 +63,10 @@ class Message(models.Model):
     priority = models.CharField(max_length=1, choices=PRIORITIES, default='2')
     # @@@ campaign?
     # @@@ content_type?
+    
+    def defer(self):
+        self.priority = 4
+        self.save()
     
     class Admin:
         list_display = ('id', 'to_address', 'subject', 'when_added', 'priority')

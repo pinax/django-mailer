@@ -1,4 +1,5 @@
 from time import sleep
+from socket import error as socket_error
 
 from models import Message, DontSendEntry, MessageLog
 
@@ -26,7 +27,7 @@ def prioritize():
                 yield Message.objects.medium_priority().order_by('when_added')[0]
         while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count() == 0 and Message.objects.low_priority().count():
             yield Message.objects.low_priority().order_by('when_added')[0]
-        if Message.objects.all().count() == 0:
+        if Message.objects.non_deferred().count() == 0:
             break
 
 
@@ -42,9 +43,14 @@ def send_all():
             message.delete()
         else:
             print "sending message '%s' to %s" % (message.subject, message.to_address)
-            core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
-            MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
-            message.delete()
+            try:
+                core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
+                MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
+                message.delete()
+            # @@@ need to catch some other things here too
+            except socket_error, err:
+                message.defer()
+                MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
 
 
 
