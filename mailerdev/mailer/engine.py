@@ -50,6 +50,7 @@ def send_all():
             # @@@ need to catch some other things here too
             except socket_error, err:
                 message.defer()
+                print "message deferred due to failure: %s" % err
                 MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
 
 
