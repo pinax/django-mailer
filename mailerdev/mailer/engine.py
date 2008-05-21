@@ -2,6 +2,7 @@ from time import sleep
 
 from models import Message, DontSendEntry, MessageLog
 
+from django.core.mail import send_mail as core_send_mail
 
 ## configuration settings
 # @@@ eventually move to settings.py
@@ -41,6 +42,7 @@ def send_all():
             message.delete()
         else:
             print "sending message '%s' to %s" % (message.subject, message.to_address)
+            core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
             MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
             message.delete()
 
