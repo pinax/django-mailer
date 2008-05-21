@@ -3,7 +3,7 @@ http://code.google.com/p/django-mailer/
 
 
 TO SEE DEMO IN ACTION
-(won't send any real email at this stage)
+(you might want to comment out the call to core_send_mail in engine.py first)
 
 1.  `python manage.py syncdb` and create superuser for admin
     
@@ -30,7 +30,8 @@ TO SEE DEMO IN ACTION
 9.  notice that the message model is now empty and the messages have moved
     to the message log model
     
-10. add a new message (the addresses don't matter--no email will be sent)
+10. add a new message (the addresses don't matter if you commented out the
+    call to core_send_mail in engine.py)
     
     Watch the interactive console and, within the sleep period, you should
     see the message you added picked up and a send simulated.
