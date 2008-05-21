@@ -41,12 +41,12 @@ class Message(models.Model):
     
     objects = MessageManager()
     
-    to_address = models.CharField(maxlength=50)
-    from_address = models.CharField(maxlength=50)
-    subject = models.CharField(maxlength=100)
+    to_address = models.CharField(max_length=50)
+    from_address = models.CharField(max_length=50)
+    subject = models.CharField(max_length=100)
     message_body = models.TextField()
     when_added = models.DateTimeField()
-    priority = models.CharField(maxlength=1, choices=PRIORITIES)
+    priority = models.CharField(max_length=1, choices=PRIORITIES)
     # @@@ campaign?
     # @@@ content_type?
     
@@ -72,7 +72,7 @@ class DontSendEntry(models.Model):
     
     objects = DontSendEntryManager()
     
-    to_address = models.CharField(maxlength=50)
+    to_address = models.CharField(max_length=50)
     when_added = models.DateTimeField()
     # @@@ who added?
     # @@@ comment field?
@@ -123,17 +123,17 @@ class MessageLog(models.Model):
     objects = MessageLogManager()
     
     # fields from Message
-    to_address = models.CharField(maxlength=50)
-    from_address = models.CharField(maxlength=50)
-    subject = models.CharField(maxlength=100)
+    to_address = models.CharField(max_length=50)
+    from_address = models.CharField(max_length=50)
+    subject = models.CharField(max_length=100)
     message_body = models.TextField()
     when_added = models.DateTimeField()
-    priority = models.CharField(maxlength=1, choices=PRIORITIES)
+    priority = models.CharField(max_length=1, choices=PRIORITIES)
     # @@@ campaign?
     
     # additional logging fields
     when_attempted = models.DateTimeField()
-    result = models.CharField(maxlength=1, choices=RESULT_CODES)
+    result = models.CharField(max_length=1, choices=RESULT_CODES)
     log_message = models.TextField()
     
     class Admin:
