@@ -45,8 +45,8 @@ class Message(models.Model):
     from_address = models.CharField(max_length=50)
     subject = models.CharField(max_length=100)
     message_body = models.TextField()
-    when_added = models.DateTimeField()
-    priority = models.CharField(max_length=1, choices=PRIORITIES)
+    when_added = models.DateTimeField(default=datetime.now)
+    priority = models.CharField(max_length=1, choices=PRIORITIES, default='2')
     # @@@ campaign?
     # @@@ content_type?
     
@@ -111,7 +111,6 @@ class MessageLogManager(models.Manager):
             when_added = message.when_added,
             priority = message.priority,
             # @@@ other fields from Message
-            when_attempted = datetime.now(),
             result = result_code,
             log_message = log_message,
         )
@@ -132,7 +131,7 @@ class MessageLog(models.Model):
     # @@@ campaign?
     
     # additional logging fields
-    when_attempted = models.DateTimeField()
+    when_attempted = models.DateTimeField(default=datetime.now)
     result = models.CharField(max_length=1, choices=RESULT_CODES)
     log_message = models.TextField()
     
