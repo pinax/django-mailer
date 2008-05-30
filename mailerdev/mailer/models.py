@@ -71,11 +71,11 @@ class Message(models.Model):
     # @@@ content_type?
     
     def defer(self):
-        self.priority = 4
+        self.priority = '4'
         self.save()
     
     def retry(self, new_priority=2):
-        if self.priority == 4:
+        if self.priority == '4':
             self.priority = new_priority
             self.save()
             return True
