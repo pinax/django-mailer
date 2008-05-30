@@ -46,9 +46,15 @@ class MessageManager(models.Manager):
         """
         the deferred messages in the queue
         """
-
+    
         return self.filter(priority='4')
-
+    
+    def retry_deferred(self, new_priority=2):
+        count = 0
+        for message in self.deferred():
+            if message.retry(new_priority):
+                count += 1
+        return count
 
 
 class Message(models.Model):
@@ -68,9 +74,16 @@ class Message(models.Model):
         self.priority = 4
         self.save()
     
+    def retry(self, new_priority=2):
+        if self.priority == 4:
+            self.priority = new_priority
+            self.save()
+            return True
+        else:
+            return False
+    
     class Admin:
         list_display = ('id', 'to_address', 'subject', 'when_added', 'priority')
-
 
 
 class DontSendEntryManager(models.Manager):
