@@ -42,8 +42,8 @@ def send_all():
             MessageLog.objects.log(message, 2) # @@@ avoid using literal result code
             message.delete()
         else:
-            print "sending message '%s' to %s" % (message.subject, message.to_address)
             try:
+                print "sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8"))
                 core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
                 MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                 message.delete()
