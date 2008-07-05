@@ -5,7 +5,6 @@ from socket import error as socket_error
 from models import Message, DontSendEntry, MessageLog
 
 from django.core.mail import send_mail as core_send_mail
-from django.core.files import locks
 
 ## configuration settings
 # @@@ eventually move to settings.py
