@@ -1,16 +1,17 @@
-from time import sleep
+import time
+from lockfile import FileLock
 from socket import error as socket_error
 
 from models import Message, DontSendEntry, MessageLog
 
 from django.core.mail import send_mail as core_send_mail
+from django.core.files import locks
 
 ## configuration settings
 # @@@ eventually move to settings.py
 
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = 30
-
 
 
 def prioritize():
@@ -36,24 +37,47 @@ def send_all():
     Send all eligible messages in the queue.
     """
     
+    print "-" * 72
+    
+    lock = FileLock("send_mail")
+    
+    print "acquiring lock..."
+    lock.acquire()
+    print "acquired."
+    
+    start_time = time.time()
+    
+    dont_send = 0
+    deferred = 0
+    sent = 0
+    
     for message in prioritize():
         if DontSendEntry.objects.has_address(message.to_address):
             print "skipping email to %s as on don't send list " % message.to_address
             MessageLog.objects.log(message, 2) # @@@ avoid using literal result code
             message.delete()
+            dont_send += 1
         else:
             try:
                 print "sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8"))
                 core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
                 MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                 message.delete()
+                sent += 1
             # @@@ need to catch some other things here too
             except socket_error, err:
                 message.defer()
                 print "message deferred due to failure: %s" % err
                 MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
-
-
+                deferred += 1
+    
+    print "releasing lock..."
+    lock.release()
+    print "released."
+    
+    print
+    print "%s sent; %s deferred; %s don't send" % (sent, deferred, dont_send)
+    print "done in %.2f seconds" % (time.time() - start_time)
 
 def send_loop():
     """
@@ -64,5 +88,5 @@ def send_loop():
     while True:
         while not Message.objects.all():
             print 'sleeping for %s seconds before checking queue again' % EMPTY_QUEUE_SLEEP
-            sleep(EMPTY_QUEUE_SLEEP)
+            time.sleep(EMPTY_QUEUE_SLEEP)
         send_all()
