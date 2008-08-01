@@ -50,29 +50,30 @@ def send_all():
     deferred = 0
     sent = 0
     
-    for message in prioritize():
-        if DontSendEntry.objects.has_address(message.to_address):
-            print "skipping email to %s as on don't send list " % message.to_address
-            MessageLog.objects.log(message, 2) # @@@ avoid using literal result code
-            message.delete()
-            dont_send += 1
-        else:
-            try:
-                print "sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8"))
-                core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
-                MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
+    try:
+        for message in prioritize():
+            if DontSendEntry.objects.has_address(message.to_address):
+                print "skipping email to %s as on don't send list " % message.to_address
+                MessageLog.objects.log(message, 2) # @@@ avoid using literal result code
                 message.delete()
-                sent += 1
-            # @@@ need to catch some other things here too
-            except socket_error, err:
-                message.defer()
-                print "message deferred due to failure: %s" % err
-                MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
-                deferred += 1
-    
-    print "releasing lock..."
-    lock.release()
-    print "released."
+                dont_send += 1
+            else:
+                try:
+                    print "sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8"))
+                    core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
+                    MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
+                    message.delete()
+                    sent += 1
+                # @@@ need to catch some other things here too
+                except socket_error, err:
+                    message.defer()
+                    print "message deferred due to failure: %s" % err
+                    MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
+                    deferred += 1
+    finally:
+        print "releasing lock..."
+        lock.release()
+        print "released."
     
     print
     print "%s sent; %s deferred; %s don't send" % (sent, deferred, dont_send)
