@@ -1,4 +1,5 @@
 import time
+import smtplib
 from lockfile import FileLock
 from socket import error as socket_error
 
@@ -65,7 +66,7 @@ def send_all():
                     message.delete()
                     sent += 1
                 # @@@ need to catch some other things here too
-                except socket_error, err:
+                except (socket_error, smtplib.SMTPRecipientsRefused), err:
                     message.defer()
                     print "message deferred due to failure: %s" % err
                     MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
