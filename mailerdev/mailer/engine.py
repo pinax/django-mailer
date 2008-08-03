@@ -6,13 +6,11 @@ from socket import error as socket_error
 
 from models import Message, DontSendEntry, MessageLog
 
+from django.conf import settings
 from django.core.mail import send_mail as core_send_mail
 
-## configuration settings
-# @@@ eventually move to settings.py
-
 # when queue is empty, how long to wait (in seconds) before checking again
-EMPTY_QUEUE_SLEEP = 30
+EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 
 
 def prioritize():
