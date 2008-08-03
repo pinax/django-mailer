@@ -1,5 +1,6 @@
 import time
 import smtplib
+import logging
 from lockfile import FileLock
 from socket import error as socket_error
 
@@ -37,13 +38,13 @@ def send_all():
     Send all eligible messages in the queue.
     """
     
-    print "-" * 72
+    logging.info("-" * 72)
     
     lock = FileLock("send_mail")
     
-    print "acquiring lock..."
+    logging.debug("acquiring lock...")
     lock.acquire()
-    print "acquired."
+    logging.debug("acquired.")
     
     start_time = time.time()
     
@@ -54,13 +55,13 @@ def send_all():
     try:
         for message in prioritize():
             if DontSendEntry.objects.has_address(message.to_address):
-                print "skipping email to %s as on don't send list " % message.to_address
+                logging.info("skipping email to %s as on don't send list " % message.to_address)
                 MessageLog.objects.log(message, 2) # @@@ avoid using literal result code
                 message.delete()
                 dont_send += 1
             else:
                 try:
-                    print "sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8"))
+                    logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8")))
                     core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
                     MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                     message.delete()
@@ -68,17 +69,17 @@ def send_all():
                 # @@@ need to catch some other things here too
                 except (socket_error, smtplib.SMTPRecipientsRefused), err:
                     message.defer()
-                    print "message deferred due to failure: %s" % err
+                    logging.info("message deferred due to failure: %s" % err)
                     MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
                     deferred += 1
     finally:
-        print "releasing lock..."
+        logging.debug("releasing lock...")
         lock.release()
-        print "released."
+        logging.debug("released.")
     
-    print
-    print "%s sent; %s deferred; %s don't send" % (sent, deferred, dont_send)
-    print "done in %.2f seconds" % (time.time() - start_time)
+    logging.info("")
+    logging.info("%s sent; %s deferred; %s don't send" % (sent, deferred, dont_send))
+    logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 def send_loop():
     """
@@ -88,6 +89,6 @@ def send_loop():
     
     while True:
         while not Message.objects.all():
-            print 'sleeping for %s seconds before checking queue again' % EMPTY_QUEUE_SLEEP
+            logging.debug("sleeping for %s seconds before checking queue again" % EMPTY_QUEUE_SLEEP)
             time.sleep(EMPTY_QUEUE_SLEEP)
         send_all()
