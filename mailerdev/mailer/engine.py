@@ -12,6 +12,10 @@ from django.core.mail import send_mail as core_send_mail
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 
+# lock timeout value. how long to wait for the lock to become available.
+# default behavior is to never wait for the lock to be available.
+LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
+
 
 def prioritize():
     """
@@ -41,7 +45,14 @@ def send_all():
     lock = FileLock("send_mail")
     
     logging.debug("acquiring lock...")
-    lock.acquire()
+    try:
+        lock.acquire(LOCK_WAIT_TIMEOUT)
+    except lock.AlreadyLocked:
+        logging.debug("lock already in place. quitting.")
+        return
+    except lock.LockTimeout:
+        logging.debug("waiting for the lock timed out. quitting.")
+        return
     logging.debug("acquired.")
     
     start_time = time.time()
