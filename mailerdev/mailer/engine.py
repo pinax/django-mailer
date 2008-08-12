@@ -1,7 +1,7 @@
 import time
 import smtplib
 import logging
-from lockfile import FileLock
+from lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as socket_error
 
 from models import Message, DontSendEntry, MessageLog
@@ -47,10 +47,10 @@ def send_all():
     logging.debug("acquiring lock...")
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
-    except lock.AlreadyLocked:
+    except AlreadyLocked:
         logging.debug("lock already in place. quitting.")
         return
-    except lock.LockTimeout:
+    except LockTimeout:
         logging.debug("waiting for the lock timed out. quitting.")
         return
     logging.debug("acquired.")
