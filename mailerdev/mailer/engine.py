@@ -40,8 +40,6 @@ def send_all():
     Send all eligible messages in the queue.
     """
     
-    logging.info("-" * 72)
-    
     lock = FileLock("send_mail")
     
     logging.debug("acquiring lock...")

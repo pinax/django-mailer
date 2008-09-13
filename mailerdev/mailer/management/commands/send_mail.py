@@ -13,6 +13,9 @@ class Command(NoArgsCommand):
     
     def handle_noargs(self, **options):
         logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+        logging.info("-" * 72)
         # if PAUSE_SEND is turned on don't do anything.
         if not PAUSE_SEND:
             send_all()
+        else:
+            logging.info("sending is paused, quitting.")
