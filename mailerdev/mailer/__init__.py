@@ -32,6 +32,6 @@ def mail_admins(subject, message, fail_silently=False, priority="medium"):
                 message_body=message,
                 priority=priority).save()
 
-if getattr(settings, 'MAILER_FOR_CHASH_EMAILS', False):
+if getattr(settings, 'MAILER_FOR_CRASH_EMAILS', False):
     from django.core.handlers import base
     base.mail_admins = mail_admins
