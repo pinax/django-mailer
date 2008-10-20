@@ -1,1 +1,10 @@
-DOC PLACEHOLDER
+
+=============
+django-mailer
+=============
+
+Contents:
+
+.. toctree::
+
+    usage
