@@ -4,7 +4,7 @@ import logging
 from lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as socket_error
 
-from models import Message, DontSendEntry, MessageLog
+from mailer.models import Message, DontSendEntry, MessageLog
 
 from django.conf import settings
 from django.core.mail import send_mail as core_send_mail
