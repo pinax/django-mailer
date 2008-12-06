@@ -163,7 +163,7 @@ class LockBase:
         self.hostname = socket.gethostname()
         self.pid = os.getpid()
         if threaded:
-            tname = "%x-" % threading.current_thread().get_name()
+            tname = "%s-" % threading.current_thread().get_name()
         else:
             tname = ""
         dirname = os.path.dirname(self.lock_file)
