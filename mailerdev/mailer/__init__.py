@@ -10,14 +10,15 @@ PRIORITY_MAPPING = {
 
 # replacement for django.core.mail.send_mail
 
-def send_mail(subject, message, from_address, to_addresses, priority="medium"):
+def send_mail(subject, message, from_email, recipient_list, priority="medium",
+              fail_silently=False, auth_user=None, auth_password=None):
     from mailer.models import Message
     # need to do this in case subject used lazy version of ugettext
     subject = force_unicode(subject)
     priority = PRIORITY_MAPPING[priority]
-    for to_address in to_addresses:
+    for to_address in recipient_list:
         Message(to_address=to_address,
-                from_address=from_address,
+                from_address=from_email,
                 subject=subject,
                 message_body=message,
                 priority=priority).save()
