@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='django-mailer',
     version=__import__('mailer').__version__,
-    description='Mail queuing and management for the Django web framework.',
+    description='A reusable Django app for queuing the sending of email',
     long_description=open('docs/usage.txt').read(),
     author='James Tauber',
     author_email='jtauber@jtauber.com',

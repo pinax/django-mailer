@@ -1,26 +1,4 @@
 django-mailer by James Tauber <http://jtauber.com/>
 http://code.google.com/p/django-mailer/
 
-A reusable Django app for queuing and throttling of email sending, scheduled
-sending, consolidation of multiple notifications into single emails and 
-logging of mail failures.
-
-Sample Use Cases
-
-* a site admin wants to send a one-off announcement to all users on a site
-* a site admin wants to send a one-off email to a subset of users (e.g. thank
-  you note to users who completed a survey)
-* a site admin wants to send an email but wants to defer it to a particular
-  date or time (e.g. send out at 9am tomorrow a reminder of the scheduled
-  downtime at 10am)
-* a site admin wants to send a regular email to a subset of users (e.g.
-  people who haven't logged in for over a month)
-* a user wants email notification when certain events specific to them happen
-  (e.g. a friend accepts their invitation to join a group, they receive a
-  private message)
-* a user wants email notification when certain events relevant to a subset of
-  users happen (e.g. there has been a reply to a message board thread or blog
-  entry that the user has subscribed to)
-* a user doesn't want individual emails for each notification but wants them
-  in digest form (e.g. a daily digest of new posts or a weekly update on
-  friends who have joined)
+A reusable Django app for queuing the sending of email
