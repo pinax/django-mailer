@@ -9,9 +9,9 @@ setup(
     author_email='jtauber@jtauber.com',
     url='http://code.google.com/p/django-mailer/',
     packages=[
-        'notification',
-        'notification.management',
-        'notification.management.commands',
+        'mailer',
+        'mailer.management',
+        'mailer.management.commands',
     ],
     package_dir={'mailer': 'mailer'},
     classifiers=[

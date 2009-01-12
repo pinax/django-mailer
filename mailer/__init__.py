@@ -1,5 +1,4 @@
 from django.utils.encoding import force_unicode
-from django.conf import settings
 
 VERSION = (0, 1, 0, "pre")
 
@@ -34,6 +33,7 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium",
                 priority=priority).save()
 
 def mail_admins(subject, message, fail_silently=False, priority="medium"):
+    from django.conf import settings
     from mailer.models import Message
     priority = PRIORITY_MAPPING[priority]
     for name, to_address in settings.ADMINS:
@@ -42,7 +42,3 @@ def mail_admins(subject, message, fail_silently=False, priority="medium"):
                 subject=settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject),
                 message_body=message,
                 priority=priority).save()
-
-if getattr(settings, 'MAILER_FOR_CRASH_EMAILS', False):
-    from django.core.handlers import base
-    base.mail_admins = mail_admins
