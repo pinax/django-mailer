@@ -42,3 +42,14 @@ def mail_admins(subject, message, fail_silently=False, priority="medium"):
                 subject=settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject),
                 message_body=message,
                 priority=priority).save()
+
+def mail_managers(subject, message, fail_silently=False, priority="medium"):
+    from django.conf import settings
+    from mailer.models import Message
+    priority = PRIORITY_MAPPING[priority]
+    for name, to_address in settings.MANAGERS:
+        Message(to_address=to_address,
+                from_address=settings.SERVER_EMAIL,
+                subject=settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject),
+                message_body=message,
+                priority=priority).save()

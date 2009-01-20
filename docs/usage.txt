@@ -11,7 +11,7 @@ The latter is done via a command extension.
 Putting Mail On The Queue
 =========================
 
-Because django-mailer currently uses the same function signature as django's
+Because django-mailer currently uses the same function signature as Django's
 core mail support you can do the following in your code::
 
     # favour django-mailer but fall back to django.core.mail
@@ -20,19 +20,18 @@ core mail support you can do the following in your code::
     except ImportError:
         from django.core.mail import send_mail
 
-and then just call send_mail like you normally would in django::
+and then just call send_mail like you normally would in Django::
 
     send_mail(subject, message_body, settings.DEFAULT_FROM_EMAIL, recipients)
 
-You can have Django use the mailer for crash e-mails if you add the following
-to your settings.py file::
+Additionally you can send all the admins as specified in the ``ADMIN``
+setting by calling::
 
-    MAILER_FOR_CRASH_EMAILS = True
+    mail_admins(subject, message_body)
 
-This can help when you have a large number of crashes occurring, as the
-default mail_admins will bring the site to a crawl posting the mail messages
-to the SMTP server. It will also give you a chance to purge excessive crash
-e-mails before they are sent.
+or all managers as defined in the ``MANAGERS`` setting by calling::
+
+    mail_managers(subject, message_body)
 
 Clear Queue With Command Extensions
 ===================================
