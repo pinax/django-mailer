@@ -15,7 +15,8 @@ Because django-mailer currently uses the same function signature as Django's
 core mail support you can do the following in your code::
 
     # favour django-mailer but fall back to django.core.mail
-    form django.conf import settings
+    from django.conf import settings
+
     if "mailer" in settings.INSTALLED_APPS:
         from mailer import send_mail
     else:
