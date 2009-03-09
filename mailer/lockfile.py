@@ -62,6 +62,10 @@ try:
     threading.current_thread
 except AttributeError:
     threading.current_thread = threading.currentThread
+try:
+    # python 2.6 has threading.current_thread so we need to do this separately.
+    threading.Thread.get_name
+except AttributeError:
     threading.Thread.get_name = threading.Thread.getName
 
 __all__ = ['Error', 'LockError', 'LockTimeout', 'AlreadyLocked',
