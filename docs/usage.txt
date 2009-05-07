@@ -57,3 +57,10 @@ This attempts to send mail every minute with a retry on failure every 20 minutes
 
 ``manage.py send_mail`` uses a lock file in case clearing the queue takes
 longer than the interval between calling ``manage.py send_mail``.
+
+Note that if your project lives inside a virtualenv, you also have to execute
+this command from the virtualenv. The same, naturally, applies also if you're
+executing it with cron. The `Pinax documentation`_ explains that in more
+details.
+
+.. _pinax documentation: http://pinaxproject.com/docs/dev/deployment.html#sending-mail-and-notices
