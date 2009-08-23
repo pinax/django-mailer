@@ -62,7 +62,7 @@ def send_all():
     try:
         for message in prioritize():
             if DontSendEntry.objects.has_address(message.to_address):
-                logging.info("skipping email to %s as on don't send list " % message.to_address)
+                logging.info("skipping email to %s as on don't send list " % message.to_address.encode("utf-8"))
                 MessageLog.objects.log(message, 2) # @@@ avoid using literal result code
                 message.delete()
                 dont_send += 1
