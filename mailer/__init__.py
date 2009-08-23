@@ -26,6 +26,8 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium",
     
     # need to do this in case subject used lazy version of ugettext
     subject = force_unicode(subject)
+    message = force_unicode(message)
+    
     if len(subject) > 100:
         subject = u"%s..." % subject[:97]
     
@@ -44,6 +46,8 @@ def mail_admins(subject, message, fail_silently=False, priority="medium"):
     priority = PRIORITY_MAPPING[priority]
     
     subject = settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject)
+    message = force_unicode(message)
+    
     if len(subject) > 100:
         subject = u"%s..." % subject[:97]
     
@@ -62,6 +66,8 @@ def mail_managers(subject, message, fail_silently=False, priority="medium"):
     priority = PRIORITY_MAPPING[priority]
     
     subject = settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject)
+    message = force_unicode(message)
+    
     if len(subject) > 100:
         subject = u"%s..." % subject[:97]
     
