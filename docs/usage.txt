@@ -26,6 +26,10 @@ and then just call send_mail like you normally would in Django::
 
     send_mail(subject, message_body, settings.DEFAULT_FROM_EMAIL, recipients)
 
+or to send a HTML e-mail (this function is **not** in Django)::
+
+    send_html_mail(subject, message_plaintext, message_html, settings.DEFAULT_FROM_EMAIL, recipients)
+
 Additionally you can send all the admins as specified in the ``ADMIN``
 setting by calling::
 
