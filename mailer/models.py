@@ -1,7 +1,8 @@
 from datetime import datetime
-
+from django.core.mail import EmailMessage
 from django.db import models
-
+import logging
+import pickle
 
 PRIORITIES = (
     ('1', 'high'),
@@ -61,16 +62,13 @@ class Message(models.Model):
     
     objects = MessageManager()
     
-    to_address = models.EmailField()
-    from_address = models.EmailField()
-    subject = models.CharField(max_length=100)
-    message_body = models.TextField()
-    message_body_html = models.TextField(blank=True)
+    # The actual data - a pickled EmailMessage
+    message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime.now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default='2')
     # @@@ campaign?
     # @@@ content_type?
-    
+
     def defer(self):
         self.priority = '4'
         self.save()
@@ -82,6 +80,68 @@ class Message(models.Model):
             return True
         else:
             return False
+
+    def _get_email(self):
+        if self.message_data == "":
+            return None
+        else:
+            return pickle.loads(self.message_data.encode('ascii'))
+
+    def _set_email(self, val):
+        self.message_data = pickle.dumps(val)
+
+    email = property(_get_email, _set_email, doc=
+                     """EmailMessage object. If this is mutated, you will need to
+set the attribute again to cause the underlying serialised data to be updated.""")
+
+    @property
+    def to_addresses(self):
+        email = self.email
+        if email is not None:
+            return email.to
+        else:
+            return []
+
+    @property
+    def subject(self):
+        email = self.email
+        if email is not None:
+            return email.subject
+        else:
+            return ''
+
+
+def filter_recipient_list(lst):
+    if lst is None:
+        return None
+    retval = []
+    for e in lst:
+        if DontSendEntry.objects.has_address(e):
+            logging.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
+        else:
+            retval.append(e)
+    return retval
+
+
+def make_message(subject='', body='', from_email=None, to=None, bcc=None,
+                 attachments=None, headers=None, priority=None):
+    """
+    Creates a simple message for the email parameters supplied.
+    The 'to' and 'bcc' lists are filtered using DontSendEntry.
+
+    If needed, the 'email' attribute can be set to any instance of EmailMessage
+    if e-mails with attachments etc. need to be supported.
+
+    Call 'save()' on the result when it is ready to be sent, and not before.
+    """
+    to = filter_recipient_list(to)
+    bcc = filter_recipient_list(bcc)
+    core_msg = EmailMessage(subject=subject, body=body, from_email=from_email,
+                            to=to, bcc=bcc, attachments=attachments, headers=headers)
+
+    db_msg = Message(priority=priority)
+    db_msg.email = core_msg
+    return db_msg
 
 
 class DontSendEntryManager(models.Manager):
@@ -128,11 +188,7 @@ class MessageLogManager(models.Manager):
         """
         
         message_log = self.create(
-            to_address = message.to_address,
-            from_address = message.from_address,
-            subject = message.subject,
-            message_body = message.message_body,
-            message_body_html = message.message_body_html,
+            message_data = message.message_data,
             when_added = message.when_added,
             priority = message.priority,
             # @@@ other fields from Message
@@ -147,11 +203,7 @@ class MessageLog(models.Model):
     objects = MessageLogManager()
     
     # fields from Message
-    to_address = models.EmailField()
-    from_address = models.EmailField()
-    subject = models.CharField(max_length=100)
-    message_body = models.TextField()
-    message_body_html = models.TextField(blank=True)
+    message_data = models.TextField()
     when_added = models.DateTimeField()
     priority = models.CharField(max_length=1, choices=PRIORITIES)
     # @@@ campaign?
@@ -161,3 +213,25 @@ class MessageLog(models.Model):
     result = models.CharField(max_length=1, choices=RESULT_CODES)
     log_message = models.TextField()
     
+    @property
+    def email(self):
+        if self.message_data == "":
+            return None
+        else:
+            return pickle.loads(self.message_data.encode('ascii'))
+
+    @property
+    def to_addresses(self):
+        email = self.email
+        if email is not None:
+            return email.to
+        else:
+            return []
+
+    @property
+    def subject(self):
+        email = self.email
+        if email is not None:
+            return email.subject
+        else:
+            return ''
