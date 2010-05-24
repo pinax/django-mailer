@@ -8,6 +8,7 @@ from mailer.models import Message, DontSendEntry, MessageLog
 
 from django.conf import settings
 from django.core.mail import send_mail as core_send_mail
+from django.core.mail import get_connection
 
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
@@ -60,10 +61,14 @@ def send_all():
     sent = 0
     
     try:
+        connection = None
         for message in prioritize():
             try:
+                if connection is None:
+                    connection = get_connection()
                 logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), u", ".join(message.to_addresses).encode("utf-8")))
                 email = message.email
+                email.connection = connection
                 email.send()
                 MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                 message.delete()
@@ -73,6 +78,8 @@ def send_all():
                 logging.info("message deferred due to failure: %s" % err)
                 MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
                 deferred += 1
+                # Get new connection, it case the connection itself has an error.
+                connection = None
     finally:
         logging.debug("releasing lock...")
         lock.release()
