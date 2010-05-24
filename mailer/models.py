@@ -91,7 +91,7 @@ class DontSendEntryManager(models.Manager):
         is the given address on the don't send list?
         """
         
-        if self.filter(to_address=address).count() > 0: # @@@ is there a better way?
+        if self.filter(to_address__iexact=address).exists():
             return True
         else:
             return False
