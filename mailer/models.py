@@ -61,8 +61,8 @@ class Message(models.Model):
     
     objects = MessageManager()
     
-    to_address = models.CharField(max_length=50)
-    from_address = models.CharField(max_length=50)
+    to_address = models.EmailField()
+    from_address = models.EmailField()
     subject = models.CharField(max_length=100)
     message_body = models.TextField()
     message_body_html = models.TextField(blank=True)
@@ -101,7 +101,7 @@ class DontSendEntry(models.Model):
     
     objects = DontSendEntryManager()
     
-    to_address = models.CharField(max_length=50)
+    to_address = models.EmailField()
     when_added = models.DateTimeField()
     # @@@ who added?
     # @@@ comment field?
@@ -147,8 +147,8 @@ class MessageLog(models.Model):
     objects = MessageLogManager()
     
     # fields from Message
-    to_address = models.CharField(max_length=50)
-    from_address = models.CharField(max_length=50)
+    to_address = models.EmailField()
+    from_address = models.EmailField()
     subject = models.CharField(max_length=100)
     message_body = models.TextField()
     message_body_html = models.TextField(blank=True)
