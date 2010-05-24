@@ -68,7 +68,7 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
     msg.save()
 
 
-def mail_admins(subject, message, fail_silently=False, priority="medium"):
+def mail_admins(subject, message, fail_silently=False, connection=None, priority="medium"):
     from django.conf import settings
     from django.utils.encoding import force_unicode
 
@@ -78,7 +78,7 @@ def mail_admins(subject, message, fail_silently=False, priority="medium"):
               [a[1] for a in settings.ADMINS])
 
 
-def mail_managers(subject, message, fail_silently=False, priority="medium"):
+def mail_managers(subject, message, fail_silently=False, connection=None, priority="medium"):
     from django.conf import settings
     from django.utils.encoding import force_unicode
 
