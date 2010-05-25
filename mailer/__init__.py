@@ -87,7 +87,7 @@ def send_mass_mail(datatuple, fail_silently=False, auth_user=None,
 def mail_admins(subject, message, fail_silently=False, connection=None, priority="medium"):
     from django.conf import settings
     from django.utils.encoding import force_unicode
-
+    
     return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject),
                      message,
                      settings.SERVER_EMAIL,
@@ -97,7 +97,7 @@ def mail_admins(subject, message, fail_silently=False, connection=None, priority
 def mail_managers(subject, message, fail_silently=False, connection=None, priority="medium"):
     from django.conf import settings
     from django.utils.encoding import force_unicode
-
+    
     return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject),
                      message,
                      settings.SERVER_EMAIL,

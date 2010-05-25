@@ -1,14 +1,16 @@
 import time
 import smtplib
 import logging
+
 from lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as socket_error
-
-from mailer.models import Message, DontSendEntry, MessageLog
 
 from django.conf import settings
 from django.core.mail import send_mail as core_send_mail
 from django.core.mail import get_connection
+
+from mailer.models import Message, DontSendEntry, MessageLog
+
 
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
@@ -20,6 +22,7 @@ LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 # The actual backend to use for sending, defaulting to the Django default.
 EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 
+
 def prioritize():
     """
     Yield the messages in the queue in the order they should be sent.
@@ -28,12 +31,12 @@ def prioritize():
     while True:
         while Message.objects.high_priority().count() or Message.objects.medium_priority().count():
             while Message.objects.high_priority().count():
-                for message in Message.objects.high_priority().order_by('when_added'):
+                for message in Message.objects.high_priority().order_by("when_added"):
                     yield message
             while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count():
-                yield Message.objects.medium_priority().order_by('when_added')[0]
+                yield Message.objects.medium_priority().order_by("when_added")[0]
         while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count() == 0 and Message.objects.low_priority().count():
-            yield Message.objects.low_priority().order_by('when_added')[0]
+            yield Message.objects.low_priority().order_by("when_added")[0]
         if Message.objects.non_deferred().count() == 0:
             break
 

@@ -1,8 +1,10 @@
 from django.core.mail.backends.base import BaseEmailBackend
+
 from mailer.models import Message
 
-class DbBackend(BaseEmailBackend):
 
+class DbBackend(BaseEmailBackend):
+    
     def send_messages(self, email_messages):
         num_sent = 0
         for email in email_messages:
