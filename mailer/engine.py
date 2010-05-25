@@ -8,7 +8,7 @@ from mailer.models import Message, DontSendEntry, MessageLog
 
 from django.conf import settings
 from django.core.mail import send_mail as core_send_mail
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import get_connection
 
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
@@ -17,6 +17,8 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 # default behavior is to never wait for the lock to be available.
 LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 
+# The actual backend to use for sending, defaulting to the Django default.
+EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 
 def prioritize():
     """
@@ -61,36 +63,32 @@ def send_all():
     sent = 0
     
     try:
+        connection = None
         for message in prioritize():
-            if DontSendEntry.objects.has_address(message.to_address):
-                logging.info("skipping email to %s as on don't send list " % message.to_address.encode("utf-8"))
-                MessageLog.objects.log(message, 2) # @@@ avoid using literal result code
+            try:
+                if connection is None:
+                    connection = get_connection(backend=EMAIL_BACKEND)
+                logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), u", ".join(message.to_addresses).encode("utf-8")))
+                email = message.email
+                email.connection = connection
+                email.send()
+                MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                 message.delete()
-                dont_send += 1
-            else:
-                try:
-                    logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8")))
-                    if not message.message_body_html:
-                        core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
-                    else:
-                        email = EmailMultiAlternatives(message.subject, message.message_body, message.from_address, [message.to_address])
-                        email.attach_alternative(message.message_body_html, "text/html")
-                        email.send()
-                    MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
-                    message.delete()
-                    sent += 1
-                except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError), err:
-                    message.defer()
-                    logging.info("message deferred due to failure: %s" % err)
-                    MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
-                    deferred += 1
+                sent += 1
+            except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError), err:
+                message.defer()
+                logging.info("message deferred due to failure: %s" % err)
+                MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
+                deferred += 1
+                # Get new connection, it case the connection itself has an error.
+                connection = None
     finally:
         logging.debug("releasing lock...")
         lock.release()
         logging.debug("released.")
     
     logging.info("")
-    logging.info("%s sent; %s deferred; %s don't send" % (sent, deferred, dont_send))
+    logging.info("%s sent; %s deferred;" % (sent, deferred))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 def send_loop():
