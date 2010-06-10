@@ -1,3 +1,4 @@
+import base64
 import logging
 import pickle
 
@@ -84,13 +85,22 @@ class Message(models.Model):
             return False
     
     def _get_email(self):
-        if self.message_data == "":
+        if self.message_data == u"":
             return None
         else:
-            return pickle.loads(self.message_data.encode("ascii"))
+            try:
+                return pickle.loads(base64.decodestring(self.message_data))
+            except Exception:
+                try:
+                    # previous method was to just do pickle.dumps(val)
+                    return pickle.loads(self.message_data.encode("ascii"))
+                except Exception:
+                    return None
     
     def _set_email(self, val):
-        self.message_data = pickle.dumps(val)
+        # pickle.dumps returns essentially binary data which we need to encode
+        # to store in a unicode field.
+        self.message_data = base64.encodestring(pickle.dumps(val))
     
     email = property(_get_email, _set_email, doc=
                      """EmailMessage object. If this is mutated, you will need to
