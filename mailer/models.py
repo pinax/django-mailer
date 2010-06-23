@@ -189,7 +189,7 @@ class MessageLogManager(models.Manager):
         record the given result and (optionally) a log message
         """
         
-        message_log = self.create(
+        return self.create(
             message_data = message.message_data,
             when_added = message.when_added,
             priority = message.priority,
@@ -197,7 +197,6 @@ class MessageLogManager(models.Manager):
             result = result_code,
             log_message = log_message,
         )
-        message_log.save()
 
 
 class MessageLog(models.Model):
