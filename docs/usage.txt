@@ -79,7 +79,7 @@ your settings file, you first have to set EMAIL_BACKEND::
     EMAIL_BACKEND = "mailer.backend.DbBackend"
 
 If you were previously using a non-default EMAIL_BACKEND, you need to configure
-the MAILER setting_EMAIL_BACKEND, so that django-mailer knows how to actually send
+the MAILER_EMAIL_BACKEND setting, so that django-mailer knows how to actually send
 the mail::
 
     MAILER_EMAIL_BACKEND = "your.actual.EmailBackend"
