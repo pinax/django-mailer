@@ -87,10 +87,10 @@ class Message(models.Model):
         if self.message_data == "":
             return None
         else:
-            return pickle.loads(self.message_data)
+            return pickle.loads(self.message_data.encode("ascii"))
     
     def _set_email(self, val):
-        self.message_data = pickle.dumps(val, protocol=1)
+        self.message_data = pickle.dumps(val)
     
     email = property(_get_email, _set_email, doc=
                      """EmailMessage object. If this is mutated, you will need to
