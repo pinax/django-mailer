@@ -48,7 +48,7 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium",
 
 def send_html_mail(subject, message, message_html, from_email, recipient_list,
                    priority="medium", fail_silently=False, auth_user=None,
-                   auth_password=None):
+                   auth_password=None, headers={}):
     """
     Function to queue HTML e-mails
     """
@@ -68,7 +68,7 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
                        to=recipient_list,
                        priority=priority)
     email = msg.email
-    email = EmailMultiAlternatives(email.subject, email.body, email.from_email, email.to)
+    email = EmailMultiAlternatives(email.subject, email.body, email.from_email, email.to, headers=headers)
     email.attach_alternative(message_html, "text/html")
     msg.email = email
     msg.save()
