@@ -69,7 +69,7 @@ def send_all():
     logging.debug("acquired.")
     
     start_time = time.time()
-    send_delay = SEND_RATE and 1.0 / SEND_RATE
+    send_delay = max(0, SEND_RATE and 1.0 / SEND_RATE or 0)
     
     dont_send = 0
     deferred = 0
