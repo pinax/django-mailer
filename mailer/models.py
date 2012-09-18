@@ -2,7 +2,12 @@ import base64
 import logging
 import pickle
 
-from datetime import datetime
+try:
+    from django.utils.timezone import now as datetime_now
+    datetime_now  # workaround for pyflakes
+except ImportError:
+    from datetime import datetime
+    datetime_now = datetime.now
 
 from django.core.mail import EmailMessage
 from django.db import models
@@ -85,7 +90,7 @@ class Message(models.Model):
     
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
-    when_added = models.DateTimeField(default=datetime.now)
+    when_added = models.DateTimeField(default=datetime_now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default="2")
     # @@@ campaign?
     # @@@ content_type?
@@ -229,7 +234,7 @@ class MessageLog(models.Model):
     # @@@ campaign?
     
     # additional logging fields
-    when_attempted = models.DateTimeField(default=datetime.now)
+    when_attempted = models.DateTimeField(default=datetime_now)
     result = models.CharField(max_length=1, choices=RESULT_CODES)
     log_message = models.TextField()
     
