@@ -1,6 +1,7 @@
 import base64
 import logging
 import pickle
+from datetime import timedelta
 
 try:
     from django.utils.timezone import now as datetime_now
@@ -11,6 +12,7 @@ except ImportError:
 
 from django.core.mail import EmailMessage
 from django.db import models
+from django.db.models import Q
 
 
 PRIORITIES = (
@@ -28,35 +30,35 @@ class MessageManager(models.Manager):
         the high priority messages in the queue
         """
         
-        return self.filter(priority="1")
+        return self.get_query_set().filter(priority="1")
     
     def medium_priority(self):
         """
         the medium priority messages in the queue
         """
         
-        return self.filter(priority="2")
+        return self.get_query_set().filter(priority="2")
     
     def low_priority(self):
         """
         the low priority messages in the queue
         """
         
-        return self.filter(priority="3")
+        return self.get_query_set().filter(priority="3")
     
     def non_deferred(self):
         """
         the messages in the queue not deferred
         """
         
-        return self.filter(priority__lt="4")
+        return self.get_query_set().filter(priority__lt="4")
     
     def deferred(self):
         """
         the deferred messages in the queue
         """
     
-        return self.filter(priority="4")
+        return self.get_query_set().filter(priority="4")
     
     def retry_deferred(self, new_priority=2):
         count = 0
@@ -64,6 +66,13 @@ class MessageManager(models.Manager):
             if message.retry(new_priority):
                 count += 1
         return count
+
+
+class MessageToSendManager(MessageManager):
+
+    def get_query_set(self):
+        queryset = super(MessageToSendManager, self).get_query_set()
+        return queryset.filter(Q(sending_delay__isnull=True) | Q(when_send__lte=datetime_now()))
 
 
 def email_to_db(email):
@@ -92,10 +101,22 @@ class Message(models.Model):
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default="2")
+    # sending delay in seconds, in order to postpone sending the message
+    sending_delay = models.PositiveIntegerField(null=True, blank=True)
+    when_send = models.DateTimeField(editable=False)
     # @@@ campaign?
     # @@@ content_type?
     
     objects = MessageManager()
+    objects_to_send = MessageToSendManager()
+
+    def save(self, **kwargs):
+        if self.sending_delay:
+            delta = timedelta(seconds=self.sending_delay)
+            self.when_send = self.when_added + delta
+        else:
+            self.when_send = self.when_added
+        super(Message, self).save(**kwargs)
     
     def defer(self):
         self.priority = "4"
@@ -149,7 +170,7 @@ def filter_recipient_list(lst):
 
 
 def make_message(subject="", body="", from_email=None, to=None, bcc=None,
-                 attachments=None, headers=None, priority=None):
+                 attachments=None, headers=None, priority=None, sending_delay=None):
     """
     Creates a simple message for the email parameters supplied.
     The 'to' and 'bcc' lists are filtered using DontSendEntry.
@@ -164,7 +185,7 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
     core_msg = EmailMessage(subject=subject, body=body, from_email=from_email,
                             to=to, bcc=bcc, attachments=attachments, headers=headers)
     
-    db_msg = Message(priority=priority)
+    db_msg = Message(priority=priority, sending_delay=sending_delay)
     db_msg.email = core_msg
     return db_msg
 
