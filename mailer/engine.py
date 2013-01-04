@@ -35,15 +35,15 @@ def prioritize():
     """
     
     while True:
-        while Message.objects.high_priority().count() or Message.objects.medium_priority().count():
-            while Message.objects.high_priority().count():
-                for message in Message.objects.high_priority().order_by("when_added"):
+        while Message.objects_to_send.high_priority().count() or Message.objects_to_send.medium_priority().count():
+            while Message.objects_to_send.high_priority().count():
+                for message in Message.objects_to_send.high_priority().order_by("when_added"):
                     yield message
-            while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count():
-                yield Message.objects.medium_priority().order_by("when_added")[0]
-        while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count() == 0 and Message.objects.low_priority().count():
-            yield Message.objects.low_priority().order_by("when_added")[0]
-        if Message.objects.non_deferred().count() == 0:
+            while Message.objects_to_send.high_priority().count() == 0 and Message.objects_to_send.medium_priority().count():
+                yield Message.objects_to_send.medium_priority().order_by("when_added")[0]
+        while Message.objects_to_send.high_priority().count() == 0 and Message.objects_to_send.medium_priority().count() == 0 and Message.objects_to_send.low_priority().count():
+            yield Message.objects_to_send.low_priority().order_by("when_added")[0]
+        if Message.objects_to_send.non_deferred().count() == 0:
             break
 
 

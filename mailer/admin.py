@@ -4,7 +4,7 @@ from mailer.models import Message, DontSendEntry, MessageLog
 
 
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ["id", "to_addresses", "subject", "when_added", "priority"]
+    list_display = ["id", "to_addresses", "subject", "when_added", "when_send", "priority"]
 
 
 class DontSendEntryAdmin(admin.ModelAdmin):
