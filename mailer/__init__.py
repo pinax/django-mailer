@@ -27,7 +27,7 @@ PRIORITY_MAPPING = {
 # replacement for django.core.mail.send_mail
 
 
-def send_mail(subject, message, from_email, recipient_list, priority="medium",
+def send_mail(subject, message, from_email, recipient_list, recipient_bcc_list, priority="medium",
               fail_silently=False, auth_user=None, auth_password=None):
     from django.utils.encoding import force_unicode
     from mailer.models import make_message
@@ -42,11 +42,12 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium",
                  body=message,
                  from_email=from_email,
                  to=recipient_list,
+                 bcc=recipient_bcc_list,
                  priority=priority).save()
     return 1
 
 
-def send_html_mail(subject, message, message_html, from_email, recipient_list,
+def send_html_mail(subject, message, message_html, from_email, recipient_list, recipient_bcc_list,
                    priority="medium", fail_silently=False, auth_user=None,
                    auth_password=None):
     """
@@ -66,9 +67,10 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
                        body=message,
                        from_email=from_email,
                        to=recipient_list,
+                       bcc=recipient_bcc_list,
                        priority=priority)
     email = msg.email
-    email = EmailMultiAlternatives(email.subject, email.body, email.from_email, email.to)
+    email = EmailMultiAlternatives(email.subject, email.body, email.from_email, email.to, email.bcc)
     email.attach_alternative(message_html, "text/html")
     msg.email = email
     msg.save()
