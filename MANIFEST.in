@@ -1,3 +1,4 @@
 include AUTHORS
 include LICENSE
 recursive-include docs *
+recursive-include mailer/locale *
