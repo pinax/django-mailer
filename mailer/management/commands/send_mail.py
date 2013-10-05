@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.core.management.base import NoArgsCommand
+from django.db import connection
 
 from mailer.engine import send_all
 
@@ -21,3 +22,4 @@ class Command(NoArgsCommand):
             send_all()
         else:
             logging.info("sending is paused, quitting.")
+        connection.close()
