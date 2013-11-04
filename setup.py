@@ -15,6 +15,7 @@ setup(
         "mailer.management.commands",
     ],
     package_dir={"mailer": "mailer"},
+    package_data={'mailer': ['locale/*/LC_MESSAGES/*.*']},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Web Environment",
