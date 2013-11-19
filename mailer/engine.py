@@ -28,6 +28,9 @@ LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 # The actual backend to use for sending, defaulting to the Django default.
 EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 
+# How many messages can be sent each second
+SEND_RATE = getattr(settings, "MAILER_SEND_RATE", None)
+
 
 def prioritize():
     """
@@ -66,6 +69,7 @@ def send_all():
     logging.debug("acquired.")
     
     start_time = time.time()
+    send_delay = max(0, SEND_RATE and 1.0 / SEND_RATE or 0)
     
     dont_send = 0
     deferred = 0
@@ -74,6 +78,8 @@ def send_all():
     try:
         connection = None
         for message in prioritize():
+            if send_delay and sent:
+                time.sleep(send_delay)
             try:
                 if connection is None:
                     connection = get_connection(backend=EMAIL_BACKEND)
