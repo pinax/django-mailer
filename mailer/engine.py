@@ -25,9 +25,6 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 # default behavior is to never wait for the lock to be available.
 LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 
-# The actual backend to use for sending, defaulting to the Django default.
-EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-
 
 def prioritize():
     """
@@ -51,6 +48,9 @@ def send_all():
     """
     Send all eligible messages in the queue.
     """
+    # The actual backend to use for sending, defaulting to the Django default.
+    # To make testing easier this is not stored at module level.
+    EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
     
     lock = FileLock("send_mail")
     

@@ -15,3 +15,8 @@ In a cron job file:
     0,20,40 * * * * (/path/to/your/python /path/to/your/manage.py retry_deferred >> ~/cron_mail_deferred.log 2>&1)
 
 See usage.txt in the docs for more advanced use cases.
+
+
+To run tests:
+
+    ./manage.py test mailer
