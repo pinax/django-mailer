@@ -20,3 +20,9 @@ See usage.txt in the docs for more advanced use cases.
 To run tests:
 
     ./manage.py test mailer
+
+
+To run tests on all versions:
+
+    pip install tox
+    tox
