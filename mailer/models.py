@@ -73,7 +73,7 @@ def db_to_email(data):
         return None
     else:
         try:
-            return pickle.loads(base64.decodestring(data))
+            return pickle.loads(base64.decodestring(data.encode("ascii")))
         except Exception:
             try:
                 # previous method was to just do pickle.dumps(val)

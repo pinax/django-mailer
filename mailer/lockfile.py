@@ -53,11 +53,11 @@ from __future__ import division
 import sys
 import socket
 import os
-import thread
 import threading
 import time
 import errno
-import urllib
+# Once Django 1.4.11 is released, we could use 'django.utils.six' and remove the 'six' dependency:
+from six.moves.urllib.parse import quote
 
 # Work with PEP8 and non-PEP8 versions of threading module.
 if not hasattr(threading, "current_thread"):
@@ -165,7 +165,7 @@ class LockBase:
         self.pid = os.getpid()
         if threaded:
             name = threading.current_thread().get_name()
-            tname = "%s-" % urllib.quote(name, safe="")
+            tname = "%s-" % quote(name, safe="")
         else:
             tname = ""
         dirname = os.path.dirname(self.lock_file)
@@ -295,7 +295,7 @@ class MkdirFileLock(LockBase):
         """
         LockBase.__init__(self, path, threaded)
         if threaded:
-            tname = "%x-" % thread.get_ident()
+            tname = "%x-" % threading.current_thread().ident
         else:
             tname = ""
         # Lock file itself is a directory.  Place the unique file name into

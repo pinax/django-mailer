@@ -2,7 +2,7 @@ import time
 import smtplib
 import logging
 
-from lockfile import FileLock, AlreadyLocked, LockTimeout
+from mailer.lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as socket_error
 
 from django.conf import settings
@@ -24,9 +24,6 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 # lock timeout value. how long to wait for the lock to become available.
 # default behavior is to never wait for the lock to be available.
 LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
-
-# The actual backend to use for sending, defaulting to the Django default.
-EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 
 
 def prioritize():
@@ -51,6 +48,9 @@ def send_all():
     """
     Send all eligible messages in the queue.
     """
+    # The actual backend to use for sending, defaulting to the Django default.
+    # To make testing easier this is not stored at module level.
+    EMAIL_BACKEND = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
     
     lock = FileLock("send_mail")
     
@@ -84,7 +84,7 @@ def send_all():
                 MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                 message.delete()
                 sent += 1
-            except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError), err:
+            except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError) as err:
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
                 MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
