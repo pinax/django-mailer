@@ -233,8 +233,8 @@ class MessageLog(models.Model):
     
     # fields from Message
     message_data = models.TextField()
-    when_added = models.DateTimeField()
-    priority = models.CharField(max_length=1, choices=PRIORITIES)
+    when_added = models.DateTimeField(db_index=True)
+    priority = models.CharField(max_length=1, choices=PRIORITIES, db_index=True)
     # @@@ campaign?
     
     # additional logging fields
