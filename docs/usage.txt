@@ -89,3 +89,9 @@ the MAILER_EMAIL_BACKEND setting, so that django-mailer knows how to actually se
 the mail::
 
     MAILER_EMAIL_BACKEND = "your.actual.EmailBackend"
+
+If you want email to be sent when the database cannot be reached, you can configure
+a backup backend with MAILER_BACKUP_BACKEND::
+
+     MAILER_BACKUP_BACKEND = "your.actual.EmailBackend"
+
