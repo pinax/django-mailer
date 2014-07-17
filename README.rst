@@ -1,3 +1,23 @@
+django-mailer
+-------------
+
+.. image:: https://img.shields.io/travis/pinax/django-mailer.svg
+    :target: https://travis-ci.org/pinax/django-mailer
+
+.. image:: https://img.shields.io/coveralls/pinax/django-mailer.svg
+    :target: https://coveralls.io/r/pinax/django-mailer
+
+.. image:: https://img.shields.io/pypi/dm/django-mailer.svg
+    :target:  https://pypi.python.org/pypi/django-mailer/
+
+.. image:: https://img.shields.io/pypi/v/django-mailer.svg
+    :target:  https://pypi.python.org/pypi/django-mailer/
+
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+    :target:  https://pypi.python.org/pypi/django-mailer/
+
+
+
 django-mailer by James Tauber <http://jtauber.com/>
 https://github.com/pinax/django-mailer
 
