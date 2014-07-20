@@ -7,6 +7,7 @@ import smtplib
 
 sent_messages = []
 
+
 class TestMailerEmailBackend(object):
     def __init__(self, **kwargs):
         global sent_messages
@@ -44,7 +45,8 @@ class TestBackend(TestCase):
 class TestSending(TestCase):
     def test_mailer_email_backend(self):
         """
-        Test that calling "manage.py send_mail" actually sends mail using the specified MAILER_EMAIL_BACKEND
+        Test that calling "manage.py send_mail" actually sends mail using the
+        specified MAILER_EMAIL_BACKEND
         """
         global sent_messages
         from mailer import send_mail
@@ -52,12 +54,11 @@ class TestSending(TestCase):
             send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(len(sent_messages), 0)
-            from mailer.engine import send_all
+            from mailer.engine import send_all  # noqa
             send_all()
             self.assertEqual(len(sent_messages), 1)
             self.assertEqual(Message.objects.count(), 0)
             self.assertEqual(MessageLog.objects.count(), 1)
-
 
     def test_retry_deferred(self):
         global sent_messages
