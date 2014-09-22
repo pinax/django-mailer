@@ -25,24 +25,28 @@ A reusable Django app for queuing the sending of email
 
 Simple usage instructions:
 
-In settings.py:
+In ``settings.py``:
+::
 
     EMAIL_BACKEND = "mailer.backend.DbBackend"
 
 In a cron job file:
+::
 
     *       * * * * (/path/to/your/python /path/to/your/manage.py send_mail >> ~/cron_mail.log 2>&1)
     0,20,40 * * * * (/path/to/your/python /path/to/your/manage.py retry_deferred >> ~/cron_mail_deferred.log 2>&1)
 
-See usage.txt in the docs for more advanced use cases.
+See ``usage.txt`` in the docs for more advanced use cases.
 
 
 To run tests:
+::
 
-    ./manage.py test mailer
+    $ ./manage.py test mailer
 
 
 To run tests on all versions:
+::
 
-    pip install tox
-    tox
+    $ pip install tox
+    $ tox
