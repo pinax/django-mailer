@@ -43,7 +43,7 @@ def runtests(*test_args):
     except ImportError:
         from django.test.simple import DjangoTestSuiteRunner
         runner_class = DjangoTestSuiteRunner
-        test_args = ["tests"]
+        test_args = ["mailer"]
 
     failures = runner_class(
         verbosity=1, interactive=True, failfast=False).run_tests(test_args)
