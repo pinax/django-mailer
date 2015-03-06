@@ -12,7 +12,9 @@ try:
 except ImportError:
     # ImportError: cannot import name get_connection
     from django.core.mail import SMTPConnection
-    get_connection = lambda backend=None, fail_silently=False, **kwds: SMTPConnection(fail_silently=fail_silently)  # noqa
+
+    def get_connection(backend=None, fail_silently=False, **kwds):
+        return SMTPConnection(fail_silently=fail_silently)
 
 from mailer.models import Message, MessageLog
 
