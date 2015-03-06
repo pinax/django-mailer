@@ -184,12 +184,7 @@ class DontSendEntryManager(models.Manager):
         is the given address on the don't send list?
         """
         queryset = self.filter(to_address__iexact=address)
-        try:
-            # Django 1.2
-            return queryset.exists()
-        except AttributeError:
-            # AttributeError: 'QuerySet' object has no attribute 'exists'
-            return bool(queryset.count())
+        return queryset.exists()
 
 
 class DontSendEntry(models.Model):
