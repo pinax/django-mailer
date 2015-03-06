@@ -5,13 +5,12 @@ from mailer.engine import send_all
 
 import smtplib
 
-sent_messages = []
-
 
 class TestMailerEmailBackend(object):
+    outbox = []
+
     def __init__(self, **kwargs):
-        global sent_messages
-        sent_messages = []
+        del self.outbox[:]
 
     def open(self):
         pass
@@ -20,8 +19,7 @@ class TestMailerEmailBackend(object):
         pass
 
     def send_messages(self, email_messages):
-        global sent_messages
-        sent_messages.extend(email_messages)
+        self.outbox.extend(email_messages)
 
 
 class FailingMailerEmailBackend(TestMailerEmailBackend):
@@ -49,6 +47,8 @@ class TestSending(TestCase):
         specified MAILER_EMAIL_BACKEND
         """
         global sent_messages
+        # Ensure sent_messages is empty
+        del sent_messages[:]
         from mailer import send_mail
         with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
             send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
@@ -62,6 +62,9 @@ class TestSending(TestCase):
 
     def test_retry_deferred(self):
         global sent_messages
+        # Ensure sent_messages is empty
+        del sent_messages[:]
+
         from mailer import send_mail
         with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
             send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
