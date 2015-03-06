@@ -40,6 +40,37 @@ def prioritize():
             break
 
 
+def _limits_reached(sent, deferred):
+    # Allow sending a fixed/limited amount of emails in each delivery run
+    # defaults to None which means send everything in the queue
+    EMAIL_MAX_BATCH = getattr(settings, "MAILER_EMAIL_MAX_BATCH", None)
+
+    if EMAIL_MAX_BATCH is not None and sent >= EMAIL_MAX_BATCH:
+        logging.info("EMAIL_MAX_BATCH (%s) reached, "
+                     "stopping for this round", EMAIL_MAX_BATCH)
+        return True
+
+    # Stop sending emails in the current round if more than X emails get
+    # deferred - defaults to None which means keep going regardless
+    EMAIL_MAX_DEFERRED = getattr(settings, "MAILER_EMAIL_MAX_DEFERRED", None)
+
+    if EMAIL_MAX_DEFERRED is not None and deferred >= EMAIL_MAX_DEFERRED:
+        logging.warning("EMAIL_MAX_DEFERRED (%s) reached, "
+                        "stopping for this round", EMAIL_MAX_DEFERRED)
+        return True
+
+
+def _throttle_emails():
+    # When delivering, wait some time between emails to avoid server overload
+    # defaults to 0 for no waiting
+    EMAIL_THROTTLE = getattr(settings, "MAILER_EMAIL_THROTTLE", 0)
+
+    if EMAIL_THROTTLE:
+        logging.debug("Throttling email delivery. "
+                      "Sleeping %s seconds", EMAIL_THROTTLE)
+        time.sleep(EMAIL_THROTTLE)
+
+
 def send_all():
     """
     Send all eligible messages in the queue.
@@ -97,6 +128,13 @@ def send_all():
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
                 connection = None
+
+            # Check if we reached the limits for the current run
+            if _limits_reached(sent, deferred):
+                break
+
+            _throttle_emails()
+
     finally:
         logging.debug("releasing lock...")
         lock.release()
