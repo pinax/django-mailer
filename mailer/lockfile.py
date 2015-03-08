@@ -56,8 +56,7 @@ import os
 import threading
 import time
 import errno
-# Once Django 1.4.11 is released, we could use 'django.utils.six' and remove the 'six' dependency:
-from six.moves.urllib.parse import quote
+from django.utils.six.moves.urllib.parse import quote
 
 # Work with PEP8 and non-PEP8 versions of threading module.
 if not hasattr(threading, "current_thread"):

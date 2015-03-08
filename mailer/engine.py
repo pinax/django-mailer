@@ -6,13 +6,7 @@ from mailer.lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as socket_error
 
 from django.conf import settings
-try:
-    # Django 1.2
-    from django.core.mail import get_connection
-except ImportError:
-    # ImportError: cannot import name get_connection
-    from django.core.mail import SMTPConnection
-    get_connection = lambda backend=None, fail_silently=False, **kwds: SMTPConnection(fail_silently=fail_silently)  # noqa
+from django.core.mail import get_connection
 
 from mailer.models import Message, MessageLog
 
