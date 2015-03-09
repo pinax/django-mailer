@@ -5,7 +5,7 @@ setup(
     name="django-mailer",
     version=__import__("mailer").__version__,
     description="A reusable Django app for queuing the sending of email",
-    long_description=open("docs/usage.txt").read(),
+    long_description=open("docs/usage.rst").read(),
     author="James Tauber",
     author_email="jtauber@jtauber.com",
     url="http://code.google.com/p/django-mailer/",
