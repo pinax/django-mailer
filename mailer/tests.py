@@ -6,6 +6,8 @@ from mailer.models import Message, MessageLog
 from mailer import send_mail as mailer_send_mail
 from mailer import engine
 
+from mock import patch, Mock
+import lockfile
 import smtplib
 
 
@@ -76,3 +78,91 @@ class TestSending(TestCase):
             engine.send_all()
             self.assertEqual(len(mail.outbox), 1)
             self.assertEqual(Message.objects.count(), 0)
+
+    def test_send_loop(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            with patch("mailer.engine.send_all", side_effect=StopIteration) as send:
+                with patch("time.sleep", side_effect=StopIteration) as sleep:
+                    self.assertRaises(StopIteration, engine.send_loop)
+
+                    sleep.assert_called_once_with(engine.EMPTY_QUEUE_SLEEP)
+                    send.assert_not_called()
+
+                mailer_send_mail("Subject", "Body", "sender15@example.com", ["recipient@example.com"])
+
+                self.assertRaises(StopIteration, engine.send_loop)
+                send.assert_called_once()
+
+
+class TestLockNormal(TestCase):
+    def setUp(self):
+        class CustomError(Exception):
+            pass
+
+        self.CustomError = CustomError
+
+        self.lock_mock = Mock()
+
+        self.patcher_lock = patch("lockfile.FileLock", return_value=self.lock_mock)
+        self.patcher_prio = patch("mailer.engine.prioritize", side_effect=CustomError)
+
+        self.lock = self.patcher_lock.start()
+        self.prio = self.patcher_prio.start()
+
+    def test(self):
+        self.assertRaises(self.CustomError, engine.send_all)
+        self.lock_mock.acquire.assert_called_once_with(engine.LOCK_WAIT_TIMEOUT)
+        self.lock.assert_called_once_with("send_mail")
+        self.prio.assert_called_once()
+
+    def tearDown(self):
+        self.patcher_lock.stop()
+        self.patcher_prio.stop()
+
+
+class TestLockLocked(TestCase):
+    def setUp(self):
+        config = {
+            "acquire.side_effect": lockfile.AlreadyLocked,
+        }
+        self.lock_mock = Mock(**config)
+
+        self.patcher_lock = patch("lockfile.FileLock", return_value=self.lock_mock)
+        self.patcher_prio = patch("mailer.engine.prioritize", side_effect=Exception)
+
+        self.lock = self.patcher_lock.start()
+        self.prio = self.patcher_prio.start()
+
+    def test(self):
+        engine.send_all()
+        self.lock_mock.acquire.assert_called_once_with(engine.LOCK_WAIT_TIMEOUT)
+        self.lock.assert_called_once_with("send_mail")
+        self.prio.assert_not_called()
+
+    def tearDown(self):
+        self.patcher_lock.stop()
+        self.patcher_prio.stop()
+
+
+class TestLockTimeout(TestCase):
+    def setUp(self):
+        config = {
+            "acquire.side_effect": lockfile.LockTimeout,
+        }
+        self.lock_mock = Mock(**config)
+
+        self.patcher_lock = patch("lockfile.FileLock", return_value=self.lock_mock)
+        self.patcher_prio = patch("mailer.engine.prioritize", side_effect=Exception)
+
+        self.lock = self.patcher_lock.start()
+        self.prio = self.patcher_prio.start()
+
+    def test(self):
+        engine.send_all()
+        self.lock_mock.acquire.assert_called_once_with(engine.LOCK_WAIT_TIMEOUT)
+        self.lock.assert_called_once_with("send_mail")
+        self.prio.assert_not_called()
+
+    def tearDown(self):
+        self.patcher_lock.stop()
+        self.patcher_prio.stop()

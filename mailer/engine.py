@@ -2,7 +2,7 @@ import time
 import smtplib
 import logging
 
-from lockfile import FileLock, AlreadyLocked, LockTimeout
+import lockfile
 from socket import error as socket_error
 
 from django.conf import settings
@@ -52,15 +52,15 @@ def send_all():
         "django.core.mail.backends.smtp.EmailBackend"
     )
 
-    lock = FileLock("send_mail")
+    lock = lockfile.FileLock("send_mail")
 
     logging.debug("acquiring lock...")
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
-    except AlreadyLocked:
+    except lockfile.AlreadyLocked:
         logging.debug("lock already in place. quitting.")
         return
-    except LockTimeout:
+    except lockfile.LockTimeout:
         logging.debug("waiting for the lock timed out. quitting.")
         return
     logging.debug("acquired.")
