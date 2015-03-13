@@ -2,7 +2,7 @@ import time
 import smtplib
 import logging
 
-from mailer.lockfile import FileLock, AlreadyLocked, LockTimeout
+from lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as socket_error
 
 from django.conf import settings
