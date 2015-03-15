@@ -81,11 +81,13 @@ def send_all():
                     u", ".join(message.to_addresses).encode("utf-8"))
                 )
                 email = message.email
-                email.connection = connection
-                email.send()
-                MessageLog.objects.log(message, 1)  # @@@ avoid using literal result code
+                if email is not None:
+                    email.connection = connection
+                    email.send()
+                    MessageLog.objects.log(message, 1)  # @@@ avoid using literal result code
+                    sent += 1
                 message.delete()
-                sent += 1
+
             except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError) as err:  # noqa
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
