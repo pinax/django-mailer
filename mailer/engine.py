@@ -86,6 +86,8 @@ def send_all():
                     email.send()
                     MessageLog.objects.log(message, 1)  # @@@ avoid using literal result code
                     sent += 1
+                else:
+                    logging.warn("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
 
             except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError) as err:  # noqa
