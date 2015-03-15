@@ -8,6 +8,7 @@ import mailer
 from mailer import engine
 
 from mock import patch, Mock
+import pickle
 import lockfile
 import smtplib
 
@@ -429,6 +430,14 @@ class TestDbToEmail(TestCase):
 
         email = mail.EmailMessage(*data)
         converted_email = db_to_email(email_to_db(email))
+        self.assertEqual(converted_email.body, email.body)
+        self.assertEqual(converted_email.subject, email.subject)
+        self.assertEqual(converted_email.from_email, email.from_email)
+        self.assertEqual(converted_email.to, email.to)
+
+        # Test old pickle in DB format
+        db_email = pickle.dumps(email)
+        converted_email = db_to_email(db_email)
         self.assertEqual(converted_email.body, email.body)
         self.assertEqual(converted_email.subject, email.subject)
         self.assertEqual(converted_email.from_email, email.from_email)
