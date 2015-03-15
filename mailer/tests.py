@@ -89,7 +89,7 @@ class TestSending(TestCase):
                     sleep.assert_called_once_with(engine.EMPTY_QUEUE_SLEEP)
                     send.assert_not_called()
 
-                mailer.send_mail("Subject", "Body", "sender15@example.com", ["recipient@example.com"])
+                mailer.send_mail("Subject", "Body", "sender15@example.com", ["rec@example.com"])
 
                 self.assertRaises(StopIteration, engine.send_loop)
                 send.assert_called_once()
@@ -283,19 +283,19 @@ class TestLockTimeout(TestCase):
 class TestPrioritize(TestCase):
     def test_prioritize(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            mailer.send_mail("Subject", "Body", "prio1@example.com", ["recipient@example.com"], "high")
-            mailer.send_mail("Subject", "Body", "prio2@example.com", ["recipient@example.com"], "medium")
-            mailer.send_mail("Subject", "Body", "prio3@example.com", ["recipient@example.com"], "low")
-            mailer.send_mail("Subject", "Body", "prio4@example.com", ["recipient@example.com"], "high")
-            mailer.send_mail("Subject", "Body", "prio5@example.com", ["recipient@example.com"], "high")
-            mailer.send_mail("Subject", "Body", "prio6@example.com", ["recipient@example.com"], "low")
-            mailer.send_mail("Subject", "Body", "prio7@example.com", ["recipient@example.com"], "low")
-            mailer.send_mail("Subject", "Body", "prio8@example.com", ["recipient@example.com"], "medium")
-            mailer.send_mail("Subject", "Body", "prio9@example.com", ["recipient@example.com"], "medium")
-            mailer.send_mail("Subject", "Body", "prio10@example.com", ["recipient@example.com"], "low")
-            mailer.send_mail("Subject", "Body", "prio11@example.com", ["recipient@example.com"], "medium")
-            mailer.send_mail("Subject", "Body", "prio12@example.com", ["recipient@example.com"], "high")
-            mailer.send_mail("Subject", "Body", "prio13@example.com", ["recipient@example.com"], "deferred")
+            mailer.send_mail("Subject", "Body", "prio1@example.com", ["r@example.com"], "high")
+            mailer.send_mail("Subject", "Body", "prio2@example.com", ["r@example.com"], "medium")
+            mailer.send_mail("Subject", "Body", "prio3@example.com", ["r@example.com"], "low")
+            mailer.send_mail("Subject", "Body", "prio4@example.com", ["r@example.com"], "high")
+            mailer.send_mail("Subject", "Body", "prio5@example.com", ["r@example.com"], "high")
+            mailer.send_mail("Subject", "Body", "prio6@example.com", ["r@example.com"], "low")
+            mailer.send_mail("Subject", "Body", "prio7@example.com", ["r@example.com"], "low")
+            mailer.send_mail("Subject", "Body", "prio8@example.com", ["r@example.com"], "medium")
+            mailer.send_mail("Subject", "Body", "prio9@example.com", ["r@example.com"], "medium")
+            mailer.send_mail("Subject", "Body", "prio10@example.com", ["r@example.com"], "low")
+            mailer.send_mail("Subject", "Body", "prio11@example.com", ["r@example.com"], "medium")
+            mailer.send_mail("Subject", "Body", "prio12@example.com", ["r@example.com"], "high")
+            mailer.send_mail("Subject", "Body", "prio13@example.com", ["r@example.com"], "deferred")
             self.assertEqual(Message.objects.count(), 13)
             self.assertEqual(Message.objects.deferred().count(), 1)
 
@@ -344,7 +344,7 @@ class TestPrioritize(TestCase):
             msg.delete()
 
             # Add one more mail that should still get delivered
-            mailer.send_mail("Subject", "Body", "prio14@example.com", ["recipient@example.com"], "high")
+            mailer.send_mail("Subject", "Body", "prio14@example.com", ["r@example.com"], "high")
             msg = messages.next()
             self.assertEqual(msg.email.from_email, "prio14@example.com")
             msg.delete()
