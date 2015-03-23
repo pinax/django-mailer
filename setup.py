@@ -6,9 +6,9 @@ setup(
     version=__import__("mailer").__version__,
     description="A reusable Django app for queuing the sending of email",
     long_description=open("docs/usage.rst").read(),
-    author="James Tauber",
-    author_email="jtauber@jtauber.com",
-    url="http://code.google.com/p/django-mailer/",
+    author="Pinax Team",
+    author_email="developers@pinaxproject.com",
+    url="http://github.com/pinax/django-mailer/",
     packages=[
         "mailer",
         "mailer.management",
@@ -17,7 +17,7 @@ setup(
     package_dir={"mailer": "mailer"},
     package_data={'mailer': ['locale/*/LC_MESSAGES/*.*']},
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
