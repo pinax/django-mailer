@@ -94,3 +94,36 @@ details.
 
 .. _pinax documentation: http://pinaxproject.com/docs/dev/deployment.html#sending-mail-and-notices
 
+===================
+Using EMAIL_BACKEND
+===================
+
+To automatically switch all your mail to use django-mailer, instead of changing imports
+you can also use the EMAIL_BACKEND feature that was introduced in Django 1.2. In
+your settings file, you first have to set EMAIL_BACKEND::
+
+    EMAIL_BACKEND = "mailer.backend.DbBackend"
+
+If you were previously using a non-default EMAIL_BACKEND, you need to configure
+the MAILER_EMAIL_BACKEND setting, so that django-mailer knows how to actually send
+the mail::
+
+    MAILER_EMAIL_BACKEND = "your.actual.EmailBackend"
+
+Controlling the delivery process
+================================
+
+If you wish to have a finer control over the delivery process, which defaults
+to deliver everything in the queue, you can use the following 3 variables
+(default values shown)::
+
+    MAILER_EMAIL_MAX_BATCH = None  # integer or None
+    MAILER_EMAIL_MAX_DEFERRED = None  # integer or None
+    MAILER_EMAIL_THROTTLE = 0  # passed to time.sleep()
+
+These control how many emails are sent successfully before stopping the
+current run `MAILER_EMAIL_MAX_BATCH`, after how many failed/deferred emails
+should it stop `MAILER_EMAIL_MAX_DEFERRED` and how much time to wait between
+each email `MAILER_EMAIL_THROTTLE`.
+
+Unprocessed emails will be evaluated in the following delivery iterations.
