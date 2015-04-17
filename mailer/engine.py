@@ -2,7 +2,7 @@ import time
 import smtplib
 import logging
 
-from mailer.lockfile import FileLock, AlreadyLocked, LockTimeout
+import lockfile
 from socket import error as socket_error
 
 from django.conf import settings
@@ -52,15 +52,15 @@ def send_all():
         "django.core.mail.backends.smtp.EmailBackend"
     )
 
-    lock = FileLock("send_mail")
+    lock = lockfile.FileLock("send_mail")
 
     logging.debug("acquiring lock...")
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
-    except AlreadyLocked:
+    except lockfile.AlreadyLocked:
         logging.debug("lock already in place. quitting.")
         return
-    except LockTimeout:
+    except lockfile.LockTimeout:
         logging.debug("waiting for the lock timed out. quitting.")
         return
     logging.debug("acquired.")
@@ -81,11 +81,15 @@ def send_all():
                     u", ".join(message.to_addresses).encode("utf-8"))
                 )
                 email = message.email
-                email.connection = connection
-                email.send()
-                MessageLog.objects.log(message, 1)  # @@@ avoid using literal result code
+                if email is not None:
+                    email.connection = connection
+                    email.send()
+                    MessageLog.objects.log(message, 1)  # @@@ avoid using literal result code
+                    sent += 1
+                else:
+                    logging.warn("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
-                sent += 1
+
             except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError) as err:  # noqa
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)

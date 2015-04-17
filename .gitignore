@@ -1,3 +1,6 @@
-.tox
+htmlcov/
+build/
+.tox/
+
 MANIFEST
 .coverage
