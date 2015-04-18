@@ -236,7 +236,14 @@ class TestSending(TestCase):
 
         with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend", MAILER_EMAIL_MAX_DEFERRED=2):  # noqa
             # 2 will get deferred 3 remain undeferred
-            engine.send_all()
+            with patch("logging.warning") as w:
+                engine.send_all()
+
+                w.assert_called_once()
+                arg = w.call_args[0][0]
+                self.assertIn("EMAIL_MAX_DEFERRED", arg)
+                self.assertIn("stopping for this round", arg)
+
             self.assertEqual(Message.objects.count(), 5)
             self.assertEqual(Message.objects.deferred().count(), 2)
 
@@ -460,7 +467,12 @@ class TestMessages(TestCase):
 
             msg.save()
 
-            engine.send_all()
+            with patch("logging.warning") as w:
+                engine.send_all()
+
+                w.assert_called_once()
+                arg = w.call_args[0][0]
+                self.assertIn("message discarded due to failure in converting from DB", arg)
 
             self.assertEqual(Message.objects.count(), 0)
             self.assertEqual(Message.objects.deferred().count(), 0)
