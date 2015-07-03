@@ -9,7 +9,7 @@ setup(
     name="django-mailer",
     version=__import__("mailer").__version__,
     description="A reusable Django app for queuing the sending of email",
-    long_description=open("docs/usage.rst").read(),
+    long_description=open("docs/usage.rst").read() + open("CHANGES.rst").read(),
     author="Pinax Team",
     author_email="developers@pinaxproject.com",
     url="http://github.com/pinax/django-mailer/",
