@@ -8,19 +8,31 @@ def show_to(message):
 show_to.short_description = "To"
 
 
-class MessageAdmin(admin.ModelAdmin):
+class MessageAdminMixin(object):
+
+    def plain_text_body(self, instance):
+        email = instance.email
+        if hasattr(email, 'body'):
+            return email.body
+        else:
+            return "<Can't decode>"
+
+
+class MessageAdmin(MessageAdminMixin, admin.ModelAdmin):
 
     list_display = ["id", show_to, "subject", "when_added", "priority"]
+    readonly_fields = ['plain_text_body']
 
 
 class DontSendEntryAdmin(admin.ModelAdmin):
+
     list_display = ["to_address", "when_added"]
 
 
-class MessageLogAdmin(admin.ModelAdmin):
+class MessageLogAdmin(MessageAdminMixin, admin.ModelAdmin):
 
     list_display = ["id", show_to, "subject", "when_attempted", "result"]
-
+    readonly_fields = ['plain_text_body']
 
 admin.site.register(Message, MessageAdmin)
 admin.site.register(DontSendEntry, DontSendEntryAdmin)
