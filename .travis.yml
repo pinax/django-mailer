@@ -4,11 +4,14 @@ env:
   - TOXENV=py27-django15
   - TOXENV=py27-django16
   - TOXENV=py27-django17
+  - TOXENV=py27-django18
   - TOXENV=py33-django15
   - TOXENV=py33-django16
   - TOXENV=py33-django17
+  - TOXENV=py33-django18
   - TOXENV=py34-django16
   - TOXENV=py34-django17
+  - TOXENV=py34-django18
 install:
   - pip install flake8 coverage coveralls tox
 before_script:
