@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import base64
 import logging
 import pickle
@@ -69,7 +71,7 @@ def email_to_db(email):
 
 
 def db_to_email(data):
-    if data == u"":
+    if data == "":
         return None
     else:
         try:
