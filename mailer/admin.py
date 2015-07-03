@@ -3,8 +3,14 @@ from django.contrib import admin
 from mailer.models import Message, DontSendEntry, MessageLog
 
 
+def show_to(message):
+    return ", ".join(message.to_addresses)
+show_to.short_description = "To"
+
+
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ["id", "to_addresses", "subject", "when_added", "priority"]
+
+    list_display = ["id", show_to, "subject", "when_added", "priority"]
 
 
 class DontSendEntryAdmin(admin.ModelAdmin):
@@ -12,7 +18,8 @@ class DontSendEntryAdmin(admin.ModelAdmin):
 
 
 class MessageLogAdmin(admin.ModelAdmin):
-    list_display = ["id", "subject", "when_attempted", "result"]
+
+    list_display = ["id", show_to, "subject", "when_attempted", "result"]
 
 
 admin.site.register(Message, MessageAdmin)
