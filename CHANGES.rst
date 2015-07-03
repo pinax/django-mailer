@@ -1,5 +1,8 @@
+Change log
+==========
+
 1.0.0
-=====
+-----
 
 * Throttling of email sending
 * Django 1.8 support
@@ -14,6 +17,6 @@
 * Various other fixes, especially from Renato Alves <alves.rjc@gmail.com> - thank you!
 
 0.1.0
-=====
+-----
 
 * First PyPI version
