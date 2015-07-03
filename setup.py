@@ -1,5 +1,7 @@
-from distutils.core import setup
-
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 setup(
     name="django-mailer",
@@ -27,9 +29,8 @@ setup(
         "Programming Language :: Python :: 3.3",
         "Framework :: Django",
     ],
-    setup_requires=[
+    install_requires=[
         'Django >= 1.4',
         'lockfile >= 0.8',
         ],
-
 )
