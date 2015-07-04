@@ -38,15 +38,4 @@ In a cron job file:
 
 See ``usage.rst`` in the docs for more advanced use cases - https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage
 
-
-To run tests:
-::
-
-    $ ./manage.py test mailer
-
-
-To run tests on all versions:
-::
-
-    $ pip install tox
-    $ tox
+See CONTRIBUTING.rst for information about contributing patches to django-mailer.
