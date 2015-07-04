@@ -64,12 +64,12 @@ Clear queue with command extensions
 With mailer in your INSTALLED_APPS, there will be two new manage.py commands
 you can run:
 
- * ``send_mail`` will clear the current message queue. If there are any
-   failures, they will be marked deferred and will not be attempted again by
-   ``send_mail``.
+* ``send_mail`` will clear the current message queue. If there are any
+  failures, they will be marked deferred and will not be attempted again by
+  ``send_mail``.
 
- * ``retry_deferred`` will move any deferred mail back into the normal queue
-   (so it will be attempted again on the next ``send_mail``).
+* ``retry_deferred`` will move any deferred mail back into the normal queue
+  (so it will be attempted again on the next ``send_mail``).
 
 You may want to set these up via cron to run regularly::
 
