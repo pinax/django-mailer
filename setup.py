@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name="django-mailer",
@@ -13,11 +10,7 @@ setup(
     author="Pinax Team",
     author_email="developers@pinaxproject.com",
     url="http://github.com/pinax/django-mailer/",
-    packages=[
-        "mailer",
-        "mailer.management",
-        "mailer.management.commands",
-    ],
+    packages=find_packages(),
     package_dir={"mailer": "mailer"},
     package_data={'mailer': ['locale/*/LC_MESSAGES/*.*']},
     classifiers=[
