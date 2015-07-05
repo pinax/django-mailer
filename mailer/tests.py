@@ -290,7 +290,7 @@ class TestSending(TestCase):
         # NOTE This is a bit tricky to test due to possible fluctuations on
         # execution time. Test may randomly fail
         # NOTE 2*TIME because 2 emails are sent during the test
-        self.assertAlmostEqual(unthrottled_time, throttled_time - 2*TIME, places=1)
+        self.assertAlmostEqual(unthrottled_time, throttled_time - 2 * TIME, places=1)
 
 
 class TestLockNormal(TestCase):
