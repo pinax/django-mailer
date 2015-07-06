@@ -40,11 +40,13 @@ def runtests(*test_args):
     try:
         from django.test.runner import DiscoverRunner
         runner_class = DiscoverRunner
-        test_args = ["mailer.tests"]
+        if len(test_args) == 0:
+            test_args = ["mailer.tests"]
     except ImportError:
         from django.test.simple import DjangoTestSuiteRunner
         runner_class = DjangoTestSuiteRunner
-        test_args = ["mailer"]
+        if len(test_args) == 0:
+            test_args = ["mailer"]
 
     failures = runner_class(
         verbosity=1, interactive=True, failfast=False).run_tests(test_args)
