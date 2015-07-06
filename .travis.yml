@@ -1,21 +1,22 @@
 language: python
 env:
-  - TOXENV=py27-django14
-  - TOXENV=py27-django15
-  - TOXENV=py27-django16
-  - TOXENV=py27-django17
-  - TOXENV=py27-django18
-  - TOXENV=py33-django15
-  - TOXENV=py33-django16
-  - TOXENV=py33-django17
-  - TOXENV=py33-django18
-  - TOXENV=py34-django16
-  - TOXENV=py34-django17
-  - TOXENV=py34-django18
+  - TOXENV=py27-django14-test
+  - TOXENV=py27-django15-test
+  - TOXENV=py27-django16-test
+  - TOXENV=py27-django17-test
+  - TOXENV=py27-django18-test
+  - TOXENV=py33-django15-test
+  - TOXENV=py33-django16-test
+  - TOXENV=py33-django17-test
+  - TOXENV=py33-django18-test
+  - TOXENV=py34-django16-test
+  - TOXENV=py34-django17-test
+  - TOXENV=py34-django18-test
+  - TOXENV=py27-flake
+  - TOXENV=py33-flake
+  - TOXENV=py34-flake
 install:
-  - pip install flake8 coverage coveralls tox>=2.1
-before_script:
-  - flake8 --statistics --benchmark mailer
+  - pip install coveralls tox>=2.1
 script:
   - tox
 after_script:
