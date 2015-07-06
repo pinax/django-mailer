@@ -15,7 +15,7 @@ env:
 install:
   - pip install flake8 coverage coveralls tox
 before_script:
-  - flake8 --max-line-length=100 --max-complexity=10 --statistics --benchmark --exclude=mailer/south_migrations,mailer/migrations mailer
+  - flake8 --statistics --benchmark mailer
 script:
   - tox
 after_script:
