@@ -71,10 +71,14 @@ class MessageManager(models.Manager):
         return count
 
 
+base64_encode = base64.encodebytes if hasattr(base64, 'encodebytes') else base64.encodestring
+base64_decode = base64.decodebytes if hasattr(base64, 'decodebytes') else base64.decodestring
+
+
 def email_to_db(email):
     # pickle.dumps returns essentially binary data which we need to encode
     # to store in a unicode field.
-    return base64.encodestring(pickle.dumps(email))
+    return base64_encode(pickle.dumps(email))
 
 
 def db_to_email(data):
@@ -87,7 +91,7 @@ def db_to_email(data):
             pass
 
         try:
-            return pickle.loads(base64.decodestring(data))
+            return pickle.loads(base64_decode(data))
         except (TypeError, pickle.UnpicklingError, base64.binascii.Error):
             try:
                 # previous method was to just do pickle.dumps(val)
