@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
-VERSION = (1, 0, 1, "final", 0)  # following PEP 386
+import warnings
+
+VERSION = (1, 1, 0, "alpha", 0)  # following PEP 386
 DEV_N = None
 
 
