@@ -71,6 +71,28 @@ def _throttle_emails():
         time.sleep(EMAIL_THROTTLE)
 
 
+def acquire_lock():
+    logging.debug("acquiring lock...")
+    lock = lockfile.FileLock("send_mail")
+
+    try:
+        lock.acquire(LOCK_WAIT_TIMEOUT)
+    except lockfile.AlreadyLocked:
+        logging.debug("lock already in place. quitting.")
+        return False, lock
+    except lockfile.LockTimeout:
+        logging.debug("waiting for the lock timed out. quitting.")
+        return False, lock
+    logging.debug("acquired.")
+    return True, lock
+
+
+def release_lock(lock):
+    logging.debug("releasing lock...")
+    lock.release()
+    logging.debug("released.")
+
+
 def send_all():
     """
     Send all eligible messages in the queue.
@@ -83,18 +105,9 @@ def send_all():
         "django.core.mail.backends.smtp.EmailBackend"
     )
 
-    lock = lockfile.FileLock("send_mail")
-
-    logging.debug("acquiring lock...")
-    try:
-        lock.acquire(LOCK_WAIT_TIMEOUT)
-    except lockfile.AlreadyLocked:
-        logging.debug("lock already in place. quitting.")
+    acquired, lock = acquire_lock()
+    if not acquired:
         return
-    except lockfile.LockTimeout:
-        logging.debug("waiting for the lock timed out. quitting.")
-        return
-    logging.debug("acquired.")
 
     start_time = time.time()
 
@@ -138,9 +151,7 @@ def send_all():
             _throttle_emails()
 
     finally:
-        logging.debug("releasing lock...")
-        lock.release()
-        logging.debug("released.")
+        release_lock(lock)
 
     logging.info("")
     logging.info("%s sent; %s deferred;" % (sent, deferred))
