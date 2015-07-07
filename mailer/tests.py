@@ -370,6 +370,7 @@ class TestPrioritize(TestCase):
             mailer.send_mail("Subject", "Body", "prio13@example.com", ["r@example.com"], "deferred")
             self.assertEqual(Message.objects.count(), 13)
             self.assertEqual(Message.objects.deferred().count(), 1)
+            self.assertEqual(Message.objects.non_deferred().count(), 12)
 
             messages = engine.prioritize()
 

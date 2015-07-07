@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 VERSION = (1, 0, 1, "final", 0)  # following PEP 386
 DEV_N = None
 
@@ -16,21 +18,13 @@ def get_version():
 __version__ = get_version()
 
 
-PRIORITY_MAPPING = {
-    "high": "1",
-    "medium": "2",
-    "low": "3",
-    "deferred": "4",
-}
-
-
 # replacement for django.core.mail.send_mail
 
 
 def send_mail(subject, message, from_email, recipient_list, priority="medium",
               fail_silently=False, auth_user=None, auth_password=None):
     from django.utils.encoding import force_text
-    from mailer.models import make_message
+    from mailer.models import make_message, PRIORITY_MAPPING
 
     priority = PRIORITY_MAPPING[priority]
 
@@ -54,7 +48,7 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
     """
     from django.utils.encoding import force_text
     from django.core.mail import EmailMultiAlternatives
-    from mailer.models import make_message
+    from mailer.models import make_message, PRIORITY_MAPPING
 
     priority = PRIORITY_MAPPING[priority]
 

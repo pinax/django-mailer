@@ -8,7 +8,7 @@ from socket import error as socket_error
 from django.conf import settings
 from django.core.mail import get_connection
 
-from mailer.models import Message, MessageLog
+from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
@@ -115,16 +115,18 @@ def send_all():
                 if email is not None:
                     email.connection = connection
                     email.send()
-                    MessageLog.objects.log(message, 1)  # @@@ avoid using literal result code
+                    MessageLog.objects.log(message, RESULT_SUCCESS)
                     sent += 1
                 else:
                     logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
 
-            except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError) as err:  # noqa
+            except (socket_error, smtplib.SMTPSenderRefused,
+                    smtplib.SMTPRecipientsRefused,
+                    smtplib.SMTPAuthenticationError) as err:
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
-                MessageLog.objects.log(message, 3, log_message=str(err))  # @@@ avoid using literal result code # noqa
+                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
                 connection = None

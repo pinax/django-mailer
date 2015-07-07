@@ -16,12 +16,19 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
-PRIORITIES = (
-    ("1", "high"),
-    ("2", "medium"),
-    ("3", "low"),
-    ("4", "deferred"),
-)
+PRIORITY_HIGH = "1"
+PRIORITY_MEDIUM = "2"
+PRIORITY_LOW = "3"
+PRIORITY_DEFERRED = "4"
+
+PRIORITIES = [
+    (PRIORITY_HIGH, "high"),
+    (PRIORITY_MEDIUM, "medium"),
+    (PRIORITY_LOW, "low"),
+    (PRIORITY_DEFERRED, "deferred"),
+]
+
+PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 
 
 class MessageManager(models.Manager):
@@ -30,33 +37,33 @@ class MessageManager(models.Manager):
         """
         the high priority messages in the queue
         """
-        return self.filter(priority="1")
+        return self.filter(priority=PRIORITY_HIGH)
 
     def medium_priority(self):
         """
         the medium priority messages in the queue
         """
-        return self.filter(priority="2")
+        return self.filter(priority=PRIORITY_MEDIUM)
 
     def low_priority(self):
         """
         the low priority messages in the queue
         """
-        return self.filter(priority="3")
+        return self.filter(priority=PRIORITY_LOW)
 
     def non_deferred(self):
         """
         the messages in the queue not deferred
         """
-        return self.filter(priority__lt="4")
+        return self.exclude(priority=PRIORITY_DEFERRED)
 
     def deferred(self):
         """
         the deferred messages in the queue
         """
-        return self.filter(priority="4")
+        return self.filter(priority=PRIORITY_DEFERRED)
 
-    def retry_deferred(self, new_priority=2):
+    def retry_deferred(self, new_priority=PRIORITY_MEDIUM):
         count = 0
         for message in self.deferred():
             if message.retry(new_priority):
@@ -94,7 +101,7 @@ class Message(models.Model):
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
-    priority = models.CharField(max_length=1, choices=PRIORITIES, default="2")
+    priority = models.CharField(max_length=1, choices=PRIORITIES, default=PRIORITY_MEDIUM)
     # @@@ campaign?
     # @@@ content_type?
 
@@ -105,11 +112,11 @@ class Message(models.Model):
         verbose_name_plural = _("messages")
 
     def defer(self):
-        self.priority = "4"
+        self.priority = PRIORITY_DEFERRED
         self.save()
 
-    def retry(self, new_priority=2):
-        if self.priority == "4":
+    def retry(self, new_priority=PRIORITY_MEDIUM):
+        if self.priority == PRIORITY_DEFERRED:
             self.priority = new_priority
             self.save()
             return True
@@ -208,10 +215,14 @@ class DontSendEntry(models.Model):
         verbose_name_plural = _("don't send entries")
 
 
+RESULT_SUCCESS = "1"
+RESULT_DONT_SEND = "2"
+RESULT_FAILURE = "3"
+
 RESULT_CODES = (
-    ("1", "success"),
-    ("2", "don't send"),
-    ("3", "failure"),
+    (RESULT_SUCCESS, "success"),
+    (RESULT_DONT_SEND, "don't send"),
+    (RESULT_FAILURE, "failure"),
     # @@@ other types of failure?
 )
 
