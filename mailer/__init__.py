@@ -20,16 +20,29 @@ def get_version():
 __version__ = get_version()
 
 
+def get_priority(priority):
+    from mailer.models import PRIORITY_MAPPING, PRIORITY_MEDIUM
+    if priority is None:
+        priority = PRIORITY_MEDIUM
+
+    if priority in PRIORITY_MAPPING:
+        warnings.warn("Please pass one of the PRIORITY_* constants to 'send_mail' "
+                      "and 'send_html_mail', not '{0}'.".format(priority),
+                      DeprecationWarning)
+        priority = PRIORITY_MAPPING[priority]
+    if priority not in PRIORITY_MAPPING.values():
+        raise ValueError("Invalid priority {0}".format(repr(priority)))
+    return priority
+
+
 # replacement for django.core.mail.send_mail
 
-
-def send_mail(subject, message, from_email, recipient_list, priority="medium",
+def send_mail(subject, message, from_email, recipient_list, priority=None,
               fail_silently=False, auth_user=None, auth_password=None):
     from django.utils.encoding import force_text
-    from mailer.models import make_message, PRIORITY_MAPPING
+    from mailer.models import make_message
 
-    priority = PRIORITY_MAPPING[priority]
-
+    priority = get_priority(priority)
     # need to do this in case subject used lazy version of ugettext
     subject = force_text(subject)
     message = force_text(message)
@@ -43,16 +56,16 @@ def send_mail(subject, message, from_email, recipient_list, priority="medium",
 
 
 def send_html_mail(subject, message, message_html, from_email, recipient_list,
-                   priority="medium", fail_silently=False, auth_user=None,
+                   priority=None, fail_silently=False, auth_user=None,
                    auth_password=None, headers={}):
     """
     Function to queue HTML e-mails
     """
     from django.utils.encoding import force_text
     from django.core.mail import EmailMultiAlternatives
-    from mailer.models import make_message, PRIORITY_MAPPING
+    from mailer.models import make_message
 
-    priority = PRIORITY_MAPPING[priority]
+    priority = get_priority(priority)
 
     # need to do this in case subject used lazy version of ugettext
     subject = force_text(subject)
@@ -85,7 +98,7 @@ def send_mass_mail(datatuple, fail_silently=False, auth_user=None,
     return num_sent
 
 
-def mail_admins(subject, message, fail_silently=False, connection=None, priority="medium"):
+def mail_admins(subject, message, fail_silently=False, connection=None, priority=None):
     from django.conf import settings
     from django.utils.encoding import force_text
 
@@ -95,7 +108,7 @@ def mail_admins(subject, message, fail_silently=False, connection=None, priority
                      [a[1] for a in settings.ADMINS])
 
 
-def mail_managers(subject, message, fail_silently=False, connection=None, priority="medium"):
+def mail_managers(subject, message, fail_silently=False, connection=None, priority=None):
     from django.conf import settings
     from django.utils.encoding import force_text
 

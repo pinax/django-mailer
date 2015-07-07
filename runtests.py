@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import os
 import sys
+import warnings
 
 import django
 
 from django.conf import settings
 
+warnings.simplefilter("always", DeprecationWarning)
 
 DEFAULT_SETTINGS = dict(
     INSTALLED_APPS=[

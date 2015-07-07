@@ -1,6 +1,15 @@
 Change log
 ==========
 
+1.1.0
+-----
+
+* Deprecated calling ``send_mail`` and ``send_html_mail`` using ``priority``
+  kwargs ``"high"``, ``"medium"``, and ``"low"``. Instead you should use
+  ``PRIORITY_HIGH``, ``PRIORITY_MEDIUM`` and ``PRIORITY_LOW`` from
+  ``mailer.models``.
+
+
 1.0.1
 -----
 
