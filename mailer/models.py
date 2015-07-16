@@ -207,7 +207,7 @@ class DontSendEntryManager(models.Manager):
 
 class DontSendEntry(models.Model):
 
-    to_address = models.EmailField()
+    to_address = models.EmailField(max_length=254)
     when_added = models.DateTimeField()
     # @@@ who added?
     # @@@ comment field?
