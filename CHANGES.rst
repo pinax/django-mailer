@@ -9,6 +9,9 @@ Change log
   ``PRIORITY_HIGH``, ``PRIORITY_MEDIUM`` and ``PRIORITY_LOW`` from
   ``mailer.models``.
 
+* Fixed bug with migrations for Django 1.7, which wanted to create a migration
+  to 'fix' the EmailField length back down to 75 instead of 254.
+
 
 1.0.1
 -----
