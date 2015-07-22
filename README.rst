@@ -28,6 +28,12 @@ Simple usage instructions:
 In ``settings.py``:
 ::
 
+    INSTALLED_APPS = [
+        ...
+        "mailer",
+        ...
+   ]
+
     EMAIL_BACKEND = "mailer.backend.DbBackend"
 
 In a cron job file:
