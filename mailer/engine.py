@@ -1,6 +1,10 @@
 import time
 import smtplib
 import logging
+from datetime import datetime
+import time
+import pytz
+from time import mktime
 
 import lockfile
 from socket import error as socket_error
@@ -8,7 +12,7 @@ from socket import error as socket_error
 from django.conf import settings
 from django.core.mail import get_connection
 
-from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE
+from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, Queue
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
@@ -175,3 +179,29 @@ def send_loop():
             logging.debug("sleeping for %s seconds before checking queue again" % EMPTY_QUEUE_SLEEP)
             time.sleep(EMPTY_QUEUE_SLEEP)
         send_all()
+
+def resend(queues, send_from=None):
+    for queueName in queues:
+        try:
+            queue = Queue.objects.get(name=queueName)
+            if queue.mail_enabled == 0:
+                queue.mail_enabled = 1
+                queue.save()
+                logging.info(('Mail queue: {0} enabled').format(queue.name))
+
+            if send_from:
+                conv_send_from = time.strptime(send_from, "%Y-%m-%d %H:%M")
+                conv_send_from = datetime.fromtimestamp(mktime(conv_send_from))
+                tz = pytz.utc
+                conv_send_from = tz.localize(conv_send_from, is_dst=None).astimezone(pytz.utc)
+                messages = Message.objects.filter(queue=queue, when_added__gte=conv_send_from)
+
+                for message in messages:
+                    message.priority = 2
+                    message.save()
+
+                logging.info(('Resending mail on queue {0} from {1}').format(queue, conv_send_from))
+
+
+        except Queue.DoesNotExist:
+            logging.error(('Queue {0} not found').format(queueName))
