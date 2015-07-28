@@ -18,15 +18,17 @@ class Command(BaseCommand):
         parser.add_argument('--send_from', dest='send_from', default=time.strftime("%Y-%m-%d %H:%M"))
 
     def handle(self, *args, **options):
-        send_from = time.strptime(options['send_from'], "%Y-%m-%d %H:%M")
-        send_from = datetime.fromtimestamp(mktime(send_from))
+
         for queueName in options['queue']:
             try:
                 queue = Queue.objects.get(name=queueName)
                 if queue.mail_enabled == 0:
-                    logging.error(('Mail is not enabled for queue {0}. Please enabled and try again').format(queue.name))
+                    queue.mail_enabled = 1
+                    queue.save()
+                    logging.error(('Mail queue: {0} enabled').format(queue.name))
                     return
-
+                send_from = time.strptime(options['send_from'], "%Y-%m-%d %H:%M")
+                send_from = datetime.fromtimestamp(mktime(send_from))
                 messages = Message.objects.filter(queue=queue, when_added__gte=send_from)
                 for message in messages:
                     message.priority = 2
