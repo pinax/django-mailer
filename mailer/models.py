@@ -112,7 +112,7 @@ def db_to_email(data):
 class Message(models.Model):
 
     # The actual data - a pickled EmailMessage
-    queue = models.ForeignKey(Queue)
+    queue = models.ForeignKey(Queue, default=0)
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default=PRIORITY_MEDIUM)
