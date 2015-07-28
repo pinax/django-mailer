@@ -30,6 +30,14 @@ PRIORITIES = [
 
 PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 
+class Queue(models.Model):
+    name = models.CharField(max_length=24, blank=False, null=True)
+    mail_enabled = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+
 
 class MessageManager(models.Manager):
 
@@ -103,6 +111,7 @@ def db_to_email(data):
 class Message(models.Model):
 
     # The actual data - a pickled EmailMessage
+    queue = models.ForeignKey(Queue)
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default=PRIORITY_MEDIUM)
@@ -169,7 +178,7 @@ def filter_recipient_list(lst):
 
 
 def make_message(subject="", body="", from_email=None, to=None, bcc=None,
-                 attachments=None, headers=None, priority=None):
+                 attachments=None, headers=None, priority=None, queue=0):
     """
     Creates a simple message for the email parameters supplied.
     The 'to' and 'bcc' lists are filtered using DontSendEntry.
@@ -190,7 +199,8 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
         attachments=attachments,
         headers=headers
     )
-    db_msg = Message(priority=priority)
+
+    db_msg = Message(priority=priority, queue=Queue.objects.get(pk=queue))
     db_msg.email = core_msg
     return db_msg
 
@@ -233,7 +243,7 @@ RESULT_CODES = (
 
 class MessageLogManager(models.Manager):
 
-    def log(self, message, result_code, log_message=""):
+    def log(self, message, result_code, log_message="", queue=0):
         """
         create a log entry for an attempt to send the given message and
         record the given result and (optionally) a log message
@@ -245,6 +255,7 @@ class MessageLogManager(models.Manager):
             # @@@ other fields from Message
             result=result_code,
             log_message=log_message,
+            queue = queue
         )
 
 
@@ -254,6 +265,7 @@ class MessageLog(models.Model):
     message_data = models.TextField()
     when_added = models.DateTimeField(db_index=True)
     priority = models.CharField(max_length=1, choices=PRIORITIES, db_index=True)
+    queue = models.ForeignKey(Queue)
     # @@@ campaign?
 
     # additional logging fields

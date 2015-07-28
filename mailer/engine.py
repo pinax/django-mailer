@@ -114,10 +114,16 @@ def send_all():
     deferred = 0
     sent = 0
 
+
     try:
         connection = None
         for message in prioritize():
             try:
+                if message.queue.mail_enabled == False:
+                    logging.info("message skipped as queue for '{0}' is disabled".format(message.queue.name))
+                    deferred += 1
+                    message.defer()
+                    continue
                 if connection is None:
                     connection = get_connection(backend=EMAIL_BACKEND)
                 logging.info("sending message '{0}' to {1}".format(
@@ -128,7 +134,7 @@ def send_all():
                 if email is not None:
                     email.connection = connection
                     email.send()
-                    MessageLog.objects.log(message, RESULT_SUCCESS)
+                    MessageLog.objects.log(message, RESULT_SUCCESS, queue=message.queue)
                     sent += 1
                 else:
                     logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
@@ -139,7 +145,7 @@ def send_all():
                     smtplib.SMTPAuthenticationError) as err:
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
-                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), queue=message.queue)
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
                 connection = None
