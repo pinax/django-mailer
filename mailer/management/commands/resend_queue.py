@@ -1,4 +1,5 @@
 import time
+import pytz
 import logging
 from optparse import make_option
 from django.core.management.base import BaseCommand
@@ -29,6 +30,8 @@ class Command(BaseCommand):
                     return
                 send_from = time.strptime(options['send_from'], "%Y-%m-%d %H:%M")
                 send_from = datetime.fromtimestamp(mktime(send_from))
+                tz = pytz.utc
+                send_from = tz.localize(send_from, is_dst=None).astimezone(pytz.utc)
                 messages = Message.objects.filter(queue=queue, when_added__gte=send_from)
                 for message in messages:
                     message.priority = 2
