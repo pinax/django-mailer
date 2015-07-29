@@ -144,11 +144,9 @@ def send_all():
                     logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
 
-            except (socket_error, smtplib.SMTPSenderRefused,
-                    smtplib.SMTPRecipientsRefused,
-                    smtplib.SMTPAuthenticationError) as err:
+            except Exception as err:
                 message.defer()
-                logging.info("message deferred due to failure: %s" % err)
+                logging.info("message deferred due to failure (%s): %s" % (err.__class__.__name__, err))
                 MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), queue=message.queue)
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
