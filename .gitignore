@@ -4,5 +4,5 @@ build/
 
 MANIFEST
 .coverage
-.pyc
 .DS_Store
+.pyc
