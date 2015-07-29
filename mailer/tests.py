@@ -245,6 +245,7 @@ class TestSending(TestCase):
                 engine.send_all()
 
                 w.assert_called_once_with(ANY, 2)
+                # Possibly need a way of running the comparisons below
                 # arg = w.call_args[0][0]
                 # self.assertIn("EMAIL_MAX_DEFERRED", arg)
                 # self.assertIn("stopping for this round", arg)
@@ -478,6 +479,7 @@ class TestMessages(TestCase):
                 engine.send_all()
 
                 w.assert_called_once_with(ANY)
+                # Possibly need a way of running the comparisons below
                 # arg = w.call_args[0][0]
                 # self.assertIn("message discarded due to failure in converting from DB", arg)
 
@@ -552,7 +554,7 @@ class TestQueue(TestCase):
     def test_sending_extra_queue(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
-            mailer.send_mail("Subject", "Body", "prio3@example.com", ["r@example.com"], queue=1)
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=1)
             self.assertEqual(Queue.objects.count(), 2)
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(Message.objects.deferred().count(), 0)
@@ -567,7 +569,7 @@ class TestQueue(TestCase):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
 
-            mailer.send_mail("Subject", "Body", "prio3@example.com", ["r@example.com"], queue=1)
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=1)
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(Message.objects.deferred().count(), 0)
 
