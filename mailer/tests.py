@@ -8,11 +8,12 @@ from mailer.models import (Message, MessageLog, DontSendEntry, Queue, db_to_emai
 import mailer
 from mailer import engine
 
-from mock import patch, Mock
+from mock import patch, Mock, ANY
 import pickle
 import lockfile
 import smtplib
 import time
+import logging
 
 
 class TestMailerEmailBackend(object):
@@ -48,7 +49,9 @@ class TestBackend(TestCase):
 
 
 class TestSending(TestCase):
+    fixtures = ['mailer_queue']
     def setUp(self):
+        logging.error(Queue.objects.all())
         # Ensure outbox is empty at start
         del TestMailerEmailBackend.outbox[:]
 
@@ -99,7 +102,7 @@ class TestSending(TestCase):
                 mailer.send_mail("Subject", "Body", "sender15@example.com", ["rec@example.com"])
 
                 self.assertRaises(StopIteration, engine.send_loop)
-                send.assert_called_once()
+                send.assert_called_once_with()
 
     def test_send_html(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
@@ -241,10 +244,10 @@ class TestSending(TestCase):
             with patch("logging.warning") as w:
                 engine.send_all()
 
-                w.assert_called_once()
-                arg = w.call_args[0][0]
-                self.assertIn("EMAIL_MAX_DEFERRED", arg)
-                self.assertIn("stopping for this round", arg)
+                w.assert_called_once_with(ANY, 2)
+                # arg = w.call_args[0][0]
+                # self.assertIn("EMAIL_MAX_DEFERRED", arg)
+                # self.assertIn("stopping for this round", arg)
 
             self.assertEqual(Message.objects.count(), 5)
             self.assertEqual(Message.objects.deferred().count(), 2)
@@ -299,7 +302,7 @@ class TestLockNormal(TestCase):
         self.assertRaises(self.CustomError, engine.send_all)
         self.lock_mock.acquire.assert_called_once_with(engine.LOCK_WAIT_TIMEOUT)
         self.lock.assert_called_once_with("send_mail")
-        self.prio.assert_called_once()
+        self.prio.assert_called_once_with()
 
     def tearDown(self):
         self.patcher_lock.stop()
@@ -355,6 +358,7 @@ class TestLockTimeout(TestCase):
 
 
 class TestPrioritize(TestCase):
+    fixtures = ['mailer_queue']
     def test_prioritize(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mailer.send_mail("Subject", "Body", "prio1@example.com", ["r@example.com"],
@@ -447,6 +451,7 @@ class TestPrioritize(TestCase):
 
 
 class TestMessages(TestCase):
+    fixtures = ['mailer_queue']
     def test_message(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mailer.send_mail("Subject Msg", "Body", "msg1@example.com", ["rec1@example.com"])
@@ -472,9 +477,9 @@ class TestMessages(TestCase):
             with patch("logging.warning") as w:
                 engine.send_all()
 
-                w.assert_called_once()
-                arg = w.call_args[0][0]
-                self.assertIn("message discarded due to failure in converting from DB", arg)
+                w.assert_called_once_with(ANY)
+                # arg = w.call_args[0][0]
+                # self.assertIn("message discarded due to failure in converting from DB", arg)
 
             self.assertEqual(Message.objects.count(), 0)
             self.assertEqual(Message.objects.deferred().count(), 0)
@@ -535,3 +540,39 @@ class TestDbToEmail(TestCase):
         self.assertEqual(converted_email.subject, email.subject)
         self.assertEqual(converted_email.from_email, email.from_email)
         self.assertEqual(converted_email.to, email.to)
+
+class TestQueue(TestCase):
+    fixtures = ['mailer_queue']
+    def test_default_exist(self):
+        self.assertEqual(Queue.objects.count(), 1)
+        self.assertEqual(Queue.objects.get(pk=0).id, 0)
+    def test_extra_queue(self):
+        q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
+        self.assertEqual(Queue.objects.count(), 2)
+    def test_sending_extra_queue(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
+            mailer.send_mail("Subject", "Body", "prio3@example.com", ["r@example.com"], queue=1)
+            self.assertEqual(Queue.objects.count(), 2)
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 0)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+            self.assertEqual(MessageLog.objects.count(), 1)
+
+    def test_sending_extra_queue_disabled(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
+
+            mailer.send_mail("Subject", "Body", "prio3@example.com", ["r@example.com"], queue=1)
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 1)
+            self.assertEqual(MessageLog.objects.count(), 0)

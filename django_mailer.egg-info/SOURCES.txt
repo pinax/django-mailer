@@ -35,6 +35,7 @@ mailer/migrations/0006_auto_20150728_1111.py
 mailer/migrations/0007_auto_20150728_1250.py
 mailer/migrations/0008_queue_send_from.py
 mailer/migrations/0009_remove_queue_send_from.py
+mailer/migrations/0010_auto_20150729_0931.py
 mailer/migrations/__init__.py
 mailer/south_migrations/0001_initial.py
 mailer/south_migrations/0002_auto__chg_field_dontsendentry_to_address.py
