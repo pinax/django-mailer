@@ -1,0 +1,1 @@
+[{"fields": {"name": "default", "mail_enabled": true}, "model": "mailer.queue", "pk": 0}]
