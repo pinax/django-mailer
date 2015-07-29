@@ -46,6 +46,12 @@ def send_mail(subject, message, from_email, recipient_list, priority=None,
     subject = force_text(subject)
     message = force_text(message)
 
+    if queue == 0:
+        try:
+            Queue.objects.get(pk=0)
+        except:
+            q = Queue.objects.create(pk=0, name='default', mail_enabled=True)
+
     try:
         Queue.objects.get(pk=queue)
     except:

@@ -200,7 +200,15 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
         headers=headers
     )
 
-    db_msg = Message(priority=priority, queue=Queue.objects.get(pk=queue))
+    if queue == 0:
+        try:
+            q = Queue.objects.get(pk=0)
+        except:
+            q = Queue.objects.create(pk=0, name='default', mail_enabled=True)
+    else:
+        q = Queue.objects.get(pk=queue)
+
+    db_msg = Message(priority=priority, queue=q)
     db_msg.email = core_msg
     return db_msg
 

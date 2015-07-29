@@ -3,7 +3,7 @@ from django.core import mail
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 from django.utils.timezone import now as datetime_now
 
-from mailer.models import (Message, MessageLog, DontSendEntry, db_to_email, email_to_db,
+from mailer.models import (Message, MessageLog, DontSendEntry, Queue, db_to_email, email_to_db,
                            PRIORITY_HIGH, PRIORITY_MEDIUM, PRIORITY_LOW, PRIORITY_DEFERRED)
 import mailer
 from mailer import engine
