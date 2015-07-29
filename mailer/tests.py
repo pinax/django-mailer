@@ -666,3 +666,31 @@ class TestQueue(TestCase):
             self.assertEqual(Message.objects.filter(queue=q).count(), 2)
             self.assertEqual(Message.objects.deferred().count(), 1)
             self.assertEqual(Message.objects.deferred()[0].to_addresses, ["r1@example.com"])
+
+    def test_resend_no_time(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
+            q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=False)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=2)
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.filter(queue=q1).count(), 1)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r1@example.com"], queue=2)
+            self.assertEqual(Message.objects.count(), 2)
+            self.assertEqual(Message.objects.filter(queue=q1).count(), 2)
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 2)
+            self.assertEqual(Message.objects.deferred().count(), 2)
+
+            engine.resend(['test', 'test1'])
+
+            self.assertEqual(Message.objects.deferred().count(), 2)
+            self.assertEqual(Message.objects.count(), 2)
+
+    def test_resend_no_queue_found(self):
+        with patch('logging.warning') as warn:
+            engine.resend(['notest'])
+            warn.assert_called_once_with('Queue notest not found')

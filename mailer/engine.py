@@ -204,4 +204,4 @@ def resend(queues, send_from=None):
 
 
         except Queue.DoesNotExist:
-            logging.error(('Queue {0} not found').format(queueName))
+            logging.warning(('Queue {0} not found').format(queueName))
