@@ -31,7 +31,6 @@ PRIORITIES = [
 PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 
 class Queue(models.Model):
-    app_label = 'mailer'
     name = models.CharField(max_length=24, blank=False, null=True)
     mail_enabled = models.BooleanField(default=True)
 
