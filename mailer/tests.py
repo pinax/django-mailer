@@ -546,14 +546,17 @@ class TestDbToEmail(TestCase):
 class TestQueue(TestCase):
     fixtures = ['mailer_queue']
     def test_default_exist(self):
+        # Check default queue exists
         self.assertEqual(Queue.objects.count(), 1)
         self.assertEqual(Queue.objects.get(pk=0).id, 0)
 
     def test_extra_queue(self):
+        # Create extra queue
         q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
         self.assertEqual(Queue.objects.count(), 2)
 
     def test_sending_extra_queue(self):
+        # Put message in extra queue
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
             mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=1)
@@ -568,6 +571,7 @@ class TestQueue(TestCase):
             self.assertEqual(MessageLog.objects.count(), 1)
 
     def test_sending_extra_queue_disabled(self):
+        # Test messages don't get sent that are in a disabled queue
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
 
@@ -582,6 +586,7 @@ class TestQueue(TestCase):
             self.assertEqual(MessageLog.objects.count(), 0)
 
     def test_multiple_queues(self):
+        # Test sending on both an enabled and a disabled queue, ensure only one gets sent
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
             q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=True)
@@ -601,6 +606,7 @@ class TestQueue(TestCase):
             self.assertEqual(MessageLog.objects.count(), 1)
 
     def test_resend(self):
+        # Test resend enables queue
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
             q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=True)
@@ -630,6 +636,7 @@ class TestQueue(TestCase):
             self.assertEqual(Message.objects.deferred().count(), 0)
 
     def test_resend_split_time(self):
+        # Test resend enables queue and only sends message after specific time
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
             q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=False)
@@ -668,6 +675,7 @@ class TestQueue(TestCase):
             self.assertEqual(Message.objects.deferred()[0].to_addresses, ["r1@example.com"])
 
     def test_resend_no_time(self):
+        # Test resend renables queue with no time option
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
             q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=False)
@@ -691,6 +699,7 @@ class TestQueue(TestCase):
             self.assertEqual(Message.objects.count(), 2)
 
     def test_resend_no_queue_found(self):
+        # Test queue not found on resend
         with patch('logging.warning') as warn:
             engine.resend(['notest'])
             warn.assert_called_once_with('Queue notest not found')
