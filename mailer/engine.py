@@ -193,7 +193,7 @@ def resend(queues, send_from=None):
                 conv_send_from = time.strptime(send_from, "%Y-%m-%d %H:%M")
                 conv_send_from = datetime.fromtimestamp(mktime(conv_send_from))
                 tz = pytz.utc
-                conv_send_from = tz.localize(conv_send_from, is_dst=None).astimezone(pytz.utc)
+                conv_send_from = tz.localize(conv_send_from, is_dst=None).astimezone(pytz.utc).replace(tzinfo=None)
                 messages = Message.objects.filter(queue=queue, when_added__gte=conv_send_from)
 
                 for message in messages:

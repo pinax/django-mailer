@@ -9,12 +9,13 @@ import mailer
 from mailer import engine
 
 from mock import patch, Mock, ANY
+from time import strftime
 import pickle
 import lockfile
 import smtplib
 import time
 import logging
-
+import datetime
 
 class TestMailerEmailBackend(object):
     outbox = []
@@ -51,7 +52,6 @@ class TestBackend(TestCase):
 class TestSending(TestCase):
     fixtures = ['mailer_queue']
     def setUp(self):
-        logging.error(Queue.objects.all())
         # Ensure outbox is empty at start
         del TestMailerEmailBackend.outbox[:]
 
@@ -548,9 +548,11 @@ class TestQueue(TestCase):
     def test_default_exist(self):
         self.assertEqual(Queue.objects.count(), 1)
         self.assertEqual(Queue.objects.get(pk=0).id, 0)
+
     def test_extra_queue(self):
         q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
         self.assertEqual(Queue.objects.count(), 2)
+
     def test_sending_extra_queue(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
@@ -578,3 +580,89 @@ class TestQueue(TestCase):
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(Message.objects.deferred().count(), 1)
             self.assertEqual(MessageLog.objects.count(), 0)
+
+    def test_multiple_queues(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
+            q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=True)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=1)
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.filter(queue=q).count(), 1)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=2)
+            self.assertEqual(Message.objects.count(), 2)
+            self.assertEqual(Message.objects.filter(queue=q1).count(), 1)
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 1)
+            self.assertEqual(MessageLog.objects.count(), 1)
+
+    def test_resend(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
+            q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=True)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=1)
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.filter(queue=q).count(), 1)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=2)
+            self.assertEqual(Message.objects.count(), 2)
+            self.assertEqual(Message.objects.filter(queue=q1).count(), 1)
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 1)
+            self.assertEqual(MessageLog.objects.count(), 1)
+
+            date = datetime.datetime.now() - datetime.timedelta(minutes=15)
+            engine.resend(['test'], date.strftime("%Y-%m-%d %H:%M"))
+
+            q = Queue.objects.get(pk=1)
+
+            self.assertEqual(q.mail_enabled, True)
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.filter(queue=q).count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+
+    def test_resend_split_time(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
+            q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=False)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=2)
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.filter(queue=q1).count(), 1)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r1@example.com"], queue=2)
+            self.assertEqual(Message.objects.count(), 2)
+            self.assertEqual(Message.objects.filter(queue=q1).count(), 2)
+
+            message = Message.objects.get(pk=2)
+            message.when_added = datetime.datetime.now() - datetime.timedelta(minutes=20)
+            message.save()
+
+            mailer.send_mail("Subject", "Body", "test1@example.com", ["r2@example.com"], queue=1)
+            self.assertEqual(Message.objects.count(), 3)
+            self.assertEqual(Message.objects.filter(queue=q1).count(), 2)
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 2)
+            self.assertEqual(Message.objects.deferred().count(), 2)
+            self.assertEqual(MessageLog.objects.count(), 1)
+
+            date = datetime.datetime.now() - datetime.timedelta(minutes=15)
+            engine.resend(['test1'], date.strftime("%Y-%m-%d %H:%M"))
+
+            q = Queue.objects.get(pk=2)
+
+            self.assertEqual(q.mail_enabled, True)
+            self.assertEqual(Message.objects.count(), 2)
+            self.assertEqual(Message.objects.filter(queue=q).count(), 2)
+            self.assertEqual(Message.objects.deferred().count(), 1)
+            self.assertEqual(Message.objects.deferred()[0].to_addresses, ["r1@example.com"])
