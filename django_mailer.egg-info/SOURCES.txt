@@ -27,15 +27,6 @@ mailer/management/commands/resend_queue.py
 mailer/management/commands/retry_deferred.py
 mailer/management/commands/send_mail.py
 mailer/migrations/0001_initial.py
-mailer/migrations/0002_auto_20150720_1433.py
-mailer/migrations/0003_queue.py
-mailer/migrations/0004_auto_20150728_1045.py
-mailer/migrations/0005_auto_20150728_1052.py
-mailer/migrations/0006_auto_20150728_1111.py
-mailer/migrations/0007_auto_20150728_1250.py
-mailer/migrations/0008_queue_send_from.py
-mailer/migrations/0009_remove_queue_send_from.py
-mailer/migrations/0010_auto_20150729_0931.py
 mailer/migrations/__init__.py
 mailer/south_migrations/0001_initial.py
 mailer/south_migrations/0002_auto__chg_field_dontsendentry_to_address.py

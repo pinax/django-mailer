@@ -700,6 +700,9 @@ class TestQueue(TestCase):
 
     def test_resend_no_queue_found(self):
         # Test queue not found on resend
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            res = mailer.send_mail('sub', 'body', 'test@example.com', ['r1@example.com'], queue=1)
+            self.assertEqual(res, 0)
         with patch('logging.warning') as warn:
             engine.resend(['notest'])
             warn.assert_called_once_with('Queue notest not found')
