@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.core import mail
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 from django.utils.timezone import now as datetime_now
+from django.core.management import call_command
 
 from mailer.models import (Message, MessageLog, DontSendEntry, Queue, db_to_email, email_to_db,
                            PRIORITY_HIGH, PRIORITY_MEDIUM, PRIORITY_LOW, PRIORITY_DEFERRED)
@@ -706,3 +707,39 @@ class TestQueue(TestCase):
         with patch('logging.warning') as warn:
             engine.resend(['notest'])
             warn.assert_called_once_with('Queue notest not found')
+
+
+class TestCommands(TestCase):
+    fixtures = ['mailer_queue']
+    def test_resend_queue(self):
+        q = Queue.objects.get(pk=0)
+        q.mail_enabled = False
+        q.save()
+
+        self.assertEqual(q.mail_enabled, False)
+        call_command('resend_queue', 'default')
+
+        q = Queue.objects.get(pk=0)
+        self.assertEqual(q.mail_enabled, True)
+
+    def test_retry_deferred(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            q = Queue.objects.get(pk=0)
+            q.mail_enabled = False
+            q.save()
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r1@example.com"], queue=0)
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.deferred().count(), 1)
+
+            q.mail_enabled = True
+            q.save()
+
+            call_command('retry_deferred')
+
+            self.assertEqual(Message.objects.deferred().count(), 0)
+
+    def test_send_mail(self):
+        call_command('send_mail')
