@@ -743,3 +743,27 @@ class TestCommands(TestCase):
 
     def test_send_mail(self):
         call_command('send_mail')
+
+class TestSpamLimiting(TestCase):
+    fixtures = ['mailer_queue']
+
+    def test_spam_limit(self):
+        for x in range(0, 40):
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r"+str(x)+"@example.com"], queue=0)
+
+        self.assertEqual(Message.objects.count(), 40)
+
+        engine.send_all()
+
+        self.assertEqual(Message.objects.deferred().count(), 40)
+        self.assertEqual(Message.objects.count(), 40)
+
+    def test_max_age(self):
+        mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=0)
+        message = Message.objects.get(pk=1)
+        message.when_Added = datetime.datetime.now() - datetime.timedelta(hours = 3)
+
+        engine.send_all()
+
+        self.assertEqual(Message.objects.deferred().count(), 1)
+        self.assertEqual(Message.objects.count(), 1)

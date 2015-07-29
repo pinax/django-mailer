@@ -1,9 +1,10 @@
 import time
 import smtplib
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import pytz
+import json
 from time import mktime
 
 import lockfile
@@ -96,6 +97,9 @@ def release_lock(lock):
     lock.release()
     logging.debug("released.")
 
+def defer_messages(qs):
+    for msg in qs:
+        msg.defer()
 
 def send_all():
     """
@@ -119,7 +123,26 @@ def send_all():
     sent = 0
 
 
+
     try:
+
+
+        for queue in Queue.objects.all():
+            metadata = json.loads(queue.metadata)
+
+            qs = Message.objects.filter(priority__lt = 4, when_added__lt = datetime.now() - timedelta(hours = metadata['limits']['age'])).order_by('id')
+            if len(qs) > 0:
+                defer_messages(qs)
+                
+            # If any threshold is hit we should email an alert to notify admin
+            qs = Message.objects.filter(priority__lt = 4, queue=queue).order_by('id')
+            if datetime.now().weekday() < 5:
+                if len(qs) > metadata['limits']['weekday']:
+                    defer_messages(qs)
+            else:
+                if len(qs) > metadata['limits']['weekend']:
+                    defer_messages(qs)
+
         connection = None
         for message in prioritize():
             try:

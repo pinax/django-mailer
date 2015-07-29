@@ -33,6 +33,7 @@ PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 class Queue(models.Model):
     name = models.CharField(max_length=24, blank=False, null=True)
     mail_enabled = models.BooleanField(default=True)
+    metadata = models.TextField(default="{\"limits\":{\"weekday\": 500, \"weekend\": 700, \"age\": 1}}")
 
     def __str__(self):
         return self.name
