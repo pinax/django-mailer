@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 from mailer.models import Message, DontSendEntry, MessageLog, Queue
-import logging
+
 
 def show_to(message):
     return ", ".join(message.to_addresses)

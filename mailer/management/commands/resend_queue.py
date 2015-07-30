@@ -14,7 +14,11 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('queue', nargs='+', type=str)
-        parser.add_argument('--send_from', dest='send_from', default=time.strftime("%Y-%m-%d %H:%M"))
+        parser.add_argument('--send_from', dest='send_from',
+                                    default=None)
 
     def handle(self, *args, **options):
-        resend(options['queue'], options['send_from'])
+        if 'send_from' in options:
+            resend(options['queue'], options['send_from'])
+        else:
+            resend(options['queue'])

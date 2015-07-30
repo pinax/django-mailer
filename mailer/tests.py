@@ -17,6 +17,7 @@ import smtplib
 import time
 import logging
 import datetime
+import django
 
 class TestMailerEmailBackend(object):
     outbox = []
@@ -696,7 +697,7 @@ class TestQueue(TestCase):
 
             engine.resend(['test', 'test1'])
 
-            self.assertEqual(Message.objects.deferred().count(), 2)
+            self.assertEqual(Message.objects.deferred().count(), 0)
             self.assertEqual(Message.objects.count(), 2)
 
     def test_resend_no_queue_found(self):
@@ -717,7 +718,10 @@ class TestCommands(TestCase):
         q.save()
 
         self.assertEqual(q.mail_enabled, False)
-        call_command('resend_queue', 'default')
+        if django.VERSION[0] == 1 and django.VERSION[1] < 8:
+            call_command('resend_queue', queue=['default'])
+        else:
+            call_command('resend_queue', 'default')
 
         q = Queue.objects.get(pk=0)
         self.assertEqual(q.mail_enabled, True)
@@ -791,15 +795,3 @@ class TestSpamLimiting(TestCase):
 
             self.assertEqual(Message.objects.deferred().count(), 1)
             self.assertEqual(Message.objects.count(), 1)
-
-class TestMessageMetaData(TestCase):
-    fixtures = ['mailer_queue']
-
-    def test_set_metadata(self):
-        mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=0)
-        message = Message.objects.get(pk=1)
-        self.assertEqual(message.metadata, "{}")
-
-        mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=0, metadata={"test": "testval"})
-        message = Message.objects.get(pk=2)
-        self.assertEqual(message.metadata, "{'test': 'testval'}")

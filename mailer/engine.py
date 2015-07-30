@@ -225,7 +225,11 @@ def resend(queues, send_from=None):
                     message.save()
 
                 logging.info(('Resending mail on queue {0} from {1}').format(queue, conv_send_from))
-
+            else:
+                messages = Message.objects.filter(queue=queue)
+                for message in messages:
+                    message.priority = 2
+                    message.save()
 
         except Queue.DoesNotExist:
             logging.warning(('Queue {0} not found').format(queueName))
