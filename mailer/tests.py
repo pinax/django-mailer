@@ -716,6 +716,19 @@ class TestQueue(TestCase):
             engine.resend(['notest'])
             warn.assert_called_once_with('Queue notest not found')
 
+    def test_html_messages(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            mailer.send_html_mail('sub', 'body', '<strong>body</strong>',
+                                  'test@example.com', ['r1@example.com'], queue=0)
+            q = Queue.objects.get(pk=0)
+            self.assertEqual(Message.objects.filter(queue=q).count(), 1)
+
+            q = Queue.objects.create(name='test', mail_enabled=True)
+            mailer.send_html_mail('sub', 'body', '<strong>body</strong>',
+                                  'test@example.com', ['r1@example.com'], queue=1)
+            self.assertEqual(Message.objects.filter(queue=q).count(), 1)
+            self.assertEqual(Message.objects.count(), 2)
+
 
 class TestCommands(TestCase):
     fixtures = ['mailer_queue']
