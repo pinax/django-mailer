@@ -187,7 +187,7 @@ def filter_recipient_list(lst):
 
 def make_message(subject="", body="", from_email=None, to=None, bcc=None,
                  attachments=None, headers=None, priority=None, queue=0,
-                 metadata={}):
+                 metadata=None):
     """
     Creates a simple message for the email parameters supplied.
     The 'to' and 'bcc' lists are filtered using DontSendEntry.
@@ -208,6 +208,9 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
         attachments=attachments,
         headers=headers,
     )
+
+    if metadata is None:
+        metadata = "{}"
 
     db_msg = Message(priority=priority, queue=Queue.objects.get(pk=queue),
                      metadata=metadata)
