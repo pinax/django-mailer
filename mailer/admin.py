@@ -12,6 +12,7 @@ class QueueAdmin(admin.ModelAdmin):
     fields = ['name', 'mail_enabled', 'metadata']
     list_display = ['name', 'mail_enabled']
 
+
 class MessageAdminMixin(object):
 
     def plain_text_body(self, instance):

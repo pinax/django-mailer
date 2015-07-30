@@ -10,14 +10,13 @@ import mailer
 from mailer import engine
 
 from mock import patch, Mock, ANY
-from time import strftime
 import pickle
 import lockfile
 import smtplib
 import time
-import logging
 import datetime
 import django
+
 
 class TestMailerEmailBackend(object):
     outbox = []
@@ -53,6 +52,7 @@ class TestBackend(TestCase):
 
 class TestSending(TestCase):
     fixtures = ['mailer_queue']
+
     def setUp(self):
         # Ensure outbox is empty at start
         del TestMailerEmailBackend.outbox[:]
@@ -287,6 +287,7 @@ class TestSending(TestCase):
 
 
 class TestLockNormal(TestCase):
+
     def setUp(self):
         class CustomError(Exception):
             pass
@@ -313,6 +314,7 @@ class TestLockNormal(TestCase):
 
 
 class TestLockLocked(TestCase):
+
     def setUp(self):
         config = {
             "acquire.side_effect": lockfile.AlreadyLocked,
@@ -337,6 +339,7 @@ class TestLockLocked(TestCase):
 
 
 class TestLockTimeout(TestCase):
+
     def setUp(self):
         config = {
             "acquire.side_effect": lockfile.LockTimeout,
@@ -362,6 +365,7 @@ class TestLockTimeout(TestCase):
 
 class TestPrioritize(TestCase):
     fixtures = ['mailer_queue']
+
     def test_prioritize(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mailer.send_mail("Subject", "Body", "prio1@example.com", ["r@example.com"],
@@ -455,6 +459,7 @@ class TestPrioritize(TestCase):
 
 class TestMessages(TestCase):
     fixtures = ['mailer_queue']
+
     def test_message(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mailer.send_mail("Subject Msg", "Body", "msg1@example.com", ["rec1@example.com"])
@@ -545,8 +550,10 @@ class TestDbToEmail(TestCase):
         self.assertEqual(converted_email.from_email, email.from_email)
         self.assertEqual(converted_email.to, email.to)
 
+
 class TestQueue(TestCase):
     fixtures = ['mailer_queue']
+
     def test_default_exist(self):
         # Check default queue exists
         self.assertEqual(Queue.objects.count(), 1)
@@ -554,13 +561,13 @@ class TestQueue(TestCase):
 
     def test_extra_queue(self):
         # Create extra queue
-        q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
+        Queue.objects.create(pk=1, name="test", mail_enabled=True)
         self.assertEqual(Queue.objects.count(), 2)
 
     def test_sending_extra_queue(self):
         # Put message in extra queue
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            q = Queue.objects.create(pk=1, name="test", mail_enabled=True)
+            Queue.objects.create(pk=1, name="test", mail_enabled=True)
             mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=1)
             self.assertEqual(Queue.objects.count(), 2)
             self.assertEqual(Message.objects.count(), 1)
@@ -575,7 +582,7 @@ class TestQueue(TestCase):
     def test_sending_extra_queue_disabled(self):
         # Test messages don't get sent that are in a disabled queue
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
+            Queue.objects.create(pk=1, name="test", mail_enabled=False)
 
             mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=1)
             self.assertEqual(Message.objects.count(), 1)
@@ -679,7 +686,7 @@ class TestQueue(TestCase):
     def test_resend_no_time(self):
         # Test resend renables queue with no time option
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            q = Queue.objects.create(pk=1, name="test", mail_enabled=False)
+            Queue.objects.create(pk=1, name="test", mail_enabled=False)
             q1 = Queue.objects.create(pk=2, name="test1", mail_enabled=False)
 
             mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=2)
@@ -712,6 +719,7 @@ class TestQueue(TestCase):
 
 class TestCommands(TestCase):
     fixtures = ['mailer_queue']
+
     def test_resend_queue(self):
         q = Queue.objects.get(pk=0)
         q.mail_enabled = False
@@ -748,12 +756,14 @@ class TestCommands(TestCase):
     def test_send_mail(self):
         call_command('send_mail')
 
+
 class TestSpamLimiting(TestCase):
     fixtures = ['mailer_queue']
 
     def test_spam_limit(self):
         for x in range(0, 40):
-            mailer.send_mail("Subject", "Body", "test@example.com", ["r"+str(x)+"@example.com"], queue=0)
+            mailer.send_mail("Subject", "Body", "test@example.com",
+                             ["r"+str(x)+"@example.com"], queue=0)
 
         self.assertEqual(Message.objects.count(), 40)
 
@@ -764,12 +774,14 @@ class TestSpamLimiting(TestCase):
 
     def test_spam_limit_multiple_queues(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            for x in range(0,40):
-                mailer.send_mail("Subject", "Body", "test@example.com", ["r"+str(x)+"@example.com"], queue=0)
+            for x in range(0, 40):
+                mailer.send_mail("Subject", "Body", "test@example.com",
+                                 ["r"+str(x)+"@example.com"], queue=0)
 
             self.assertEqual(Message.objects.count(), 40)
 
-            Queue.objects.create(name="test", mail_enabled=True, metadata="{\"limits\":{\"weekday\": 10, \"weekend\": 10, \"age\": 1}}")
+            Queue.objects.create(name="test", mail_enabled=True, metadata="{\"limits\""
+                                 ":{\"weekday\": 10, \"weekend\": 10, \"age\": 1}}")
 
             self.assertEqual(Queue.objects.count(), 2)
 
@@ -788,7 +800,7 @@ class TestSpamLimiting(TestCase):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=0)
             message = Message.objects.get(pk=1)
-            message.when_added = datetime.datetime.now() - datetime.timedelta(hours = 3)
+            message.when_added = datetime.datetime.now() - datetime.timedelta(hours=3)
             message.save()
 
             engine.send_all_with_checks()
