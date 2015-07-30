@@ -18,6 +18,7 @@ import smtplib
 import time
 import datetime
 import django
+import logging
 
 
 class TestMailerEmailBackend(object):
@@ -810,6 +811,32 @@ class TestSpamLimiting(TestCase):
 
             self.assertEqual(Message.objects.count(), 40)
             self.assertEqual(Message.objects.deferred().count(), 40)
+    def test_spam_limit_multiple_queues_errors(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            for x in range(0, 40):
+                mailer.send_mail("Subject", "Body", "test@example.com",
+                                 ["r"+str(x)+"@example.com"], queue=0)
+
+            self.assertEqual(Message.objects.count(), 40)
+
+            Queue.objects.create(name="test", mail_enabled=True, metadata="{\"limits\""
+                                 ":{\"weekday\": 10, \"weekend\": 10, \"age\": 1}}")
+
+            for x in range(0, 40):
+                mailer.send_mail("Subject", "Body", "test@example.com",
+                                 ["r"+str(x)+"@example.com"], queue=1)
+
+            self.assertEqual(Queue.objects.count(), 2)
+
+            self.assertEqual(Message.objects.count(), 80)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+            self.assertEqual(Message.objects.filter(queue=Queue.objects.get(pk=1)).count(), 40)
+            self.assertEqual(Message.objects.filter(queue=Queue.objects.get(pk=0)).count(), 40)
+
+            self.assertRaises(MultipleValidationErrors, engine.send_all_with_checks)
+
+            self.assertEqual(Message.objects.count(), 80)
+            self.assertEqual(Message.objects.deferred().count(), 80)
 
     def test_max_age(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):

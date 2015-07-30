@@ -9,6 +9,7 @@ import lockfile
 
 from django.conf import settings
 from django.core.mail import get_connection
+from django.utils import timezone
 
 from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, Queue
 
@@ -106,6 +107,7 @@ class SpamThresholdHit(Exception):
 class MultipleValidationErrors(Exception):
     pass
 
+
 def send_all_with_checks():
     errors = []
     for queue in Queue.objects.all():
@@ -115,39 +117,44 @@ def send_all_with_checks():
             errors.append(e)
 
     send_all()
-    
+
     if errors:
         raise MultipleValidationErrors(errors)
 
 def do_checks(queue):
-    for queue in Queue.objects.all():
-        metadata = json.loads(queue.metadata)
-        when_added = datetime.now() - timedelta(hours=metadata['limits']['age'])
-        qs = (Message.objects.filter(queue=queue, priority__lt=4,
-                                     when_added__lt=when_added).order_by('id'))
-        if len(qs) > 0:
-            defer_messages(qs)
+    metadata = json.loads(queue.metadata)
 
-        # Check messages in last hour against spam threshold for weekdays and
-        # weekends
-        # If any threshold is hit we should email an alert to notify admin
-        qs = Message.objects.filter(priority__lt=4, queue=queue).order_by('id')
-        if datetime.now().weekday() < 5:
-            if len(qs) > metadata['limits']['weekday']:
-                defer_messages(qs)
-                msg = ('spam prevention threshold (%s) exceeded on queue:'
-                       ' \'%s\' with %s %s')
-                raise SpamThresholdHit(msg % (metadata['limits']['weekday'], queue,
-                              len(qs),
-                              'message' if len(qs) == 1 else 'messages'))
-        else:
-            if len(qs) > metadata['limits']['weekend']:
-                defer_messages(qs)
-                msg = ('spam prevention threshold (%s) exceeded on queue:'
-                       ' \'%s\' with %s %s')
-                raise SpamThresholdHit(msg % (metadata['limits']['weekend'], queue,
-                              len(qs),
-                              'message' if len(qs) == 1 else 'messages'))
+    if settings.USE_TZ:
+        when_added = timezone.localtime(timezone.now()) - timedelta(hours=metadata['limits']['age'])
+    else:
+        when_added = datetime.now() - timedelta(hours=metadata['limits']['age'])
+    qs = (Message.objects.filter(queue=queue, priority__lt=4,
+                                 when_added__lt=when_added).order_by('id'))
+    if len(qs) > 0:
+        defer_messages(qs)
+
+    # Check messages in last hour against spam threshold for weekdays and
+    # weekends
+    qs = Message.objects.filter(priority__lt=4, queue=queue).order_by('id')
+    qs_len = len(qs)
+    if datetime.now().weekday() < 5:
+        if qs_len > metadata['limits']['weekday']:
+            defer_messages(qs)
+            msg = ('spam prevention threshold (%s) exceeded on queue:'
+                   ' \'%s\' with %s %s. IDs: %s -> %s')
+            raise SpamThresholdHit(msg % (metadata['limits']['weekday'], queue,
+                          qs_len,
+                          'message' if qs_len == 1 else 'messages',
+                          qs[0].id, qs[qs_len - 1].id))
+    else:
+        if qs_len > metadata['limits']['weekend']:
+            defer_messages(qs)
+            msg = ('spam prevention threshold (%s) exceeded on queue:'
+                   ' \'%s\' with %s %s. IDs: %s -> %s')
+            raise SpamThresholdHit(msg % (metadata['limits']['weekend'], queue,
+                          qs_len,
+                          'message' if qs_len == 1 else 'messages',
+                          qs[0].id, qs[qs_len - 1].id))
 
 
 def send_all():
