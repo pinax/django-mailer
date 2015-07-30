@@ -104,6 +104,7 @@ def defer_messages(qs):
 class SpamThresholdHit(Exception):
     pass
 
+
 class MultipleValidationErrors(Exception):
     pass
 
@@ -120,6 +121,7 @@ def send_all_with_checks():
 
     if errors:
         raise MultipleValidationErrors(errors)
+
 
 def do_checks(queue):
     metadata = json.loads(queue.metadata)
@@ -143,18 +145,18 @@ def do_checks(queue):
             msg = ('spam prevention threshold (%s) exceeded on queue:'
                    ' \'%s\' with %s %s. IDs: %s -> %s')
             raise SpamThresholdHit(msg % (metadata['limits']['weekday'], queue,
-                          qs_len,
-                          'message' if qs_len == 1 else 'messages',
-                          qs[0].id, qs[qs_len - 1].id))
+                                   qs_len,
+                                   'message' if qs_len == 1 else 'messages',
+                                    qs[0].id, qs[qs_len - 1].id))
     else:
         if qs_len > metadata['limits']['weekend']:
             defer_messages(qs)
             msg = ('spam prevention threshold (%s) exceeded on queue:'
                    ' \'%s\' with %s %s. IDs: %s -> %s')
             raise SpamThresholdHit(msg % (metadata['limits']['weekend'], queue,
-                          qs_len,
-                          'message' if qs_len == 1 else 'messages',
-                          qs[0].id, qs[qs_len - 1].id))
+                                   qs_len,
+                                   'message' if qs_len == 1 else 'messages',
+                                   qs[0].id, qs[qs_len - 1].id))
 
 
 def send_all():

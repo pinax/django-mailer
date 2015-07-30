@@ -18,7 +18,6 @@ import smtplib
 import time
 import datetime
 import django
-import logging
 
 
 class TestMailerEmailBackend(object):
@@ -811,6 +810,7 @@ class TestSpamLimiting(TestCase):
 
             self.assertEqual(Message.objects.count(), 40)
             self.assertEqual(Message.objects.deferred().count(), 40)
+
     def test_spam_limit_multiple_queues_errors(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             for x in range(0, 40):
