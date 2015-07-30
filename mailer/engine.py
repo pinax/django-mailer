@@ -1,14 +1,17 @@
-import time
-import smtplib
+from time import mktime
 import logging
+from datetime import datetime, timedelta
+import time
+import pytz
+import json
 
 import lockfile
-from socket import error as socket_error
 
 from django.conf import settings
 from django.core.mail import get_connection
+from django.utils import timezone
 
-from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE
+from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, Queue
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
@@ -93,6 +96,69 @@ def release_lock(lock):
     logging.debug("released.")
 
 
+def defer_messages(qs):
+    for msg in qs:
+        msg.defer()
+
+
+class SpamThresholdHit(Exception):
+    pass
+
+
+class MultipleValidationErrors(Exception):
+    pass
+
+
+def send_all_with_checks():
+    errors = []
+    for queue in Queue.objects.all():
+        try:
+            do_checks(queue)
+        except SpamThresholdHit as e:
+            errors.append(e)
+
+    send_all()
+
+    if errors:
+        raise MultipleValidationErrors(errors)
+
+
+def do_checks(queue):
+    metadata = json.loads(queue.metadata)
+
+    if settings.USE_TZ:
+        when_added = timezone.localtime(timezone.now()) - timedelta(hours=metadata['limits']['age'])
+    else:
+        when_added = datetime.now() - timedelta(hours=metadata['limits']['age'])
+    qs = (Message.objects.filter(queue=queue, priority__lt=4,
+                                 when_added__lt=when_added).order_by('id'))
+    if len(qs) > 0:
+        defer_messages(qs)
+
+    # Check messages in last hour against spam threshold for weekdays and
+    # weekends
+    qs = Message.objects.filter(priority__lt=4, queue=queue).order_by('id')
+    qs_len = len(qs)
+    if datetime.now().weekday() < 5:
+        if qs_len > metadata['limits']['weekday']:
+            defer_messages(qs)
+            msg = ('spam prevention threshold (%s) exceeded on queue:'
+                   ' \'%s\' with %s %s. IDs: %s -> %s')
+            raise SpamThresholdHit(msg % (metadata['limits']['weekday'], queue,
+                                          qs_len,
+                                          'message' if qs_len == 1 else 'messages',
+                                          qs[0].id, qs[qs_len - 1].id))
+    else:
+        if qs_len > metadata['limits']['weekend']:
+            defer_messages(qs)
+            msg = ('spam prevention threshold (%s) exceeded on queue:'
+                   ' \'%s\' with %s %s. IDs: %s -> %s')
+            raise SpamThresholdHit(msg % (metadata['limits']['weekend'], queue,
+                                          qs_len,
+                                          'message' if qs_len == 1 else 'messages',
+                                          qs[0].id, qs[qs_len - 1].id))
+
+
 def send_all():
     """
     Send all eligible messages in the queue.
@@ -118,6 +184,12 @@ def send_all():
         connection = None
         for message in prioritize():
             try:
+                if message.queue.mail_enabled is False:
+                    logging.info("message skipped as queue for '{0}'"
+                                 " is disabled".format(message.queue.name))
+                    deferred += 1
+                    message.defer()
+                    continue
                 if connection is None:
                     connection = get_connection(backend=EMAIL_BACKEND)
                 logging.info("sending message '{0}' to {1}".format(
@@ -128,18 +200,22 @@ def send_all():
                 if email is not None:
                     email.connection = connection
                     email.send()
-                    MessageLog.objects.log(message, RESULT_SUCCESS)
+                    MessageLog.objects.log(message, RESULT_SUCCESS,
+                                           queue=message.queue)
                     sent += 1
                 else:
-                    logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
+                    msg = ("message discarded due to failure in converting from"
+                           "DB. Added on '%s' with priority '%s'")
+                    logging.warning(msg % (message.when_added,
+                                    message.priority))  # noqa
                 message.delete()
 
-            except (socket_error, smtplib.SMTPSenderRefused,
-                    smtplib.SMTPRecipientsRefused,
-                    smtplib.SMTPAuthenticationError) as err:
+            except Exception as err:
                 message.defer()
-                logging.info("message deferred due to failure: %s" % err)
-                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+                logging.info("message deferred due to failure (%s): %s"
+                             % (err.__class__.__name__, err))
+                MessageLog.objects.log(message, RESULT_FAILURE,
+                                       log_message=str(err), queue=message.queue)
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
                 connection = None
@@ -166,6 +242,41 @@ def send_loop():
 
     while True:
         while not Message.objects.all():
-            logging.debug("sleeping for %s seconds before checking queue again" % EMPTY_QUEUE_SLEEP)
+            logging.debug("sleeping for %s seconds before checking queue again"
+                          % EMPTY_QUEUE_SLEEP)
             time.sleep(EMPTY_QUEUE_SLEEP)
         send_all()
+
+
+def resend(queues, send_from=None):
+    for queueName in queues:
+        try:
+            queue = Queue.objects.get(name=queueName)
+            if queue.mail_enabled == 0:
+                queue.mail_enabled = 1
+                queue.save()
+                logging.info(('Mail queue: {0} enabled').format(queue.name))
+
+            if send_from:
+                conv_send_from = time.strptime(send_from, "%Y-%m-%d %H:%M")
+                conv_send_from = datetime.fromtimestamp(mktime(conv_send_from))
+                tz = pytz.utc
+                conv_send_from = (tz.localize(conv_send_from, is_dst=None)
+                                  .astimezone(pytz.utc).replace(tzinfo=None))
+                messages = Message.objects.filter(queue=queue,
+                                                  when_added__gte=conv_send_from)
+
+                for message in messages:
+                    message.priority = 2
+                    message.save()
+
+                logging.info(('Resending mail on queue {0} from {1}')
+                             .format(queue, conv_send_from))
+            else:
+                messages = Message.objects.filter(queue=queue)
+                for message in messages:
+                    message.priority = 2
+                    message.save()
+
+        except Queue.DoesNotExist:
+            logging.warning(('Queue {0} not found').format(queueName))

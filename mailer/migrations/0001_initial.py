@@ -30,6 +30,7 @@ class Migration(migrations.Migration):
                 ('message_data', models.TextField()),
                 ('when_added', models.DateTimeField(default=django.utils.timezone.now)),
                 ('priority', models.CharField(default='2', max_length=1, choices=[('1', 'high'), ('2', 'medium'), ('3', 'low'), ('4', 'deferred')])),
+                ('metadata', models.TextField(default='{}')),
             ],
             options={
                 'verbose_name': 'message',
@@ -51,5 +52,24 @@ class Migration(migrations.Migration):
                 'verbose_name': 'message log',
                 'verbose_name_plural': 'message logs',
             },
+        ),
+        migrations.CreateModel(
+            name='Queue',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=24, null=True)),
+                ('mail_enabled', models.BooleanField(default=True)),
+                ('metadata', models.TextField(default='{"limits":{"weekday": 500, "weekend": 700, "age": 1}}')),
+            ],
+        ),
+        migrations.AddField(
+            model_name='messagelog',
+            name='queue',
+            field=models.ForeignKey(to='mailer.Queue'),
+        ),
+        migrations.AddField(
+            model_name='message',
+            name='queue',
+            field=models.ForeignKey(default=0, to='mailer.Queue'),
         ),
     ]

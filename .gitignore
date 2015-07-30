@@ -4,3 +4,6 @@ build/
 
 MANIFEST
 .coverage
+.DS_Store
+.pyc
+django_mailer.egg-info/
