@@ -1,6 +1,11 @@
 import time
 import smtplib
 import logging
+from datetime import datetime, timedelta
+import time
+import pytz
+import json
+from time import mktime
 
 import lockfile
 from socket import error as socket_error
@@ -8,7 +13,7 @@ from socket import error as socket_error
 from django.conf import settings
 from django.core.mail import get_connection
 
-from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE
+from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, Queue
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
@@ -92,6 +97,30 @@ def release_lock(lock):
     lock.release()
     logging.debug("released.")
 
+def defer_messages(qs):
+    for msg in qs:
+        msg.defer()
+
+def send_all_with_checks():
+    for queue in Queue.objects.all():
+        metadata = json.loads(queue.metadata)
+        qs = Message.objects.filter(queue=queue, priority__lt = 4, when_added__lt = datetime.now() - timedelta(hours = metadata['limits']['age'])).order_by('id')
+        if len(qs) > 0:
+            defer_messages(qs)
+
+        # Check messages in last hour against spam threshold for weekdays and weekends
+        # If any threshold is hit we should email an alert to notify admin
+        qs = Message.objects.filter(priority__lt = 4, queue=queue).order_by('id')
+        if datetime.now().weekday() < 5:
+            if len(qs) > metadata['limits']['weekday']:
+                defer_messages(qs)
+                logging.error('spam prevention threshold (%s) exceeded on queue: \'%s\' with %s %s' % (metadata['limits']['weekday'], queue, len(qs), 'message' if len(qs) == 1 else 'messages'))
+        else:
+            if len(qs) > metadata['limits']['weekend']:
+                defer_messages(qs)
+                logging.error('spam prevention threshold (%s) exceeded on queue: \'%s\' with %s %s' % (metadata['limits']['weekday'], queue, len(qs), 'message' if len(qs) == 1 else 'messages'))
+
+    send_all()
 
 def send_all():
     """
@@ -114,10 +143,17 @@ def send_all():
     deferred = 0
     sent = 0
 
+
+
     try:
         connection = None
         for message in prioritize():
             try:
+                if message.queue.mail_enabled == False:
+                    logging.info("message skipped as queue for '{0}' is disabled".format(message.queue.name))
+                    deferred += 1
+                    message.defer()
+                    continue
                 if connection is None:
                     connection = get_connection(backend=EMAIL_BACKEND)
                 logging.info("sending message '{0}' to {1}".format(
@@ -128,18 +164,16 @@ def send_all():
                 if email is not None:
                     email.connection = connection
                     email.send()
-                    MessageLog.objects.log(message, RESULT_SUCCESS)
+                    MessageLog.objects.log(message, RESULT_SUCCESS, queue=message.queue)
                     sent += 1
                 else:
                     logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
 
-            except (socket_error, smtplib.SMTPSenderRefused,
-                    smtplib.SMTPRecipientsRefused,
-                    smtplib.SMTPAuthenticationError) as err:
+            except Exception as err:
                 message.defer()
-                logging.info("message deferred due to failure: %s" % err)
-                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+                logging.info("message deferred due to failure (%s): %s" % (err.__class__.__name__, err))
+                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), queue=message.queue)
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
                 connection = None
@@ -169,3 +203,29 @@ def send_loop():
             logging.debug("sleeping for %s seconds before checking queue again" % EMPTY_QUEUE_SLEEP)
             time.sleep(EMPTY_QUEUE_SLEEP)
         send_all()
+
+def resend(queues, send_from=None):
+    for queueName in queues:
+        try:
+            queue = Queue.objects.get(name=queueName)
+            if queue.mail_enabled == 0:
+                queue.mail_enabled = 1
+                queue.save()
+                logging.info(('Mail queue: {0} enabled').format(queue.name))
+
+            if send_from:
+                conv_send_from = time.strptime(send_from, "%Y-%m-%d %H:%M")
+                conv_send_from = datetime.fromtimestamp(mktime(conv_send_from))
+                tz = pytz.utc
+                conv_send_from = tz.localize(conv_send_from, is_dst=None).astimezone(pytz.utc).replace(tzinfo=None)
+                messages = Message.objects.filter(queue=queue, when_added__gte=conv_send_from)
+
+                for message in messages:
+                    message.priority = 2
+                    message.save()
+
+                logging.info(('Resending mail on queue {0} from {1}').format(queue, conv_send_from))
+
+
+        except Queue.DoesNotExist:
+            logging.warning(('Queue {0} not found').format(queueName))

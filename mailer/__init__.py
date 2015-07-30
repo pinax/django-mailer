@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-
 import warnings
 
 VERSION = (1, 1, 0, "alpha", 0)  # following PEP 386
@@ -38,20 +37,26 @@ def get_priority(priority):
 # replacement for django.core.mail.send_mail
 
 def send_mail(subject, message, from_email, recipient_list, priority=None,
-              fail_silently=False, auth_user=None, auth_password=None):
+              fail_silently=False, auth_user=None, auth_password=None, queue=0):
     from django.utils.encoding import force_text
     from mailer.models import make_message
-
+    from mailer.models import Queue
     priority = get_priority(priority)
     # need to do this in case subject used lazy version of ugettext
     subject = force_text(subject)
     message = force_text(message)
+    
+    try:
+        Queue.objects.get(pk=queue)
+    except:
+        return 0
 
     make_message(subject=subject,
                  body=message,
                  from_email=from_email,
                  to=recipient_list,
-                 priority=priority).save()
+                 priority=priority,
+                 queue=queue).save()
     return 1
 
 

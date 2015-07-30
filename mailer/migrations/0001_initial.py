@@ -52,4 +52,22 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'message logs',
             },
         ),
+        migrations.CreateModel(
+            name='Queue',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=24, null=True)),
+                ('mail_enabled', models.BooleanField(default=True)),
+            ],
+        ),
+        migrations.AddField(
+            model_name='messagelog',
+            name='queue',
+            field=models.ForeignKey(to='mailer.Queue'),
+        ),
+        migrations.AddField(
+            model_name='message',
+            name='queue',
+            field=models.ForeignKey(default=0, to='mailer.Queue'),
+        ),
     ]

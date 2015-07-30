@@ -1,0 +1,1 @@
+[{"fields": {"name": "default", "mail_enabled": true, "metadata": "{\"limits\":{\"weekday\": 20, \"weekend\": 30, \"age\": 1}}"}, "model": "mailer.queue", "pk": 0}]
