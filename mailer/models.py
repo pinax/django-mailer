@@ -166,6 +166,9 @@ set the attribute again to cause the underlying serialised data to be updated.""
         else:
             return ""
 
+    def _set_metadata(self, val):
+        return json.dumps(val)
+
 
 def filter_recipient_list(lst):
     if lst is None:
@@ -180,7 +183,7 @@ def filter_recipient_list(lst):
 
 
 def make_message(subject="", body="", from_email=None, to=None, bcc=None,
-                 attachments=None, headers=None, priority=None, queue=0):
+                 attachments=None, headers=None, priority=None, queue=0, metadata={}):
     """
     Creates a simple message for the email parameters supplied.
     The 'to' and 'bcc' lists are filtered using DontSendEntry.
@@ -199,10 +202,10 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
         to=to,
         bcc=bcc,
         attachments=attachments,
-        headers=headers
+        headers=headers,
     )
 
-    db_msg = Message(priority=priority, queue=Queue.objects.get(pk=queue))
+    db_msg = Message(priority=priority, queue=Queue.objects.get(pk=queue), metadata=metadata)
     db_msg.email = core_msg
     return db_msg
 

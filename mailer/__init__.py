@@ -37,7 +37,7 @@ def get_priority(priority):
 # replacement for django.core.mail.send_mail
 
 def send_mail(subject, message, from_email, recipient_list, priority=None,
-              fail_silently=False, auth_user=None, auth_password=None, queue=0):
+              fail_silently=False, auth_user=None, auth_password=None, queue=0, metadata={}):
     from django.utils.encoding import force_text
     from mailer.models import make_message
     from mailer.models import Queue
@@ -45,7 +45,7 @@ def send_mail(subject, message, from_email, recipient_list, priority=None,
     # need to do this in case subject used lazy version of ugettext
     subject = force_text(subject)
     message = force_text(message)
-    
+
     try:
         Queue.objects.get(pk=queue)
     except:
@@ -56,7 +56,8 @@ def send_mail(subject, message, from_email, recipient_list, priority=None,
                  from_email=from_email,
                  to=recipient_list,
                  priority=priority,
-                 queue=queue).save()
+                 queue=queue,
+                 metadata=metadata).save()
     return 1
 
 
