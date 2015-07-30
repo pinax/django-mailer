@@ -127,8 +127,7 @@ def send_all():
     try:
         for queue in Queue.objects.all():
             metadata = json.loads(queue.metadata)
-
-            qs = Message.objects.filter(priority__lt = 4, when_added__lt = datetime.now() - timedelta(hours = metadata['limits']['age'])).order_by('id')
+            qs = Message.objects.filter(queue=queue, priority__lt = 4, when_added__lt = datetime.now() - timedelta(hours = metadata['limits']['age'])).order_by('id')
             if len(qs) > 0:
                 defer_messages(qs)
 
