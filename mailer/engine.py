@@ -100,7 +100,26 @@ def defer_messages(qs):
         msg.defer()
 
 
+class SpamThresholdHit(Exception):
+    pass
+
+class MultipleValidationErrors(Exception):
+    pass
+
 def send_all_with_checks():
+    errors = []
+    for queue in Queue.objects.all():
+        try:
+            do_checks(queue)
+        except SpamThresholdHit as e:
+            errors.append(e)
+
+    send_all()
+    
+    if errors:
+        raise MultipleValidationErrors(errors)
+
+def do_checks(queue):
     for queue in Queue.objects.all():
         metadata = json.loads(queue.metadata)
         when_added = datetime.now() - timedelta(hours=metadata['limits']['age'])
@@ -118,7 +137,7 @@ def send_all_with_checks():
                 defer_messages(qs)
                 msg = ('spam prevention threshold (%s) exceeded on queue:'
                        ' \'%s\' with %s %s')
-                logging.error(msg % (metadata['limits']['weekday'], queue,
+                raise SpamThresholdHit(msg % (metadata['limits']['weekday'], queue,
                               len(qs),
                               'message' if len(qs) == 1 else 'messages'))
         else:
@@ -126,11 +145,9 @@ def send_all_with_checks():
                 defer_messages(qs)
                 msg = ('spam prevention threshold (%s) exceeded on queue:'
                        ' \'%s\' with %s %s')
-                logging.error(msg % (metadata['limits']['weekend'], queue,
+                raise SpamThresholdHit(msg % (metadata['limits']['weekend'], queue,
                               len(qs),
                               'message' if len(qs) == 1 else 'messages'))
-
-    send_all()
 
 
 def send_all():

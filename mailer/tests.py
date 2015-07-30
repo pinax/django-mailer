@@ -6,8 +6,10 @@ from django.core.management import call_command
 
 from mailer.models import (Message, MessageLog, DontSendEntry, Queue, db_to_email, email_to_db,
                            PRIORITY_HIGH, PRIORITY_MEDIUM, PRIORITY_LOW, PRIORITY_DEFERRED)
+
 import mailer
 from mailer import engine
+from mailer.engine import MultipleValidationErrors
 
 from mock import patch, Mock, ANY
 import pickle
@@ -780,7 +782,7 @@ class TestSpamLimiting(TestCase):
 
         self.assertEqual(Message.objects.count(), 40)
 
-        engine.send_all_with_checks()
+        self.assertRaises(MultipleValidationErrors, engine.send_all_with_checks)
 
         self.assertEqual(Message.objects.deferred().count(), 40)
         self.assertEqual(Message.objects.count(), 40)
@@ -804,7 +806,7 @@ class TestSpamLimiting(TestCase):
             self.assertEqual(Message.objects.filter(queue=Queue.objects.get(pk=1)).count(), 1)
             self.assertEqual(Message.objects.filter(queue=Queue.objects.get(pk=0)).count(), 40)
 
-            engine.send_all_with_checks()
+            self.assertRaises(MultipleValidationErrors, engine.send_all_with_checks)
 
             self.assertEqual(Message.objects.count(), 40)
             self.assertEqual(Message.objects.deferred().count(), 40)
