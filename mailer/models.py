@@ -116,6 +116,7 @@ class Message(models.Model):
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default=PRIORITY_MEDIUM)
+    metadata = models.TextField(default="{}")
     # @@@ campaign?
     # @@@ content_type?
 

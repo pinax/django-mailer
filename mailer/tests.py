@@ -747,16 +747,16 @@ class TestCommands(TestCase):
 class TestSpamLimiting(TestCase):
     fixtures = ['mailer_queue']
 
-    # def test_spam_limit(self):
-    #     for x in range(0, 40):
-    #         mailer.send_mail("Subject", "Body", "test@example.com", ["r"+str(x)+"@example.com"], queue=0)
-    #
-    #     self.assertEqual(Message.objects.count(), 40)
-    #
-    #     engine.send_all()
-    #
-    #     self.assertEqual(Message.objects.deferred().count(), 40)
-    #     self.assertEqual(Message.objects.count(), 40)
+    def test_spam_limit(self):
+        for x in range(0, 40):
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r"+str(x)+"@example.com"], queue=0)
+
+        self.assertEqual(Message.objects.count(), 40)
+
+        engine.send_all_with_checks()
+
+        self.assertEqual(Message.objects.deferred().count(), 40)
+        self.assertEqual(Message.objects.count(), 40)
 
     def test_spam_limit_multiple_queues(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
@@ -775,7 +775,7 @@ class TestSpamLimiting(TestCase):
             self.assertEqual(Message.objects.filter(queue=Queue.objects.get(pk=1)).count(), 1)
             self.assertEqual(Message.objects.filter(queue=Queue.objects.get(pk=0)).count(), 40)
 
-            engine.send_all()
+            engine.send_all_with_checks()
 
             self.assertEqual(Message.objects.count(), 40)
             self.assertEqual(Message.objects.deferred().count(), 40)
@@ -787,7 +787,7 @@ class TestSpamLimiting(TestCase):
             message.when_added = datetime.datetime.now() - datetime.timedelta(hours = 3)
             message.save()
 
-            engine.send_all()
+            engine.send_all_with_checks()
 
             self.assertEqual(Message.objects.deferred().count(), 1)
             self.assertEqual(Message.objects.count(), 1)
