@@ -791,3 +791,15 @@ class TestSpamLimiting(TestCase):
 
             self.assertEqual(Message.objects.deferred().count(), 1)
             self.assertEqual(Message.objects.count(), 1)
+
+class TestMessageMetaData(TestCase):
+    fixtures = ['mailer_queue']
+
+    def test_set_metadata(self):
+        mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=0)
+        message = Message.objects.get(pk=1)
+        self.assertEqual(message.metadata, "{}")
+
+        mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=0, metadata={"test": "testval"})
+        message = Message.objects.get(pk=2)
+        self.assertEqual(message.metadata, "{'test': 'testval'}")
