@@ -9,7 +9,7 @@ show_to.short_description = "To"
 
 
 class QueueAdmin(admin.ModelAdmin):
-    fields = ['name', 'mail_enabled']
+    fields = ['name', 'mail_enabled', 'metadata']
     list_display = ['name', 'mail_enabled']
 
 class MessageAdminMixin(object):

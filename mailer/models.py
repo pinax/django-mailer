@@ -33,6 +33,7 @@ PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 class Queue(models.Model):
     name = models.CharField(max_length=24, blank=False, null=True)
     mail_enabled = models.BooleanField(default=True)
+    metadata = models.TextField(default="{\"limits\":{\"weekday\": 500, \"weekend\": 700, \"age\": 1}}")
 
     def __str__(self):
         return self.name
@@ -115,6 +116,7 @@ class Message(models.Model):
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default=PRIORITY_MEDIUM)
+    metadata = models.TextField(default="{}")
     # @@@ campaign?
     # @@@ content_type?
 

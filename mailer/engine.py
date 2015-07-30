@@ -1,9 +1,10 @@
 import time
 import smtplib
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import pytz
+import json
 from time import mktime
 
 import lockfile
@@ -96,6 +97,30 @@ def release_lock(lock):
     lock.release()
     logging.debug("released.")
 
+def defer_messages(qs):
+    for msg in qs:
+        msg.defer()
+
+def send_all_with_checks():
+    for queue in Queue.objects.all():
+        metadata = json.loads(queue.metadata)
+        qs = Message.objects.filter(queue=queue, priority__lt = 4, when_added__lt = datetime.now() - timedelta(hours = metadata['limits']['age'])).order_by('id')
+        if len(qs) > 0:
+            defer_messages(qs)
+
+        # Check messages in last hour against spam threshold for weekdays and weekends
+        # If any threshold is hit we should email an alert to notify admin
+        qs = Message.objects.filter(priority__lt = 4, queue=queue).order_by('id')
+        if datetime.now().weekday() < 5:
+            if len(qs) > metadata['limits']['weekday']:
+                defer_messages(qs)
+                logging.error('spam prevention threshold (%s) exceeded on queue: \'%s\' with %s %s' % (metadata['limits']['weekday'], queue, len(qs), 'message' if len(qs) == 1 else 'messages'))
+        else:
+            if len(qs) > metadata['limits']['weekend']:
+                defer_messages(qs)
+                logging.error('spam prevention threshold (%s) exceeded on queue: \'%s\' with %s %s' % (metadata['limits']['weekday'], queue, len(qs), 'message' if len(qs) == 1 else 'messages'))
+
+    send_all()
 
 def send_all():
     """
@@ -117,6 +142,7 @@ def send_all():
 
     deferred = 0
     sent = 0
+
 
 
     try:

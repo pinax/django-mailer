@@ -743,3 +743,51 @@ class TestCommands(TestCase):
 
     def test_send_mail(self):
         call_command('send_mail')
+
+class TestSpamLimiting(TestCase):
+    fixtures = ['mailer_queue']
+
+    def test_spam_limit(self):
+        for x in range(0, 40):
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r"+str(x)+"@example.com"], queue=0)
+
+        self.assertEqual(Message.objects.count(), 40)
+
+        engine.send_all_with_checks()
+
+        self.assertEqual(Message.objects.deferred().count(), 40)
+        self.assertEqual(Message.objects.count(), 40)
+
+    def test_spam_limit_multiple_queues(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            for x in range(0,40):
+                mailer.send_mail("Subject", "Body", "test@example.com", ["r"+str(x)+"@example.com"], queue=0)
+
+            self.assertEqual(Message.objects.count(), 40)
+
+            Queue.objects.create(name="test", mail_enabled=True, metadata="{\"limits\":{\"weekday\": 10, \"weekend\": 10, \"age\": 1}}")
+
+            self.assertEqual(Queue.objects.count(), 2)
+
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r1@example.com"], queue=1)
+            self.assertEqual(Message.objects.count(), 41)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+            self.assertEqual(Message.objects.filter(queue=Queue.objects.get(pk=1)).count(), 1)
+            self.assertEqual(Message.objects.filter(queue=Queue.objects.get(pk=0)).count(), 40)
+
+            engine.send_all_with_checks()
+
+            self.assertEqual(Message.objects.count(), 40)
+            self.assertEqual(Message.objects.deferred().count(), 40)
+
+    def test_max_age(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            mailer.send_mail("Subject", "Body", "test@example.com", ["r@example.com"], queue=0)
+            message = Message.objects.get(pk=1)
+            message.when_added = datetime.datetime.now() - datetime.timedelta(hours = 3)
+            message.save()
+
+            engine.send_all_with_checks()
+
+            self.assertEqual(Message.objects.deferred().count(), 1)
+            self.assertEqual(Message.objects.count(), 1)
