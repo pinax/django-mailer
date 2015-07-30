@@ -137,11 +137,11 @@ def send_all():
             if datetime.now().weekday() < 5:
                 if len(qs) > metadata['limits']['weekday']:
                     defer_messages(qs)
-                    logging.error('spam prevention threshold (%s) exceeded' % metadata['limits']['weekday'])
+                    logging.error('spam prevention threshold (%s) exceeded on queue: \'%s\' with %s %s' % (metadata['limits']['weekday'], queue, len(qs), 'message' if len(qs) == 1 else 'messages'))
             else:
                 if len(qs) > metadata['limits']['weekend']:
                     defer_messages(qs)
-                    logging.error('spam prevention threshold (%s) exceeded' % metadata['limits']['weekend'])
+                    logging.error('spam prevention threshold (%s) exceeded on queue: \'%s\' with %s %s' % (metadata['limits']['weekday'], queue, len(qs), 'message' if len(qs) == 1 else 'messages'))
 
         connection = None
         for message in prioritize():
