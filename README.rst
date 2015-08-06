@@ -1,6 +1,9 @@
 django-mailer
 -------------
 
+.. image:: http://slack.pinaxproject.com/badge.svg
+   :target: http://slack.pinaxproject.com/
+
 .. image:: https://img.shields.io/travis/pinax/django-mailer.svg
     :target: https://travis-ci.org/pinax/django-mailer
 
