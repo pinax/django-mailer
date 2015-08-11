@@ -1,6 +1,11 @@
-htmlcov/
+dist/
 build/
+django_mailer.egg-info/
+htmlcov/
 .tox/
 
 MANIFEST
 .coverage
+*.mo
+*~
+*.pyc
