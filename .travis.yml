@@ -22,3 +22,4 @@ script:
   - tox
 after_script:
   - coveralls
+sudo: false
