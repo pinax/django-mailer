@@ -1,6 +1,9 @@
 django-mailer
 -------------
 
+.. image:: http://slack.pinaxproject.com/badge.svg
+   :target: http://slack.pinaxproject.com/
+
 .. image:: https://img.shields.io/travis/pinax/django-mailer.svg
     :target: https://travis-ci.org/pinax/django-mailer
 
@@ -27,6 +30,12 @@ Simple usage instructions:
 
 In ``settings.py``:
 ::
+
+    INSTALLED_APPS = [
+        ...
+        "mailer",
+        ...
+   ]
 
     EMAIL_BACKEND = "mailer.backend.DbBackend"
 

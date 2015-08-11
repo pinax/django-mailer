@@ -2,6 +2,9 @@
 Usage
 =====
 
+First, add "mailer" to your ``INSTALLED_APPS`` in your settings.py.
+Run ``./manage.py migrate`` to install models.
+
 Using EMAIL_BACKEND
 ===================
 
