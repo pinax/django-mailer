@@ -15,6 +15,7 @@ env:
   - TOXENV=py27-flake
   - TOXENV=py33-flake
   - TOXENV=py34-flake
+  - TOXENV=checkmanifest
 install:
   - pip install coveralls tox>=2.1
 script:
