@@ -2,11 +2,12 @@ import time
 import smtplib
 import logging
 
-import lockfile
 from socket import error as socket_error
 
 from django.conf import settings
 from django.core.mail import get_connection
+from lockfile import FileLock, AlreadyLocked, LockTimeout
+from lockfile.mkdirlockfile import MkdirLockFile
 
 from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE
 
@@ -17,6 +18,8 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 # lock timeout value. how long to wait for the lock to become available.
 # default behavior is to never wait for the lock to be available.
 LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
+
+LOCK_TYPE = getattr(settings, "MAILER_LOCK_TYPE", "FileLock")
 
 
 def prioritize():
@@ -73,14 +76,20 @@ def _throttle_emails():
 
 def acquire_lock():
     logging.debug("acquiring lock...")
-    lock = lockfile.FileLock("send_mail")
+
+    if LOCK_TYPE == 'MkdirLockFile':
+        # mkdir(2)() system call as the basic lock mechanism
+        lock = MkdirLockFile("send_mail")
+    else:
+        # Default Lock Type
+        lock = FileLock("send_mail")
 
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
-    except lockfile.AlreadyLocked:
+    except AlreadyLocked:
         logging.debug("lock already in place. quitting.")
         return False, lock
-    except lockfile.LockTimeout:
+    except LockTimeout:
         logging.debug("waiting for the lock timed out. quitting.")
         return False, lock
     logging.debug("acquired.")
