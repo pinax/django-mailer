@@ -22,6 +22,7 @@ __version__ = get_version()
 
 def get_priority(priority):
     from mailer.models import PRIORITY_MAPPING, PRIORITY_MEDIUM
+
     if priority is None:
         priority = PRIORITY_MEDIUM
 
@@ -38,7 +39,7 @@ def get_priority(priority):
 # replacement for django.core.mail.send_mail
 
 def send_mail(subject, message, from_email, recipient_list, priority=None,
-              fail_silently=False, auth_user=None, auth_password=None):
+              fail_silently=False, auth_user=None, auth_password=None, connection=None):
     from django.utils.encoding import force_text
     from mailer.models import make_message
 
@@ -51,13 +52,14 @@ def send_mail(subject, message, from_email, recipient_list, priority=None,
                  body=message,
                  from_email=from_email,
                  to=recipient_list,
-                 priority=priority).save()
+                 priority=priority,
+                 connection=connection).save()
     return 1
 
 
 def send_html_mail(subject, message, message_html, from_email, recipient_list,
                    priority=None, fail_silently=False, auth_user=None,
-                   auth_password=None, headers={}):
+                   auth_password=None, connection=None, headers={}):
     """
     Function to queue HTML e-mails
     """
@@ -75,13 +77,15 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
                        body=message,
                        from_email=from_email,
                        to=recipient_list,
-                       priority=priority)
+                       priority=priority,
+                       connection=connection)
     email = msg.email
     email = EmailMultiAlternatives(
         email.subject,
         email.body,
         email.from_email,
         email.to,
+        connection=email.get_connection(),
         headers=headers
     )
     email.attach_alternative(message_html, "text/html")
@@ -94,7 +98,7 @@ def send_mass_mail(datatuple, fail_silently=False, auth_user=None,
                    auth_password=None, connection=None):
     num_sent = 0
     for subject, message, sender, recipient in datatuple:
-        num_sent += send_mail(subject, message, sender, recipient)
+        num_sent += send_mail(subject, message, sender, recipient, connection=connection)
     return num_sent
 
 
@@ -105,7 +109,7 @@ def mail_admins(subject, message, fail_silently=False, connection=None, priority
     return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_text(subject),
                      message,
                      settings.SERVER_EMAIL,
-                     [a[1] for a in settings.ADMINS])
+                     [a[1] for a in settings.ADMINS], connection=connection)
 
 
 def mail_managers(subject, message, fail_silently=False, connection=None, priority=None):
@@ -115,4 +119,4 @@ def mail_managers(subject, message, fail_silently=False, connection=None, priori
     return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_text(subject),
                      message,
                      settings.SERVER_EMAIL,
-                     [a[1] for a in settings.MANAGERS])
+                     [a[1] for a in settings.MANAGERS], connection=connection)
