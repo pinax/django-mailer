@@ -32,7 +32,7 @@ This app was developed as part of the Pinax ecosystem but is just a Django app a
 django-mailer
 --------------
 
-`django-mailer` is a reusable Django app for queuing the sending of email.
+``django-mailer`` is a reusable Django app for queuing the sending of email.
 
 
 Getting Started
@@ -61,7 +61,7 @@ In a cron job file:
 Documentation
 ---------------
 
-See ``usage.rst`` in the docs for more advanced use cases - https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage
+See ``usage.rst`` in the docs for more advanced use cases - https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage.
 The Pinax documentation is available at http://pinaxproject.com/pinax/.
 
 
