@@ -6,15 +6,16 @@ import pickle
 
 try:
     from django.utils.timezone import now as datetime_now
+
     datetime_now  # workaround for pyflakes
 except ImportError:
     from datetime import datetime
+
     datetime_now = datetime.now
 
 from django.core.mail import EmailMessage
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-
 
 PRIORITY_HIGH = "1"
 PRIORITY_MEDIUM = "2"
@@ -32,7 +33,6 @@ PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 
 
 class MessageManager(models.Manager):
-
     def high_priority(self):
         """
         the high priority messages in the queue
@@ -101,7 +101,6 @@ def db_to_email(data):
 
 
 class Message(models.Model):
-
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
@@ -169,7 +168,7 @@ def filter_recipient_list(lst):
 
 
 def make_message(subject="", body="", from_email=None, to=None, bcc=None,
-                 attachments=None, headers=None, priority=None):
+                 attachments=None, headers=None, priority=None, connection=None):
     """
     Creates a simple message for the email parameters supplied.
     The 'to' and 'bcc' lists are filtered using DontSendEntry.
@@ -181,6 +180,7 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
     """
     to = filter_recipient_list(to)
     bcc = filter_recipient_list(bcc)
+
     core_msg = EmailMessage(
         subject=subject,
         body=body,
@@ -188,7 +188,8 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
         to=to,
         bcc=bcc,
         attachments=attachments,
-        headers=headers
+        headers=headers,
+        connection=connection
     )
     db_msg = Message(priority=priority)
     db_msg.email = core_msg
@@ -196,7 +197,6 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
 
 
 class DontSendEntryManager(models.Manager):
-
     def has_address(self, address):
         """
         is the given address on the don't send list?
@@ -206,7 +206,6 @@ class DontSendEntryManager(models.Manager):
 
 
 class DontSendEntry(models.Model):
-
     to_address = models.EmailField(max_length=254)
     when_added = models.DateTimeField()
     # @@@ who added?
@@ -232,7 +231,6 @@ RESULT_CODES = (
 
 
 class MessageLogManager(models.Manager):
-
     def log(self, message, result_code, log_message=""):
         """
         create a log entry for an attempt to send the given message and
@@ -249,7 +247,6 @@ class MessageLogManager(models.Manager):
 
 
 class MessageLog(models.Model):
-
     # fields from Message
     message_data = models.TextField()
     when_added = models.DateTimeField(db_index=True)
