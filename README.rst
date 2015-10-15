@@ -47,12 +47,15 @@ In ``settings.py``:
         ...
         "mailer",
         ...
-   ]
+    ]
 
     EMAIL_BACKEND = "mailer.backend.DbBackend"
 
-In a cron job file:
-::
+Run database migrations to set up the needed database tables.
+
+Then send email in the normal way, as per the `Django email docs <https://docs.djangoproject.com/en/stable/topics/email/>`_, and they will be added to the queue.
+
+To actually send the messages on the queue, add this to a cron job file or equivalent::
 
     *       * * * * (/path/to/your/python /path/to/your/manage.py send_mail >> ~/cron_mail.log 2>&1)
     0,20,40 * * * * (/path/to/your/python /path/to/your/manage.py retry_deferred >> ~/cron_mail_deferred.log 2>&1)
