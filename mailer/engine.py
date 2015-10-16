@@ -136,6 +136,7 @@ def send_all():
 
             except (socket_error, smtplib.SMTPSenderRefused,
                     smtplib.SMTPRecipientsRefused,
+                    smtplib.SMTPDataError,
                     smtplib.SMTPAuthenticationError) as err:
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
