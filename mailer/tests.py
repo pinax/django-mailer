@@ -28,6 +28,8 @@ class TestMailerEmailBackend(object):
         pass
 
     def send_messages(self, email_messages):
+        for m in email_messages:
+            m.extra_headers['X-Sent-By'] = 'django-mailer-tests'
         self.outbox.extend(email_messages)
 
 
@@ -278,6 +280,18 @@ class TestSending(TestCase):
 
         # Notes: 2 * TIME because 2 emails are sent during the test
         self.assertGreater(throttled_time, 2 * TIME)
+
+    def test_save_changes_to_email(self):
+        """
+        Test that changes made to the email by the backend are
+        saved in MessageLog.
+        """
+        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
+            mailer.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
+            engine.send_all()
+            m = MessageLog.objects.get()
+            self.assertEqual(m.email.extra_headers['X-Sent-By'],
+                             'django-mailer-tests')
 
 
 class TestLockNormal(TestCase):

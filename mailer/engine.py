@@ -128,6 +128,7 @@ def send_all():
                 if email is not None:
                     email.connection = connection
                     email.send()
+                    message.email = email  # For the sake of MessageLog
                     MessageLog.objects.log(message, RESULT_SUCCESS)
                     sent += 1
                 else:
