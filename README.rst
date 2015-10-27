@@ -64,7 +64,7 @@ To actually send the messages on the queue, add this to a cron job file or equiv
 Documentation
 ---------------
 
-See ``usage.rst`` in the docs for more advanced use cases - https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage.
+The django-mailer documentation can be found at http://django-mailer2.readthedocs.org/en/latest/. See ``usage.rst`` in the docs for more advanced use cases - https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage.
 The Pinax documentation is available at http://pinaxproject.com/pinax/.
 
 
