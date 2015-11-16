@@ -127,6 +127,11 @@ def send_all():
                 email = message.email
                 if email is not None:
                     email.connection = connection
+                    if not hasattr(email, 'reply_to'):
+                        # Compatability fix for EmailMessage objects
+                        # pickled when running < Django 1.8 and then
+                        # unpickled under Django 1.8
+                        email.reply_to = []
                     email.send()
                     message.email = email  # For the sake of MessageLog
                     MessageLog.objects.log(message, RESULT_SUCCESS)
