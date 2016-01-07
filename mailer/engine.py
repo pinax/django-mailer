@@ -133,6 +133,9 @@ def send_all():
                         # unpickled under Django 1.8
                         email.reply_to = []
                     email.send()
+
+                    # connection can't be stored in the MessageLog
+                    email.connection = None
                     message.email = email  # For the sake of MessageLog
                     MessageLog.objects.log(message, RESULT_SUCCESS)
                     sent += 1
