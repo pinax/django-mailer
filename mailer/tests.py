@@ -15,10 +15,16 @@ import smtplib
 import time
 
 
+class FakeConnection(object):
+    def __getstate__(self):
+        raise TypeError("Connections can't be pickled")
+
+
 class TestMailerEmailBackend(object):
     outbox = []
 
     def __init__(self, **kwargs):
+        self.connection = FakeConnection()
         del self.outbox[:]
 
     def open(self):
