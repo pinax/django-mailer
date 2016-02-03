@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import base64
 import logging
 import pickle
+import datetime
 
 try:
     from django.utils.timezone import now as datetime_now
@@ -246,6 +247,10 @@ class MessageLogManager(models.Manager):
             result=result_code,
             log_message=log_message,
         )
+
+    def cleanup(self, days):
+        limit = datetime_now() - datetime.timedelta(days=days)
+        self.filter(when_attempted__lt=limit, result=RESULT_SUCCESS).delete()
 
 
 class MessageLog(models.Model):
