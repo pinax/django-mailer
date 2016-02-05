@@ -1,3 +1,4 @@
+import logging
 from django.core.management.base import BaseCommand
 from mailer.models import MessageLog
 

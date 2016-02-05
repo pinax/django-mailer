@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.core import mail
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
+from django.core.management import call_command
 from django.utils.timezone import now as datetime_now
 
 from mailer.models import (Message, MessageLog, DontSendEntry, db_to_email, email_to_db,
@@ -76,7 +77,7 @@ class TestSending(TestCase):
             self.assertEqual(MessageLog.objects.count(), 1)
             with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
                 datetime_now_patch.side_effect = lambda: datetime_now() + datetime.timedelta(days=2)
-                MessageLog.objects.purge_old_entries(1)
+                self.assertEqual(MessageLog.objects.purge_old_entries(1), 1)
             self.assertEqual(MessageLog.objects.count(), 0)
 
     def test_retry_deferred(self):
@@ -88,7 +89,7 @@ class TestSending(TestCase):
             self.assertEqual(MessageLog.objects.count(), 1)
             with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
                 datetime_now_patch.side_effect = lambda: datetime_now() + datetime.timedelta(days=2)
-                MessageLog.objects.purge_old_entries(1)
+                call_command('purge_mail_log', '1')
             self.assertEqual(MessageLog.objects.count(), 1)
 
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
