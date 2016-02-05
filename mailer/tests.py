@@ -89,6 +89,7 @@ class TestSending(TestCase):
             self.assertEqual(MessageLog.objects.count(), 1)
             with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
                 datetime_now_patch.side_effect = lambda: datetime_now() + datetime.timedelta(days=2)
+                self.assertEquals(MessageLog.objects.purge_old_entries(1), 0)
                 call_command('purge_mail_log', '1')
             self.assertEqual(MessageLog.objects.count(), 1)
 

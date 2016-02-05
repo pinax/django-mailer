@@ -10,5 +10,7 @@ class Command(BaseCommand):
         parser.add_argument('days', nargs=1, type=int)
 
     def handle(self, *args, **options):
-        count = MessageLog.objects.purge_old_entries(options['days'][0])
+        # Compatiblity with Django-1.6
+        days = int(options.get('days', args)[0])
+        count = MessageLog.objects.purge_old_entries(days)
         logging.info("%s log entries deleted " % count)
