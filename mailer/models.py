@@ -9,8 +9,7 @@ try:
     from django.utils.timezone import now as datetime_now
     datetime_now  # workaround for pyflakes
 except ImportError:
-    from datetime import datetime
-    datetime_now = datetime.now
+    datetime_now = datetime.datetime.now
 
 from django.core.mail import EmailMessage
 from django.db import models
