@@ -64,7 +64,7 @@ or all managers as defined in the ``MANAGERS`` setting by calling::
 Clear queue with command extensions
 ===================================
 
-With mailer in your INSTALLED_APPS, there will be two new manage.py commands
+With mailer in your INSTALLED_APPS, there will be three new manage.py commands
 you can run:
 
 * ``send_mail`` will clear the current message queue. If there are any
@@ -74,18 +74,23 @@ you can run:
 * ``retry_deferred`` will move any deferred mail back into the normal queue
   (so it will be attempted again on the next ``send_mail``).
 
+* ``purge_mail_log`` will remove old successful message logs from the database, to prevent it from filling up your database
+
+
 You may want to set these up via cron to run regularly::
 
 
     *       * * * * (/path/to/your/python /path/to/your/manage.py send_mail >> ~/cron_mail.log 2>&1)
     0,20,40 * * * * (/path/to/your/python /path/to/your/manage.py retry_deferred >> ~/cron_mail_deferred.log 2>&1)
+    0 0 * * * (/path/to/your/python /path/to/your/manage.py purge_mail_log 7 >> ~/cron_mail_purge.log 2>&1)
 
 For use in Pinax, for example, that might look like::
 
     * * * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py send_mail >> $PINAX/cron_mail.log 2>&1)
     0,20,40 * * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py retry_deferred >> $PINAX/cron_mail_deferred.log 2>&1)
+    0 0 * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py purge_mail_log 7 >> $PINAX/cron_mail_purge.log 2>&1)
 
-This attempts to send mail every minute with a retry on failure every 20 minutes.
+This attempts to send mail every minute with a retry on failure every 20 minutes and purging the mail log for entries older than 7 days.
 
 ``manage.py send_mail`` uses a lock file in case clearing the queue takes
 longer than the interval between calling ``manage.py send_mail``.

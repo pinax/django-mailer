@@ -248,9 +248,12 @@ class MessageLogManager(models.Manager):
             log_message=log_message,
         )
 
-    def cleanup(self, days):
+    def purge_old_entries(self, days):
         limit = datetime_now() - datetime.timedelta(days=days)
-        self.filter(when_attempted__lt=limit, result=RESULT_SUCCESS).delete()
+        query = self.filter(when_attempted__lt=limit, result=RESULT_SUCCESS)
+        count = query.count()
+        query.delete()
+        return count
 
 
 class MessageLog(models.Model):

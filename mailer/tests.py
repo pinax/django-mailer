@@ -13,6 +13,7 @@ import pickle
 import lockfile
 import smtplib
 import time
+import datetime
 
 
 class FakeConnection(object):
@@ -73,6 +74,10 @@ class TestSending(TestCase):
             self.assertEqual(len(TestMailerEmailBackend.outbox), 1)
             self.assertEqual(Message.objects.count(), 0)
             self.assertEqual(MessageLog.objects.count(), 1)
+            with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
+                datetime_now_patch.side_effect = lambda: datetime_now() + datetime.timedelta(days=2)
+                MessageLog.objects.purge_old_entries(1)
+            self.assertEqual(MessageLog.objects.count(), 0)
 
     def test_retry_deferred(self):
         with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
@@ -80,6 +85,11 @@ class TestSending(TestCase):
             engine.send_all()
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(Message.objects.deferred().count(), 1)
+            self.assertEqual(MessageLog.objects.count(), 1)
+            with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
+                datetime_now_patch.side_effect = lambda: datetime_now() + datetime.timedelta(days=2)
+                MessageLog.objects.purge_old_entries(1)
+            self.assertEqual(MessageLog.objects.count(), 1)
 
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
 
