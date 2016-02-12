@@ -5,7 +5,8 @@ from django.core.management import call_command
 from django.utils.timezone import now as datetime_now
 
 from mailer.models import (Message, MessageLog, DontSendEntry, db_to_email, email_to_db,
-                           PRIORITY_HIGH, PRIORITY_MEDIUM, PRIORITY_LOW, PRIORITY_DEFERRED)
+                           PRIORITY_HIGH, PRIORITY_MEDIUM, PRIORITY_LOW, PRIORITY_DEFERRED,
+                           RESULT_SUCCESS, RESULT_FAILURE)
 import mailer
 from mailer import engine
 
@@ -75,10 +76,6 @@ class TestSending(TestCase):
             self.assertEqual(len(TestMailerEmailBackend.outbox), 1)
             self.assertEqual(Message.objects.count(), 0)
             self.assertEqual(MessageLog.objects.count(), 1)
-            with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
-                datetime_now_patch.side_effect = lambda: datetime_now() + datetime.timedelta(days=2)
-                self.assertEqual(MessageLog.objects.purge_old_entries(1), 1)
-            self.assertEqual(MessageLog.objects.count(), 0)
 
     def test_retry_deferred(self):
         with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
@@ -86,11 +83,6 @@ class TestSending(TestCase):
             engine.send_all()
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(Message.objects.deferred().count(), 1)
-            self.assertEqual(MessageLog.objects.count(), 1)
-            with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
-                datetime_now_patch.side_effect = lambda: datetime_now() + datetime.timedelta(days=2)
-                self.assertEquals(MessageLog.objects.purge_old_entries(1), 0)
-                call_command('purge_mail_log', '1')
             self.assertEqual(MessageLog.objects.count(), 1)
 
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
@@ -106,6 +98,29 @@ class TestSending(TestCase):
             engine.send_all()
             self.assertEqual(len(mail.outbox), 1)
             self.assertEqual(Message.objects.count(), 0)
+
+    def test_purge_old_entries(self):
+        # Send one successfully
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            mailer.send_mail("Subject", "Body", "sender1@example.com",
+                             ["recipient@example.com"])
+            engine.send_all()
+
+        # And one failure
+        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
+            mailer.send_mail("Subject", "Body", "sender2@example.com",
+                             ["recipient@example.com"])
+
+            engine.send_all()
+            Message.objects.retry_deferred()
+            engine.send_all()
+
+        with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
+            datetime_now_patch.return_value = datetime_now() + datetime.timedelta(days=2)
+            call_command('purge_mail_log', '1')
+
+        self.assertNotEqual(MessageLog.objects.filter(result=RESULT_FAILURE).count(), 0)
+        self.assertEqual(MessageLog.objects.filter(result=RESULT_SUCCESS).count(), 0)
 
     def test_send_loop(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
