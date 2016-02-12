@@ -60,9 +60,9 @@ To actually send the messages on the queue, add this to a cron job file or equiv
     *       * * * * (/path/to/your/python /path/to/your/manage.py send_mail >> ~/cron_mail.log 2>&1)
     0,20,40 * * * * (/path/to/your/python /path/to/your/manage.py retry_deferred >> ~/cron_mail_deferred.log 2>&1)
 
-To prevent from the database filling up from the message log, you should clean it up every once in a while.
+To prevent from the database filling up with the message log, you should clean it up every once in a while.
 
-To remove successful log entries oldan then a week, add this to a cron job file or equivalent::
+To remove successful log entries older than a week, add this to a cron job file or equivalent::
 
     0 0 * * * (/path/to/your/python /path/to/your/manage.py purge_mail_log 7 >> ~/cron_mail_purge.log 2>&1)
 

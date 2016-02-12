@@ -7,7 +7,6 @@ import datetime
 
 try:
     from django.utils.timezone import now as datetime_now
-    datetime_now  # workaround for pyflakes
 except ImportError:
     datetime_now = datetime.datetime.now
 
