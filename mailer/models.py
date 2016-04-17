@@ -30,6 +30,14 @@ PRIORITIES = [
 PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 
 
+def get_message_id(msg):
+    # From django.core.mail.message: Email header names are case-insensitive
+    # (RFC 2045), so we have to accommodate that when doing comparisons.
+    for key, value in msg.extra_headers.items():
+        if key.lower() == 'message-id':
+            return value
+
+
 class MessageManager(models.Manager):
 
     def high_priority(self):
@@ -239,6 +247,7 @@ class MessageLogManager(models.Manager):
         """
         return self.create(
             message_data=message.message_data,
+            message_id=get_message_id(message.email),
             when_added=message.when_added,
             priority=message.priority,
             # @@@ other fields from Message
@@ -258,6 +267,7 @@ class MessageLog(models.Model):
 
     # fields from Message
     message_data = models.TextField()
+    message_id = models.TextField(editable=False, null=True)
     when_added = models.DateTimeField(db_index=True)
     priority = models.CharField(max_length=1, choices=PRIORITIES, db_index=True)
     # @@@ campaign?

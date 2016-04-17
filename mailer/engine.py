@@ -7,8 +7,11 @@ from socket import error as socket_error
 
 from django.conf import settings
 from django.core.mail import get_connection
+from django.core.mail.message import make_msgid
 
-from mailer.models import Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE
+from mailer.models import (
+    Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, get_message_id,
+)
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
@@ -38,6 +41,11 @@ def prioritize():
             yield lp_qs.order_by("when_added")[0]
         if Message.objects.non_deferred().using('default').count() == 0:
             break
+
+
+def ensure_message_id(msg):
+    if get_message_id(msg) is None:
+        msg.extra_headers['Message-ID'] = make_msgid()
 
 
 def _limits_reached(sent, deferred):
@@ -132,6 +140,7 @@ def send_all():
                         # pickled when running < Django 1.8 and then
                         # unpickled under Django 1.8
                         email.reply_to = []
+                    ensure_message_id(email)
                     email.send()
 
                     # connection can't be stored in the MessageLog
