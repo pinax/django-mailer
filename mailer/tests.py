@@ -10,7 +10,7 @@ from mailer.models import (Message, MessageLog, DontSendEntry, db_to_email, emai
 import mailer
 from mailer import engine
 
-from mock import patch, Mock
+from mock import patch, Mock, ANY
 import pickle
 import lockfile
 import smtplib
@@ -582,3 +582,36 @@ class TestDbToEmail(TestCase):
         self.assertEqual(converted_email.subject, email.subject)
         self.assertEqual(converted_email.from_email, email.from_email)
         self.assertEqual(converted_email.to, email.to)
+
+
+class TestCommandHelper(TestCase):
+    def test_send_mail_no_cron(self):
+        with patch('mailer.management.commands.send_mail.logging') as logging:
+            call_command('send_mail')
+            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+
+    def test_send_mail_cron_0(self):
+        with patch('mailer.management.commands.send_mail.logging') as logging:
+            call_command('send_mail', '--cron', '0')
+            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+
+    def test_send_mail_cron_1(self):
+        with patch('mailer.management.commands.send_mail.logging') as logging:
+            call_command('send_mail', '--cron', '1')
+            logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+
+    def test_retry_deferred_no_cron(self):
+        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+            call_command('retry_deferred')
+            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+
+    def test_retry_deferred_cron_0(self):
+        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+            call_command('retry_deferred', '--cron', '0')
+            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+
+    def test_retry_deferred_cron_1(self):
+        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+            call_command('retry_deferred', '--cron', '1')
+            logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+
