@@ -614,4 +614,3 @@ class TestCommandHelper(TestCase):
         with patch('mailer.management.commands.retry_deferred.logging') as logging:
             call_command('retry_deferred', '--cron', '1')
             logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
-

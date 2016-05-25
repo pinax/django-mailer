@@ -1,3 +1,5 @@
+from optparse import make_option
+
 from django.core.management.base import NoArgsCommand
 
 help_msg = "If 1 don't print messagges, but only errors."
@@ -21,5 +23,3 @@ else:
                 type=int,
                 help=help_msg,
             )
-
-
