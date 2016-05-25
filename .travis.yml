@@ -10,7 +10,6 @@ env:
   - TOXENV=py33-django16-test
   - TOXENV=py33-django17-test
   - TOXENV=py33-django18-test
-  - TOXENV=py33-django19-test
   - TOXENV=py34-django16-test
   - TOXENV=py34-django17-test
   - TOXENV=py34-django18-test
