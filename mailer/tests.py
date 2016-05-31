@@ -1,21 +1,23 @@
-from django.test import TestCase
+import datetime
+import pickle
+import smtplib
+import time
+
+import lockfile
 from django.core import mail
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 from django.core.management import call_command
+from django.test import TestCase
 from django.utils.timezone import now as datetime_now
+from mock import Mock, patch
 
-from mailer.models import (Message, MessageLog, DontSendEntry, db_to_email, email_to_db,
-                           PRIORITY_HIGH, PRIORITY_MEDIUM, PRIORITY_LOW, PRIORITY_DEFERRED,
-                           RESULT_SUCCESS, RESULT_FAILURE)
 import mailer
 from mailer import engine
-
-from mock import patch, Mock
-import pickle
-import lockfile
-import smtplib
-import time
-import datetime
+from mailer.models import (
+    PRIORITY_DEFERRED, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_MEDIUM,
+    RESULT_FAILURE, RESULT_SUCCESS, DontSendEntry, Message, MessageLog,
+    db_to_email, email_to_db, make_message
+)
 
 
 class FakeConnection(object):
@@ -325,6 +327,43 @@ class TestSending(TestCase):
             m = MessageLog.objects.get()
             self.assertEqual(m.email.extra_headers['X-Sent-By'],
                              'django-mailer-tests')
+
+    def test_set_and_save_message_id(self):
+        """
+        Test that message-id is set and saved correctly
+        """
+        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
+            mailer.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
+            engine.send_all()
+            m = MessageLog.objects.get()
+            self.assertEqual(
+                m.email.extra_headers['Message-ID'],
+                m.message_id
+            )
+
+    def test_save_existing_message_id(self):
+        """
+        Test that a preset message-id is saved correctly
+        """
+        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
+            make_message(
+                subject="Subject",
+                body="Body",
+                from_email="sender@example.com",
+                to=["recipient@example.com"],
+                priority=PRIORITY_MEDIUM,
+                headers={'message-id': 'foo'},
+            ).save()
+            engine.send_all()
+            m = MessageLog.objects.get()
+            self.assertEqual(
+                m.email.extra_headers['message-id'],
+                'foo'
+            )
+            self.assertEqual(
+                m.message_id,
+                'foo'
+            )
 
 
 class TestLockNormal(TestCase):

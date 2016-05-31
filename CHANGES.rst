@@ -1,6 +1,13 @@
 Change log
 ==========
 
+Unreleased
+----------
+
+* Save the ``Message-ID`` header on ``Message`` explicitly to enable finding
+  emails using this identifier.
+
+
 1.1.0
 -----
 
