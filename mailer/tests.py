@@ -3,21 +3,21 @@ import pickle
 import smtplib
 import time
 
+import django
 import lockfile
 from django.core import mail
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils.timezone import now as datetime_now
-from mock import Mock, patch
+from mock import ANY, Mock, patch
 
 import mailer
 from mailer import engine
-from mailer.models import (
-    PRIORITY_DEFERRED, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_MEDIUM,
-    RESULT_FAILURE, RESULT_SUCCESS, DontSendEntry, Message, MessageLog,
-    db_to_email, email_to_db, make_message
-)
+from mailer.models import (PRIORITY_DEFERRED, PRIORITY_HIGH, PRIORITY_LOW,
+                           PRIORITY_MEDIUM, RESULT_FAILURE, RESULT_SUCCESS,
+                           DontSendEntry, Message, MessageLog, db_to_email,
+                           email_to_db, make_message)
 
 
 class FakeConnection(object):
@@ -621,3 +621,44 @@ class TestDbToEmail(TestCase):
         self.assertEqual(converted_email.subject, email.subject)
         self.assertEqual(converted_email.from_email, email.from_email)
         self.assertEqual(converted_email.to, email.to)
+
+
+def call_command_with_cron_arg(command, cron_value):
+    # for old django versions, `call_command` doesn't parse arguments
+    if django.VERSION < (1, 8):
+        return call_command(command, cron=cron_value)
+
+    # newer django; test parsing by passing argument as string
+    return call_command(command, '--cron={}'.format(cron_value))
+
+
+class TestCommandHelper(TestCase):
+    def test_send_mail_no_cron(self):
+        with patch('mailer.management.commands.send_mail.logging') as logging:
+            call_command('send_mail')
+            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+
+    def test_send_mail_cron_0(self):
+        with patch('mailer.management.commands.send_mail.logging') as logging:
+            call_command_with_cron_arg('send_mail', 0)
+            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+
+    def test_send_mail_cron_1(self):
+        with patch('mailer.management.commands.send_mail.logging') as logging:
+            call_command_with_cron_arg('send_mail', 1)
+            logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+
+    def test_retry_deferred_no_cron(self):
+        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+            call_command('retry_deferred')
+            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+
+    def test_retry_deferred_cron_0(self):
+        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+            call_command_with_cron_arg('retry_deferred', 0)
+            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+
+    def test_retry_deferred_cron_1(self):
+        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+            call_command_with_cron_arg('retry_deferred', 1)
+            logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
