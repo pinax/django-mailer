@@ -5,6 +5,7 @@ include CHANGES.rst
 include MANIFEST.in
 include CONTRIBUTING.rst
 include README.rst
+include RELEASE.rst
 include *.py
 include .coveragerc
 include tox.ini
