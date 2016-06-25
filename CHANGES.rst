@@ -1,11 +1,13 @@
 Change log
 ==========
 
-Unreleased
-----------
+1.2.0
+-----
 
 * Save the ``Message-ID`` header on ``Message`` explicitly to enable finding
   emails using this identifier.
+
+  This includes a database schema migration.
 
 
 1.1.0
