@@ -1,6 +1,11 @@
 Change log
 ==========
 
+1.2.1
+-----
+
+* More helpful admin for Message and MessageLog
+
 1.2.0
 -----
 
