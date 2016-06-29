@@ -5,6 +5,7 @@ Change log
 -----
 
 * More helpful admin for Message and MessageLog
+* Handle exceptions from really old Django versions
 
 1.2.0
 -----

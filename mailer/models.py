@@ -99,11 +99,11 @@ def db_to_email(data):
 
         try:
             return pickle.loads(base64_decode(data))
-        except (TypeError, pickle.UnpicklingError, base64.binascii.Error):
+        except (TypeError, pickle.UnpicklingError, base64.binascii.Error, AttributeError):
             try:
                 # previous method was to just do pickle.dumps(val)
                 return pickle.loads(data)
-            except (TypeError, pickle.UnpicklingError):
+            except (TypeError, pickle.UnpicklingError, AttributeError):
                 return None
 
 
