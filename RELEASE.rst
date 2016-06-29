@@ -15,7 +15,7 @@ Release process
 * Tag the release e.g.::
 
     $ git tag 1.2.0
-    $ git push upstream master
+    $ git push upstream master --tags
 
 Post release
 ------------
