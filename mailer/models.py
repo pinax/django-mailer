@@ -122,6 +122,15 @@ class Message(models.Model):
         verbose_name = _("message")
         verbose_name_plural = _("messages")
 
+    def __str__(self):
+        try:
+            email = self.email
+            return "On {0}, \"{1}\" to {2}".format(self.when_attempted,
+                                                   email.subject,
+                                                   ", ".join(email.to))
+        except Exception:
+            return "<Message repr unavailable>"
+
     def defer(self):
         self.priority = PRIORITY_DEFERRED
         self.save()
@@ -282,6 +291,15 @@ class MessageLog(models.Model):
     class Meta:
         verbose_name = _("message log")
         verbose_name_plural = _("message logs")
+
+    def __str__(self):
+        try:
+            email = self.email
+            return "On {0}, \"{1}\" to {2}".format(self.when_added,
+                                                   email.subject,
+                                                   ", ".join(email.to))
+        except Exception:
+            return "<MessageLog repr unavailable>"
 
     @property
     def email(self):
