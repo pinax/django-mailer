@@ -1,16 +1,16 @@
 import logging
 
-from django.core.management.base import NoArgsCommand
+from django.core.management.base import BaseCommand
 from django.db import connection
 
 from mailer.models import Message
 from mailer.management.helpers import CronArgMixin
 
 
-class Command(CronArgMixin, NoArgsCommand):
+class Command(CronArgMixin, BaseCommand):
     help = "Attempt to resend any deferred mail."
 
-    def handle_noargs(self, **options):
+    def handle(self, *args, **options):
         if options['cron'] == 0:
             logging.basicConfig(level=logging.DEBUG, format="%(message)s")
         else:
