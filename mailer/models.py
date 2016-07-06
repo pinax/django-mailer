@@ -5,11 +5,7 @@ import logging
 import pickle
 import datetime
 
-try:
-    from django.utils.timezone import now as datetime_now
-except ImportError:
-    datetime_now = datetime.datetime.now
-
+from django.utils.timezone import now as datetime_now
 from django.core.mail import EmailMessage
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -125,7 +121,7 @@ class Message(models.Model):
     def __str__(self):
         try:
             email = self.email
-            return "On {0}, \"{1}\" to {2}".format(self.when_attempted,
+            return "On {0}, \"{1}\" to {2}".format(self.when_added,
                                                    email.subject,
                                                    ", ".join(email.to))
         except Exception:
@@ -295,7 +291,7 @@ class MessageLog(models.Model):
     def __str__(self):
         try:
             email = self.email
-            return "On {0}, \"{1}\" to {2}".format(self.when_added,
+            return "On {0}, \"{1}\" to {2}".format(self.when_attempted,
                                                    email.subject,
                                                    ", ".join(email.to))
         except Exception:
