@@ -599,12 +599,12 @@ class TestMessages(TestCase):
 
             self.assertEqual(Message.objects.count(), 1)
 
-            msg = Message.objects.all()[0]
+            msg = Message.objects.get()
             self.assertEqual(
                 str(msg),
                 'On {0}, \"Subject Msg\" to rec1@example.com'.format(msg.when_added),
             )
-            del msg.when_added
+            msg.message_data = None
             self.assertEqual(str(msg), '<Message repr unavailable>')
 
     def test_message_log_str(self):
@@ -614,12 +614,12 @@ class TestMessages(TestCase):
 
             self.assertEqual(MessageLog.objects.count(), 1)
 
-            log = MessageLog.objects.all()[0]
+            log = MessageLog.objects.get()
             self.assertEqual(
                 str(log),
                 'On {0}, \"Subject Log\" to 1gol@example.com'.format(log.when_attempted),
             )
-            del log.when_attempted
+            log.message_data = None
             self.assertEqual(str(log), '<MessageLog repr unavailable>')
 
 
