@@ -593,6 +593,35 @@ class TestMessages(TestCase):
             self.assertEqual(log.to_addresses, [])
             self.assertEqual(log.subject, "")
 
+    def test_message_str(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            mailer.send_mail("Subject Msg", "Body", "msg1@example.com", ["rec1@example.com"])
+
+            self.assertEqual(Message.objects.count(), 1)
+
+            msg = Message.objects.all()[0]
+            self.assertEqual(
+                str(msg),
+                'On {0}, \"Subject Msg\" to rec1@example.com'.format(msg.when_added),
+            )
+            del msg.when_added
+            self.assertEqual(str(msg), '<Message repr unavailable>')
+
+    def test_message_log_str(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            mailer.send_mail("Subject Log", "Body", "log1@example.com", ["1gol@example.com"])
+            engine.send_all()
+
+            self.assertEqual(MessageLog.objects.count(), 1)
+
+            log = MessageLog.objects.all()[0]
+            self.assertEqual(
+                str(log),
+                'On {0}, \"Subject Log\" to 1gol@example.com'.format(log.when_attempted),
+            )
+            del log.when_attempted
+            self.assertEqual(str(log), '<MessageLog repr unavailable>')
+
 
 class TestDbToEmail(TestCase):
     def test_db_to_email(self):
