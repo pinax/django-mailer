@@ -103,22 +103,6 @@ details.
 
 .. _pinax documentation: http://pinaxproject.com/docs/dev/deployment.html#sending-mail-and-notices
 
-===================
-Using EMAIL_BACKEND
-===================
-
-To automatically switch all your mail to use django-mailer, instead of changing imports
-you can also use the EMAIL_BACKEND feature that was introduced in Django 1.2. In
-your settings file, you first have to set EMAIL_BACKEND::
-
-    EMAIL_BACKEND = "mailer.backend.DbBackend"
-
-If you were previously using a non-default EMAIL_BACKEND, you need to configure
-the MAILER_EMAIL_BACKEND setting, so that django-mailer knows how to actually send
-the mail::
-
-    MAILER_EMAIL_BACKEND = "your.actual.EmailBackend"
-
 Controlling the delivery process
 ================================
 
