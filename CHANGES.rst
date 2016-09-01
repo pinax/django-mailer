@@ -1,9 +1,11 @@
 Change log
 ==========
 
-Unreleased
-----------
+1.2.2
+-----
 
+* Django 1.10 support.
+* Fixed reprs for Message and MessageLog.
 
 1.2.1
 -----
