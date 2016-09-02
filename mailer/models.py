@@ -5,6 +5,7 @@ import logging
 import pickle
 import datetime
 
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as datetime_now
 from django.core.mail import EmailMessage
 from django.db import models
@@ -103,6 +104,7 @@ def db_to_email(data):
                 return None
 
 
+@python_2_unicode_compatible
 class Message(models.Model):
 
     # The actual data - a pickled EmailMessage
@@ -268,6 +270,7 @@ class MessageLogManager(models.Manager):
         return count
 
 
+@python_2_unicode_compatible
 class MessageLog(models.Model):
 
     # fields from Message

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import datetime
 import pickle
 import smtplib
@@ -9,6 +12,7 @@ from django.core import mail
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 from django.core.management import call_command
 from django.test import TestCase
+from django.utils import six
 from django.utils.timezone import now as datetime_now
 from mock import ANY, Mock, patch
 
@@ -595,30 +599,31 @@ class TestMessages(TestCase):
 
     def test_message_str(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            mailer.send_mail("Subject Msg", "Body", "msg1@example.com", ["rec1@example.com"])
+            mailer.send_mail("Subject Msg 中", "Body 中", "msg1@example.com", ["rec1@example.com"])
 
             self.assertEqual(Message.objects.count(), 1)
 
             msg = Message.objects.get()
             self.assertEqual(
-                str(msg),
-                'On {0}, \"Subject Msg\" to rec1@example.com'.format(msg.when_added),
+                six.text_type(msg),
+                'On {0}, "Subject Msg 中" to rec1@example.com'.format(msg.when_added),
             )
             msg.message_data = None
             self.assertEqual(str(msg), '<Message repr unavailable>')
 
     def test_message_log_str(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            mailer.send_mail("Subject Log", "Body", "log1@example.com", ["1gol@example.com"])
+            mailer.send_mail("Subject Log 中", "Body 中", "log1@example.com", ["1gol@example.com"])
             engine.send_all()
 
             self.assertEqual(MessageLog.objects.count(), 1)
 
             log = MessageLog.objects.get()
             self.assertEqual(
-                str(log),
-                'On {0}, \"Subject Log\" to 1gol@example.com'.format(log.when_attempted),
+                six.text_type(log),
+                'On {0}, "Subject Log 中" to 1gol@example.com'.format(log.when_attempted),
             )
+
             log.message_data = None
             self.assertEqual(str(log), '<MessageLog repr unavailable>')
 
