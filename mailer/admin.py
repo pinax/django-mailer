@@ -5,6 +5,8 @@ from mailer.models import Message, DontSendEntry, MessageLog
 
 def show_to(message):
     return ", ".join(message.to_addresses)
+
+
 show_to.short_description = "To"
 
 
@@ -37,6 +39,7 @@ class MessageLogAdmin(MessageAdminMixin, admin.ModelAdmin):
     date_hierarchy = "when_attempted"
     readonly_fields = ['plain_text_body', 'message_id']
     search_fields = ['message_id']
+
 
 admin.site.register(Message, MessageAdmin)
 admin.site.register(DontSendEntry, DontSendEntryAdmin)
