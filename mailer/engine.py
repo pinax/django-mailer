@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import time
 import smtplib
 import logging
@@ -129,8 +131,8 @@ def send_all():
                 if connection is None:
                     connection = get_connection(backend=EMAIL_BACKEND)
                 logging.info("sending message '{0}' to {1}".format(
-                    message.subject.encode("utf-8"),
-                    u", ".join(message.to_addresses).encode("utf-8"))
+                    message.subject,
+                    ", ".join(message.to_addresses))
                 )
                 email = message.email
                 if email is not None:

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import datetime
 import pickle
 import smtplib
@@ -56,7 +59,7 @@ class TestBackend(TestCase):
         """
         self.assertEqual(Message.objects.count(), 0)
         with self.settings(EMAIL_BACKEND="mailer.backend.DbBackend"):
-            mail.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
+            mail.send_mail("Subject ☺", "Body", "sender@example.com", ["recipient@example.com"])
             self.assertEqual(Message.objects.count(), 1)
 
 
@@ -71,7 +74,7 @@ class TestSending(TestCase):
         specified MAILER_EMAIL_BACKEND
         """
         with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
-            mailer.send_mail("Subject", "Body", "sender1@example.com", ["recipient@example.com"])
+            mailer.send_mail("Subject ☺", "Body", "sender1@example.com", ["recipient@example.com"])
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(len(TestMailerEmailBackend.outbox), 0)
             engine.send_all()
@@ -164,10 +167,10 @@ class TestSending(TestCase):
     def test_send_mass_mail(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mails = (
-                ("Subject", "Body", "mass0@example.com", ["recipient0@example.com"]),
-                ("Subject", "Body", "mass1@example.com", ["recipient1@example.com"]),
-                ("Subject", "Body", "mass2@example.com", ["recipient2@example.com"]),
-                ("Subject", "Body", "mass3@example.com", ["recipient3@example.com"]),
+                ("Subject ☺", "Body", "mass0@example.com", ["recipient0@example.com"]),
+                ("Subject ☺", "Body", "mass1@example.com", ["recipient1@example.com"]),
+                ("Subject ☺", "Body", "mass2@example.com", ["recipient2@example.com"]),
+                ("Subject ☺", "Body", "mass3@example.com", ["recipient3@example.com"]),
             )
 
             mailer.send_mass_mail(mails)
@@ -183,6 +186,7 @@ class TestSending(TestCase):
             self.assertEqual(len(mail.outbox), 4)
             for i, sent in enumerate(mail.outbox):
                 # Default "plain text"
+                self.assertEqual(sent.subject, "Subject ☺")
                 self.assertEqual(sent.from_email, "mass{0}@example.com".format(i))
                 self.assertEqual(sent.to, ["recipient{0}@example.com".format(i)])
 
