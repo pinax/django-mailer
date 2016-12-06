@@ -10,8 +10,7 @@ from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
 
 from mailer.models import (
-    Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, get_message_id,
-)
+    Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, RESULT_ERROR, get_message_id)
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
@@ -120,6 +119,7 @@ def send_all():
     start_time = time.time()
 
     deferred = 0
+    errored = 0
     sent = 0
 
     try:
@@ -152,10 +152,14 @@ def send_all():
                     logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
 
-            except (socket_error, smtplib.SMTPSenderRefused,
-                    smtplib.SMTPRecipientsRefused,
+            except (socket_error,
+                    smtplib.SMTPServerDisconnected,
+                    smtplib.SMTPConnectError,
                     smtplib.SMTPDataError,
-                    smtplib.SMTPAuthenticationError) as err:
+                    smtplib.SMTPHeloError,
+                    smtplib.SMTPAuthenticationError,  # retryable with corrected auth settings
+                    ) as err:
+                # Transient/recoverable problem: this exact message should be retried later.
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
                 MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
@@ -163,8 +167,20 @@ def send_all():
                 # Get new connection, it case the connection itself has an error.
                 connection = None
 
+            except Exception as err:
+                # Everything else is non-retryable; this exact message is unlikely to ever succeed
+                # (including smtplib.SMTPSenderRefused, smtplib.SMTPNotSupportedError,
+                # smtplib.SMTPRecipientsRefused -- usually an invalid recipient address --
+                # and most errors from non-SMTP EmailBackend implementations).
+                logging.info("message discarded due to non-retryable failure: %s" % err)
+                MessageLog.objects.log(message, RESULT_ERROR, log_message=str(err))
+                message.delete()
+                errored += 1
+                # Get new connection, it case the connection itself has an error.
+                connection = None
+
             # Check if we reached the limits for the current run
-            if _limits_reached(sent, deferred):
+            if _limits_reached(sent, deferred):  # TODO: add limits for errored?
                 break
 
             _throttle_emails()
@@ -173,7 +189,7 @@ def send_all():
         release_lock(lock)
 
     logging.info("")
-    logging.info("%s sent; %s deferred;" % (sent, deferred))
+    logging.info("%s sent; %s deferred; %s errored" % (sent, deferred, errored))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 

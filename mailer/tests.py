@@ -18,8 +18,8 @@ from mock import ANY, Mock, patch
 
 import mailer
 from mailer import engine
-from mailer.models import (PRIORITY_DEFERRED, PRIORITY_HIGH, PRIORITY_LOW,
-                           PRIORITY_MEDIUM, RESULT_FAILURE, RESULT_SUCCESS,
+from mailer.models import (PRIORITY_DEFERRED, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_MEDIUM,
+                           RESULT_FAILURE, RESULT_ERROR, RESULT_SUCCESS,
                            DontSendEntry, Message, MessageLog, db_to_email,
                            email_to_db, make_message)
 
@@ -50,7 +50,14 @@ class TestMailerEmailBackend(object):
 
 class FailingMailerEmailBackend(LocMemEmailBackend):
     def send_messages(self, email_messages):
-        raise smtplib.SMTPSenderRefused(1, "foo", "foo@foo.com")
+        # A retryable error:
+        raise smtplib.SMTPConnectError(1, "network unreachable")
+
+
+class ErroringMailerEmailBackend(LocMemEmailBackend):
+    def send_messages(self, email_messages):
+        # A non-retryable error:
+        raise smtplib.SMTPSenderRefused(1, "no such account", "foo@foo.com")
 
 
 class TestBackend(TestCase):
@@ -104,6 +111,22 @@ class TestSending(TestCase):
             engine.send_all()
             self.assertEqual(len(mail.outbox), 1)
             self.assertEqual(Message.objects.count(), 0)
+
+    def test_non_retryable_errors(self):
+        """
+        Test that messages with permanent errors don't get stuck in deferred queue
+        """
+        # (Retryable errors are covered by test_retry_deferred and test_purge_old_entries)
+        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.ErroringMailerEmailBackend"):
+            mailer.send_mail("Subject", "Body", "sender1@example.com", ["recipient@example.com"])
+            engine.send_all()
+
+        # Should not be pending or deferred
+        self.assertEqual(Message.objects.count(), 0)
+
+        # But should have logged it as a non-retryable error
+        self.assertEqual(MessageLog.objects.count(), 1)
+        self.assertEqual(MessageLog.objects.all()[0].result, RESULT_ERROR)
 
     def test_purge_old_entries(self):
         # Send one successfully
