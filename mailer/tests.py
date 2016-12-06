@@ -18,8 +18,8 @@ from mock import ANY, Mock, patch
 
 import mailer
 from mailer import engine
-from mailer.models import (PRIORITY_DEFERRED, PRIORITY_HIGH, PRIORITY_LOW,
-                           PRIORITY_MEDIUM, RESULT_FAILURE, RESULT_SUCCESS,
+from mailer.models import (PRIORITY_DEFERRED, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_MEDIUM,
+                           RESULT_FAILURE, RESULT_ERROR, RESULT_SUCCESS,
                            DontSendEntry, Message, MessageLog, db_to_email,
                            email_to_db, make_message)
 
@@ -104,6 +104,66 @@ class TestSending(TestCase):
             engine.send_all()
             self.assertEqual(len(mail.outbox), 1)
             self.assertEqual(Message.objects.count(), 0)
+
+    def test_deferrable_send_errors(self):
+        """
+        Test that specific send errors are treated as deferrals
+        """
+        for deferrable_error in [
+            smtplib.SMTPSenderRefused(530, "Unauthorized sender", "from@example.com"),
+            smtplib.SMTPRecipientsRefused({"to@example.com": (422, "Mailbox full")}),
+            smtplib.SMTPDataError(501, "Syntax error"),
+            smtplib.SMTPAuthenticationError(530, "Invalid username/password"),
+        ]:
+            with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
+                with patch("mailer.tests.FailingMailerEmailBackend", side_effect=deferrable_error):
+                    mailer.send_mail("Subject", "Body", "from@example.com", ["to@example.com"])
+                    engine.send_all()
+
+            # Should be deferred and logged
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 1)
+            self.assertEqual(MessageLog.objects.count(), 1)
+
+            Message.objects.all().delete()
+            MessageLog.objects.all().delete()
+
+    def test_transient_send_errors(self):
+        """
+        Test that temporary errors cleanly exit send, leaving queue intact
+        """
+        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
+            with patch("mailer.tests.FailingMailerEmailBackend",
+                       side_effect=smtplib.SMTPConnectError(421, "Down for maintenance")
+                       ) as send_patch:
+                mailer.send_mail("Subject", "Body", "from@example.com", ["to1@example.com"])
+                mailer.send_mail("Subject", "Body", "from@example.com", ["to2@example.com"])
+                self.assertEqual(Message.objects.count(), 2)
+                engine.send_all()
+                send_patch.assert_called_once()
+
+        # Should both still be pending
+        self.assertEqual(Message.objects.count(), 2)
+
+        # And should have logged the failure
+        self.assertEqual(MessageLog.objects.count(), 1)
+        self.assertEqual(MessageLog.objects.all()[0].result, RESULT_FAILURE)
+
+    def test_unexpected_send_errors(self):
+        """
+        Test that messages with permanent content errors don't stall send queue
+        """
+        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
+            with patch("mailer.tests.FailingMailerEmailBackend", side_effect=UnicodeDecodeError):
+                mailer.send_mail("Subject", "Body", "from@example.com", ["to@example.com"])
+                engine.send_all()
+
+        # Should not be pending or deferred
+        self.assertEqual(Message.objects.count(), 0)
+
+        # But should have logged it as an error
+        self.assertEqual(MessageLog.objects.count(), 1)
+        self.assertEqual(MessageLog.objects.all()[0].result, RESULT_ERROR)
 
     def test_purge_old_entries(self):
         # Send one successfully
