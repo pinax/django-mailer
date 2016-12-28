@@ -121,4 +121,13 @@ each email `MAILER_EMAIL_THROTTLE`.
 
 Unprocessed emails will be evaluated in the following delivery iterations.
 
+Controlling the internals
+=========================
+
+Ever ran into trouble with the application not being able to write the lockfile
+to a specific location? Or are you working on a system that is running the mail
+sending process via celery? You can configure the lockfile path using the
+value below (default value shown)::
+
+    MAILER_LOCK_ABSOLUTE_PATH = None # path or None
 

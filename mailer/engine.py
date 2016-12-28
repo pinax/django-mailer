@@ -23,6 +23,10 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 # default behavior is to never wait for the lock to be available.
 LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 
+# allows for a different lockfile. The system attempts to create a new
+# file in the directory the application was started from
+LOCK_ABSOLUTE_PATH = getattr(settings, "MAILER_LOCK_ABSOLUTE_PATH", None)
+
 
 def prioritize():
     """
@@ -84,6 +88,9 @@ def _throttle_emails():
 def acquire_lock():
     logging.debug("acquiring lock...")
     lock = lockfile.FileLock("send_mail")
+    # Creates the lockfile in a different location when configured.
+    if LOCK_ABSOLUTE_PATH is not None:
+        lock.unique_name = LOCK_ABSOLUTE_PATH
 
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
