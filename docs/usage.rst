@@ -121,4 +121,12 @@ each email `MAILER_EMAIL_THROTTLE`.
 
 Unprocessed emails will be evaluated in the following delivery iterations.
 
+Other settings
+==============
 
+If you need to be able to control where django-mailer puts its lock file (used
+to ensure mail is not sent twice), you can set ``MAILER_LOCK_PATH`` to a full
+absolute path to the file to be used as a lock. The extension ".lock" will be
+added. The process running ``send_mail`` needs to have permissions to create and
+delete this file, and others in the same directory. With the default value of
+``None`` django-mailer will use a path in current working directory.
