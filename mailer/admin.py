@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from django.contrib import admin
 
 from mailer.models import Message, DontSendEntry, MessageLog
@@ -5,9 +7,7 @@ from mailer.models import Message, DontSendEntry, MessageLog
 
 def show_to(message):
     return ", ".join(message.to_addresses)
-
-
-show_to.short_description = "To"
+show_to.short_description = "To"  # noqa: E305
 
 
 class MessageAdminMixin(object):

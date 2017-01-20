@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import time
 import smtplib
 import logging
@@ -20,6 +22,10 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 # lock timeout value. how long to wait for the lock to become available.
 # default behavior is to never wait for the lock to be available.
 LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
+
+# allows for a different lockfile path. The default is a file
+# in the current working directory.
+LOCK_PATH = getattr(settings, "MAILER_LOCK_PATH", None)
 
 
 def prioritize():
@@ -81,7 +87,12 @@ def _throttle_emails():
 
 def acquire_lock():
     logging.debug("acquiring lock...")
-    lock = lockfile.FileLock("send_mail")
+    if LOCK_PATH is not None:
+        lock_file_path = LOCK_PATH
+    else:
+        lock_file_path = "send_mail"
+
+    lock = lockfile.FileLock(lock_file_path)
 
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
@@ -129,8 +140,8 @@ def send_all():
                 if connection is None:
                     connection = get_connection(backend=EMAIL_BACKEND)
                 logging.info("sending message '{0}' to {1}".format(
-                    message.subject.encode("utf-8"),
-                    u", ".join(message.to_addresses).encode("utf-8"))
+                    message.subject,
+                    ", ".join(message.to_addresses))
                 )
                 email = message.email
                 if email is not None:
