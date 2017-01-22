@@ -236,11 +236,13 @@ class DontSendEntry(models.Model):
 RESULT_SUCCESS = "1"
 RESULT_DONT_SEND = "2"
 RESULT_FAILURE = "3"
+RESULT_ERROR = "4"
 
 RESULT_CODES = (
     (RESULT_SUCCESS, "success"),
     (RESULT_DONT_SEND, "don't send"),
-    (RESULT_FAILURE, "failure"),
+    (RESULT_FAILURE, "failure (retryable)"),
+    (RESULT_ERROR, "error (non-retryable)"),
     # @@@ other types of failure?
 )
 

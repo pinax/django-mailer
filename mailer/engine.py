@@ -12,8 +12,7 @@ from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
 
 from mailer.models import (
-    Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, get_message_id,
-)
+    Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, RESULT_ERROR, get_message_id)
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
@@ -112,7 +111,7 @@ def release_lock(lock):
     logging.debug("released.")
 
 
-def send_all():
+def send_all():  # noqa: C901  # TODO: refactor to reduce complexity
     """
     Send all eligible messages in the queue.
     """
@@ -131,6 +130,7 @@ def send_all():
     start_time = time.time()
 
     deferred = 0
+    errored = 0
     sent = 0
 
     try:
@@ -163,10 +163,17 @@ def send_all():
                     logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
 
-            except (socket_error, smtplib.SMTPSenderRefused,
-                    smtplib.SMTPRecipientsRefused,
-                    smtplib.SMTPDataError,
-                    smtplib.SMTPAuthenticationError) as err:
+            except (smtplib.SMTPConnectError,
+                    smtplib.SMTPServerDisconnected) as err:
+                # Connection-related problem -- try again soon:
+                logging.info("message left queued due to transient failure: %s" % err)
+                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+                break  # connectivity issue; resume batch next time
+
+            except (socket_error,  # includes smtplib.SMTPException in python3.4+
+                    # TODO: consider handling socket_error/OSError/IOError as "retry soon"???
+                    smtplib.SMTPException) as err:
+                # Destination/recipient-related problem -- try again later:
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
                 MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
@@ -174,8 +181,17 @@ def send_all():
                 # Get new connection, it case the connection itself has an error.
                 connection = None
 
+            except Exception as err:
+                # Content-specific (or unknown) problem -- don't retry this message:
+                logging.info("message discarded due to error: %s" % err)
+                MessageLog.objects.log(message, RESULT_ERROR, log_message=str(err))
+                message.delete()
+                errored += 1
+                # Get new connection, it case the connection itself has an error.
+                connection = None
+
             # Check if we reached the limits for the current run
-            if _limits_reached(sent, deferred):
+            if _limits_reached(sent, deferred):  # TODO: add limits for errored???
                 break
 
             _throttle_emails()
@@ -184,7 +200,7 @@ def send_all():
         release_lock(lock)
 
     logging.info("")
-    logging.info("%s sent; %s deferred;" % (sent, deferred))
+    logging.info("%s sent; %s deferred; %s errored" % (sent, deferred, errored))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 
