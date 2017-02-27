@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.contrib import admin
 
-from mailer.models import Message, DontSendEntry, MessageLog
+from mailer.models import Message, DontSendEntry, MessageLog, base64_encode
 
 
 def show_to(message):
@@ -38,7 +38,13 @@ class MessageLogAdmin(MessageAdminMixin, admin.ModelAdmin):
     list_filter = ["result"]
     date_hierarchy = "when_attempted"
     readonly_fields = ['plain_text_body', 'message_id']
-    search_fields = ['message_id']
+    search_fields = ['message_data']
+
+    def get_search_results(self, request, queryset, search_term):
+        base64_search_term = []
+        for term in search_term.split():
+            base64_search_term.append(base64_encode(term).replace('=', ''))
+        return super(MessageLogAdmin, self).get_search_results(request, queryset, ' '.join(base64_search_term))
 
 
 admin.site.register(Message, MessageAdmin)
