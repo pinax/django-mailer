@@ -27,6 +27,21 @@ LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 # in the current working directory.
 LOCK_PATH = getattr(settings, "MAILER_LOCK_PATH", None)
 
+# classes of exceptions to catch when trying to send an email
+EMAIL_SENDING_EXCEPTIONS = (
+    socket_error,
+    smtplib.SMTPSenderRefused,
+    smtplib.SMTPRecipientsRefused,
+    smtplib.SMTPDataError,
+    smtplib.SMTPAuthenticationError,
+)
+try:
+    from boto.ses.exceptions import SESError
+except ImportError:
+    pass
+else:
+    EMAIL_SENDING_EXCEPTIONS += (SESError,)
+
 
 def prioritize():
     """
@@ -163,10 +178,7 @@ def send_all():
                     logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
 
-            except (socket_error, smtplib.SMTPSenderRefused,
-                    smtplib.SMTPRecipientsRefused,
-                    smtplib.SMTPDataError,
-                    smtplib.SMTPAuthenticationError) as err:
+            except EMAIL_SENDING_EXCEPTIONS as err:
                 message.defer()
                 logging.info("message deferred due to failure: %s" % err)
                 MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
