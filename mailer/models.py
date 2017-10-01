@@ -120,7 +120,7 @@ class Message(models.Model):
         verbose_name = _("message")
         verbose_name_plural = _("messages")
 
-    def __str__(self):
+    def __unicode__(self):
         try:
             email = self.email
             return "On {0}, \"{1}\" to {2}".format(self.when_added,
@@ -291,7 +291,7 @@ class MessageLog(models.Model):
         verbose_name = _("message log")
         verbose_name_plural = _("message logs")
 
-    def __str__(self):
+    def __unicode__(self):
         try:
             email = self.email
             return "On {0}, \"{1}\" to {2}".format(self.when_attempted,
