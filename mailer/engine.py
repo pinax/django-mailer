@@ -27,8 +27,6 @@ LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 # in the current working directory.
 LOCK_PATH = getattr(settings, "MAILER_LOCK_PATH", None)
 
-ERROR_HANDLER = getattr(settings, 'MAILER_ERROR_HANDLER', 'error_handler')
-
 
 def prioritize():
     """
@@ -114,7 +112,7 @@ def release_lock(lock):
     logging.debug("released.")
 
 
-def error_handler(message, err):
+def error_handler(connection, message, err):
     error_type = type(err)
     if error_type is socket_error or \
         error_type is smtplib.SMTPSenderRefused or \
@@ -126,10 +124,12 @@ def error_handler(message, err):
         logging.info("message deferred due to failure: %s" % err)
         MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
         action = 'deferred'
-        # Get new connection, it case the connection itself has an error.
+        # Kill the connection, in case the connection itself has an error.
         connection = None
 
     return connection, action
+
+ERROR_HANDLER = getattr(settings, 'MAILER_ERROR_HANDLER', error_handler)
 
 
 def send_all():
@@ -150,8 +150,7 @@ def send_all():
 
     start_time = time.time()
 
-    deferred = 0
-    sent = 0
+    counts = {'deferred': 0, 'sent': 0}
 
     try:
         connection = None
@@ -178,16 +177,17 @@ def send_all():
                     email.connection = None
                     message.email = email  # For the sake of MessageLog
                     MessageLog.objects.log(message, RESULT_SUCCESS)
-                    sent += 1
+                    counts['sent'] += 1
                 else:
                     logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                 message.delete()
 
             except Exception as err:
                 connection, action = ERROR_HANDLER(connection, message, err)
+                counts[action] = counts[action] + 1
 
             # Check if we reached the limits for the current run
-            if _limits_reached(sent, deferred):
+            if _limits_reached(counts['sent'], counts['deferred']):
                 break
 
             _throttle_emails()
@@ -196,7 +196,7 @@ def send_all():
         release_lock(lock)
 
     logging.info("")
-    logging.info("%s sent; %s deferred;" % (sent, deferred))
+    logging.info("%s sent; %s deferred;" % (counts['sent'], counts['deferred']))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 
