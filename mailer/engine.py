@@ -10,6 +10,7 @@ from socket import error as socket_error
 from django.conf import settings
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
+from django.utils.module_loading import import_string
 
 from mailer.models import (
     Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, get_message_id,
@@ -129,8 +130,6 @@ def error_handler(connection, message, err):
 
     return connection, action
 
-ERROR_HANDLER = getattr(settings, 'MAILER_ERROR_HANDLER', error_handler)
-
 
 def send_all():
     """
@@ -142,6 +141,11 @@ def send_all():
         settings,
         "MAILER_EMAIL_BACKEND",
         "django.core.mail.backends.smtp.EmailBackend"
+    )
+
+    ERROR_HANDLER = import_string(
+        getattr(settings, 'MAILER_ERROR_HANDLER',
+        'mailer.engine.error_handler')
     )
 
     acquired, lock = acquire_lock()
