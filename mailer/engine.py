@@ -27,6 +27,8 @@ LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 # in the current working directory.
 LOCK_PATH = getattr(settings, "MAILER_LOCK_PATH", None)
 
+ERROR_HANDLER = getattr(settings, 'MAILER_ERROR_HANDLER', 'error_handler')
+
 
 def prioritize():
     """
@@ -112,6 +114,24 @@ def release_lock(lock):
     logging.debug("released.")
 
 
+def error_handler(message, err):
+    error_type = type(err)
+    if error_type is socket_error or \
+        error_type is smtplib.SMTPSenderRefused or \
+        error_type is smtplib.SMTPRecipientsRefused or \
+        error_type is smtplib.SMTPDataError or \
+        error_type is smtplib.SMTPAuthenticationError:
+
+        message.defer()
+        logging.info("message deferred due to failure: %s" % err)
+        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+        action = 'deferred'
+        # Get new connection, it case the connection itself has an error.
+        connection = None
+
+    return connection, action
+
+
 def send_all():
     """
     Send all eligible messages in the queue.
@@ -164,12 +184,7 @@ def send_all():
                 message.delete()
 
             except Exception as err:
-                message.defer()
-                logging.info("message deferred due to failure: %s" % err)
-                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
-                deferred += 1
-                # Get new connection, it case the connection itself has an error.
-                connection = None
+                connection, action = ERROR_HANDLER(connection, message, err)
 
             # Check if we reached the limits for the current run
             if _limits_reached(sent, deferred):
