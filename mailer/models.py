@@ -4,6 +4,7 @@ import base64
 import logging
 import pickle
 import datetime
+import sys
 
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.timezone import now as datetime_now
@@ -90,7 +91,7 @@ def db_to_email(data):
         return None
     else:
         try:
-            data = data.encode("ascii")
+            data = data.encode(sys.getdefaultencoding())
         except AttributeError:
             pass
 
