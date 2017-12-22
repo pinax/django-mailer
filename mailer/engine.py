@@ -114,19 +114,23 @@ def release_lock(lock):
 
 
 def error_handler(connection, message, err):
-    error_type = type(err)
-    if error_type is socket_error or \
-        error_type is smtplib.SMTPSenderRefused or \
-        error_type is smtplib.SMTPRecipientsRefused or \
-        error_type is smtplib.SMTPDataError or \
-        error_type is smtplib.SMTPAuthenticationError:
+    if not isinstance(err, (
+            socket_error,
+            smtplib.SMTPSenderRefused,
+            smtplib.SMTPRecipientsRefused,
+            smtplib.SMTPDataError,
+            smtplib.SMTPAuthenticationError,
+    )):
+        # TODO: Avoid endless retrying sending of messages on unrecognized
+        #       types of errors.
+        pass
 
-        message.defer()
-        logging.info("message deferred due to failure: %s" % err)
-        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
-        action = 'deferred'
-        # Kill the connection, in case the connection itself has an error.
-        connection = None
+    message.defer()
+    logging.info("message deferred due to failure: %s" % err)
+    MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+    action = 'deferred'
+    # Kill the connection, in case the connection itself has an error.
+    connection = None
 
     return connection, action
 

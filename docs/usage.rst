@@ -24,7 +24,18 @@ the mail::
 Now, just use the normal `Django mail functions
 <https://docs.djangoproject.com/en/dev/topics/email/>`_ for sending email. These
 functions will store mail on a queue in the database, which must be sent as
-below.
+
+Recognizing and handling errors
+===============================
+
+When using non-default MAILER_EMAIL_BACKEND, note that django-mailer may not
+recognize its exceptions. django-mailer makes no attempt to recognize
+exceptions from all possible backends, but makes it possible to register a
+custom error handler for this purpose. To do so, set MAILER_ERROR_HANDLER
+to an appropriate error handling function.
+
+By default, ``mailer.engine.error_handler`` is used. Its code should be used as
+a reference for writing custom error handlers.
 
 Explicitly putting mail on the queue
 ====================================
