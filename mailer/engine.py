@@ -148,8 +148,7 @@ def send_all():
     )
 
     ERROR_HANDLER = import_string(
-        getattr(settings, 'MAILER_ERROR_HANDLER',
-        'mailer.engine.error_handler')
+        getattr(settings, 'MAILER_ERROR_HANDLER', 'mailer.engine.error_handler')
     )
 
     acquired, lock = acquire_lock()
