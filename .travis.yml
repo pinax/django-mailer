@@ -1,5 +1,4 @@
 language: python
-python: 3.6  # this is needed to fool travis to have python3.6 as well
 env:
   - TOXENV=py27-django14-test
   - TOXENV=py27-django15-test
@@ -17,21 +16,38 @@ env:
   - TOXENV=py34-django110-test
   - TOXENV=py34-django111-test
   - TOXENV=py34-django20-test
-  - TOXENV=py35-django18-test
-  - TOXENV=py35-django19-test
-  - TOXENV=py35-django110-test
-  - TOXENV=py35-django111-test
-  - TOXENV=py35-django20-test
-  - TOXENV=py36-django18-test
-  - TOXENV=py36-django19-test
-  - TOXENV=py36-django110-test
-  - TOXENV=py36-django111-test
-  - TOXENV=py36-django20-test
   - TOXENV=py27-flake
   - TOXENV=py34-flake
-  - TOXENV=py35-flake
-  - TOXENV=py36-flake
   - TOXENV=checkmanifest
+
+ # this is needed for python 3.5 and 3.6
+matrix:
+  include:
+  - python: 3.5
+    env: TOXENV=py35-django18-test
+  - python: 3.5
+    env: TOXENV=py35-django19-test
+  - python: 3.5
+    env: TOXENV=py35-django110-test
+  - python: 3.5
+    env: TOXENV=py35-django111-test
+  - python: 3.5
+    env: TOXENV=py35-django20-test
+  - python: 3.5
+    env: TOXENV=py35-flake
+  - python: 3.6
+    env: TOXENV=py36-django18-test
+  - python: 3.6
+    env: TOXENV=py36-django19-test
+  - python: 3.6
+    env: TOXENV=py36-django110-test
+  - python: 3.6
+    env: TOXENV=py36-django111-test
+  - python: 3.6
+    env: TOXENV=py36-django20-test
+  - python: 3.6
+    env: TOXENV=py36-flake
+
 install:
   - pip install coveralls tox>=2.1
 script:
