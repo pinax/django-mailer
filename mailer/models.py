@@ -80,9 +80,11 @@ base64_decode = base64.decodebytes if hasattr(base64, 'decodebytes') else base64
 
 
 def email_to_db(email):
-    # pickle.dumps returns essentially binary data which we need to encode
-    # to store in a unicode field.
-    return base64_encode(pickle.dumps(email))
+    # pickle.dumps returns essentially binary data which we need to base64
+    # encode to store in a unicode field. finally we encode back to make sure
+    # we only try to insert unicode strings into the db, since we use a
+    # TextField
+    return base64_encode(pickle.dumps(email)).decode('ascii')
 
 
 def db_to_email(data):
