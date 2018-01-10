@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import warnings
 
-VERSION = (1, 2, 3, "final", 0)  # following PEP 386
+VERSION = (1, 2, 4, "final", 0)  # following PEP 386
 DEV_N = None
 
 
