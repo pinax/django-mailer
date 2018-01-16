@@ -8,6 +8,10 @@ Release process
 * Change the version in mailer/__init__.py, changing "alpha" to "final" if
   necessary.
 
+* Ensure correct file permissions::
+
+    $ chmod ugo+r -R mailer docs
+
 * Release::
 
     $ ./setup.py sdist bdist_wheel register upload
