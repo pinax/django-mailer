@@ -64,9 +64,9 @@ matrix:
       env: TOXENV=checkmanifest
 install:
   - pip install tox>=2.1
-  - if [[ $TOXENV == *test ]] pip install coveralls
+  - if [[ $TOXENV == *test ]]; then pip install coveralls; fi
 script:
   - tox
 after_script:
-  - if [[ $TOXENV == *test ]] coveralls
+  - if [[ $TOXENV == *test ]]; then coveralls; fi
 sudo: false
