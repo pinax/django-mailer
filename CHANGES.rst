@@ -1,8 +1,10 @@
 Change log
 ==========
 
-Unreleased
-----------
+1.2.3
+-----
+
+* Fixed crasher with models ``__str__``
 
 1.2.2
 -----

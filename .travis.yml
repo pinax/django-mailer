@@ -1,45 +1,72 @@
 language: python
-env:
-  - TOXENV=py27-django14-test
-  - TOXENV=py27-django15-test
-  - TOXENV=py27-django16-test
-  - TOXENV=py27-django17-test
-  - TOXENV=py27-django18-test
-  - TOXENV=py27-django19-test
-  - TOXENV=py27-django110-test
-  - TOXENV=py27-django111-test
-  - TOXENV=py33-django15-test
-  - TOXENV=py33-django16-test
-  - TOXENV=py33-django17-test
-  - TOXENV=py33-django18-test
-  - TOXENV=py34-django16-test
-  - TOXENV=py34-django17-test
-  - TOXENV=py34-django18-test
-  - TOXENV=py34-django19-test
-  - TOXENV=py34-django110-test
-  - TOXENV=py34-django111-test
-  - TOXENV=py35-django18-test
-  - TOXENV=py35-django19-test
-  - TOXENV=py35-django110-test
-  - TOXENV=py35-django111-test
-  - TOXENV=py36-django18-test
-  - TOXENV=py36-django19-test
-  - TOXENV=py36-django110-test
-  - TOXENV=py36-django111-test
-  - TOXENV=py27-flake
-  - TOXENV=py33-flake
-  - TOXENV=py34-flake
-  - TOXENV=py35-flake
-  - TOXENV=py36-flake
-  - TOXENV=checkmanifest
+
 matrix:
-  allow_failures:
-    - env: TOXENV=py27-django111-test
-    - env: TOXENV=py34-django111-test
+  include:
+    - python: "2.7"
+      env: TOXENV=py27-django14-test
+    - python: "2.7"
+      env: TOXENV=py27-django15-test
+    - python: "2.7"
+      env: TOXENV=py27-django16-test
+    - python: "2.7"
+      env: TOXENV=py27-django17-test
+    - python: "2.7"
+      env: TOXENV=py27-django18-test
+    - python: "2.7"
+      env: TOXENV=py27-django19-test
+    - python: "2.7"
+      env: TOXENV=py27-django110-test
+    - python: "2.7"
+      env: TOXENV=py27-django111-test
+    - python: "3.3"
+      env: TOXENV=py33-django15-test
+    - python: "3.3"
+      env: TOXENV=py33-django16-test
+    - python: "3.3"
+      env: TOXENV=py33-django17-test
+    - python: "3.3"
+      env: TOXENV=py33-django18-test
+    - python: "3.4"
+      env: TOXENV=py34-django15-test
+    - python: "3.4"
+      env: TOXENV=py34-django16-test
+    - python: "3.4"
+      env: TOXENV=py34-django17-test
+    - python: "3.4"
+      env: TOXENV=py34-django18-test
+    - python: "3.4"
+      env: TOXENV=py34-django19-test
+    - python: "3.4"
+      env: TOXENV=py34-django110-test
+    - python: "3.4"
+      env: TOXENV=py34-django111-test
+    - python: "3.5"
+      env: TOXENV=py35-django18-test
+    - python: "3.5"
+      env: TOXENV=py35-django19-test
+    - python: "3.5"
+      env: TOXENV=py35-django110-test
+    - python: "3.5"
+      env: TOXENV=py35-django111-test
+    - python: "3.6"
+      env: TOXENV=py36-django18-test
+    - python: "3.6"
+      env: TOXENV=py36-django19-test
+    - python: "3.6"
+      env: TOXENV=py36-django110-test
+    - python: "3.6"
+      env: TOXENV=py36-django111-test
+    - python: "2.7"
+      env: TOXENV=py27-flake
+    - python: "3.4"
+      env: TOXENV=py34-flake
+    - python: "2.7"
+      env: TOXENV=checkmanifest
 install:
-  - pip install coveralls tox>=2.1
+  - pip install tox>=2.1
+  - if [[ $TOXENV == *test ]] pip install coveralls
 script:
   - tox
 after_script:
-  - coveralls
+  - if [[ $TOXENV == *test ]] coveralls
 sudo: false
