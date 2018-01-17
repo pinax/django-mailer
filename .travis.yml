@@ -18,16 +18,24 @@ env:
   - TOXENV=py34-django19-test
   - TOXENV=py34-django110-test
   - TOXENV=py34-django111-test
-  - TOXENV=py34-djangomaster-test
+  - TOXENV=py35-django18-test
+  - TOXENV=py35-django19-test
+  - TOXENV=py35-django110-test
+  - TOXENV=py35-django111-test
+  - TOXENV=py36-django18-test
+  - TOXENV=py36-django19-test
+  - TOXENV=py36-django110-test
+  - TOXENV=py36-django111-test
   - TOXENV=py27-flake
   - TOXENV=py33-flake
   - TOXENV=py34-flake
+  - TOXENV=py35-flake
+  - TOXENV=py36-flake
   - TOXENV=checkmanifest
 matrix:
   allow_failures:
     - env: TOXENV=py27-django111-test
     - env: TOXENV=py34-django111-test
-    - env: TOXENV=py34-djangomaster-test
 install:
   - pip install coveralls tox>=2.1
 script:

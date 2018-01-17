@@ -319,7 +319,7 @@ class TestSending(TestCase):
             self.assertEqual(Message.objects.count(), 0)
 
         # Notes: 2 * TIME because 2 emails are sent during the test
-        self.assertGreater(throttled_time, 2 * TIME)
+        self.assertGreaterEqual(throttled_time, 2 * TIME)
 
     def test_save_changes_to_email(self):
         """
