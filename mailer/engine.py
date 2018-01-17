@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import importlib
 import time
 import smtplib
 import logging
@@ -8,9 +9,9 @@ import lockfile
 from socket import error as socket_error
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
-from django.utils.module_loading import import_string
 
 from mailer.models import (
     Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, get_message_id,
@@ -135,6 +136,17 @@ def error_handler(connection, message, err):
     return connection, action
 
 
+def _load_error_handler():
+    _err_handler_setting = getattr(settings, "MAILER_ERROR_HANDLER", "mailer.engine.error_handler")
+
+    try:
+        module_path, class_name = _err_handler_setting.rsplit('.', 1)
+        module = importlib.import_module(module_path)
+        return getattr(module, class_name)
+    except (ValueError, AttributeError):
+        raise ImproperlyConfigured("Could not import error handler: %s" % _err_handler_setting)
+
+
 def send_all():
     """
     Send all eligible messages in the queue.
@@ -147,9 +159,7 @@ def send_all():
         "django.core.mail.backends.smtp.EmailBackend"
     )
 
-    ERROR_HANDLER = import_string(
-        getattr(settings, 'MAILER_ERROR_HANDLER', 'mailer.engine.error_handler')
-    )
+    ERROR_HANDLER = _load_error_handler()
 
     acquired, lock = acquire_lock()
     if not acquired:
