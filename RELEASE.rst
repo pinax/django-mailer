@@ -15,7 +15,7 @@ Release process
 * Release::
 
     $ ./setup.py sdist bdist_wheel
-    $ twine upload dist/django_mailer-$VERSION-py2-none-any.whl dist/django-mailer-$VERSION.tar.gz
+    $ twine upload dist/django_mailer-$VERSION--py2.py3-none-any.whl dist/django-mailer-$VERSION.tar.gz
 
 * Tag the release e.g.::
 
