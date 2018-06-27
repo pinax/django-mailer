@@ -8,6 +8,7 @@ Unreleased
 -----
 
 * Fixed packaging file permission problems.
+* Added Japanese locale (thanks msk7777)
 
 1.2.4
 -----
