@@ -4,6 +4,11 @@ Change log
 Unreleased
 ----------
 
+1.2.5
+-----
+
+* Fixed packaging file permission problems.
+
 1.2.4
 -----
 
