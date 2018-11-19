@@ -4,6 +4,11 @@ Change log
 Unreleased
 ----------
 
+1.2.6
+-----
+
+* Django 2.1 support.
+
 1.2.5
 -----
 

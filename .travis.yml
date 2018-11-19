@@ -46,6 +46,8 @@ matrix:
   - python: 3.6
     env: TOXENV=py36-django20-test
   - python: 3.6
+    env: TOXENV=py36-django21-test
+  - python: 3.6
     env: TOXENV=py36-flake
 
 install:
