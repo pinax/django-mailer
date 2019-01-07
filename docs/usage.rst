@@ -130,3 +130,8 @@ absolute path to the file to be used as a lock. The extension ".lock" will be
 added. The process running ``send_mail`` needs to have permissions to create and
 delete this file, and others in the same directory. With the default value of
 ``None`` django-mailer will use a path in current working directory.
+
+If you need to change the batch size used by django-mailer to save messages in
+``mailer.backend.DbBackend``, you can set ``MAILER_MESSAGES_BATCH_SIZE`` to a 
+value more suitable for you. By default, no value defined, inheriting django
+default behavior when passing batch size as ``None``. 

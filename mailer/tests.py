@@ -63,6 +63,18 @@ class TestBackend(TestCase):
             mail.send_mail("Subject ☺", "Body", "sender@example.com", ["recipient@example.com"])
             self.assertEqual(Message.objects.count(), 1)
 
+    def test_save_mass_mail_to_db(self):
+        """
+        Test that using send_mass_mail creates multiple Message objects in DB instead, when
+        EMAIL_BACKEND is set.
+        """
+        self.assertEqual(Message.objects.count(), 0)
+        with self.settings(EMAIL_BACKEND="mailer.backend.DbBackend"):
+            message1 = ('Subject ☺', 'Body', 'sender@example.com', ['first@example.com'])
+            message2 = ('Another Subject ☺', 'Body', 'sender@example.com', ['second@test.com'])
+            mail.send_mass_mail((message1, message2))
+            self.assertEqual(Message.objects.count(), 2)
+
 
 class TestSending(TestCase):
     def setUp(self):
