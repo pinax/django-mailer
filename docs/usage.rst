@@ -133,5 +133,6 @@ delete this file, and others in the same directory. With the default value of
 
 If you need to change the batch size used by django-mailer to save messages in
 ``mailer.backend.DbBackend``, you can set ``MAILER_MESSAGES_BATCH_SIZE`` to a 
-value more suitable for you. By default, no value defined, inheriting django
-default behavior when passing batch size as ``None``. 
+value more suitable for you. This value, which defaults to `None`, will be passed to 
+`Django's bulk_create method <https://docs.djangoproject.com/en/2.1/ref/models/querysets/#bulk-create>`_
+ as the `batch_size` parameter.
