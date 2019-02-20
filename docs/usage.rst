@@ -22,7 +22,7 @@ the mail::
     MAILER_EMAIL_BACKEND = "your.actual.EmailBackend"
 
 Now, just use the normal `Django mail functions
-<https://docs.djangoproject.com/en/dev/topics/email/>`_ for sending email. These
+<https://docs.djangoproject.com/en/stable/topics/email/>`_ for sending email. These
 functions will store mail on a queue in the database, which must be sent as
 below.
 
@@ -134,5 +134,5 @@ delete this file, and others in the same directory. With the default value of
 If you need to change the batch size used by django-mailer to save messages in
 ``mailer.backend.DbBackend``, you can set ``MAILER_MESSAGES_BATCH_SIZE`` to a 
 value more suitable for you. This value, which defaults to `None`, will be passed to 
-`Django's bulk_create method <https://docs.djangoproject.com/en/2.1/ref/models/querysets/#bulk-create>`_
+`Django's bulk_create method <https://docs.djangoproject.com/en/stable/ref/models/querysets/#bulk-create>`_
  as the `batch_size` parameter.
