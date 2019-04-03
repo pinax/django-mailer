@@ -1,11 +1,8 @@
 Change log
 ==========
 
-Unreleased
-----------
-
-1.2.6
------
+1.2.6 - 2019-04-03
+------------------
 
 * Official Django 2.1 and 2.2 support.
 * Don't close DB connection in management commands.
