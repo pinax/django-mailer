@@ -8,6 +8,8 @@ Unreleased
 -----
 
 * Django 2.1 support.
+* Don't close DB connection in management commands.
+  This is unnecessary with modern Django.
 
 1.2.5
 -----

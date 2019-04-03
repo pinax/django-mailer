@@ -2,7 +2,6 @@ import logging
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 from mailer.engine import send_all
 from mailer.management.helpers import CronArgMixin
@@ -26,4 +25,3 @@ class Command(CronArgMixin, BaseCommand):
             send_all()
         else:
             logging.info("sending is paused, quitting.")
-        connection.close()

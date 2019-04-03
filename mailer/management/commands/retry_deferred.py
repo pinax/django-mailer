@@ -1,7 +1,6 @@
 import logging
 
 from django.core.management.base import BaseCommand
-from django.db import connection
 
 from mailer.models import Message
 from mailer.management.helpers import CronArgMixin
@@ -17,4 +16,3 @@ class Command(CronArgMixin, BaseCommand):
             logging.basicConfig(level=logging.ERROR, format="%(message)s")
         count = Message.objects.retry_deferred()  # @@@ new_priority not yet supported
         logging.info("%s message(s) retried" % count)
-        connection.close()
