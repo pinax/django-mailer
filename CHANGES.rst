@@ -7,7 +7,7 @@ Unreleased
 1.2.6
 -----
 
-* Django 2.1 support.
+* Official Django 2.1 and 2.2 support.
 * Don't close DB connection in management commands.
   This is unnecessary with modern Django.
 
