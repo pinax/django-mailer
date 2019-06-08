@@ -9,6 +9,7 @@ import time
 import django
 import lockfile
 from django.core import mail
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 from django.core.management import call_command
 from django.test import TestCase
@@ -709,3 +710,15 @@ class CommandHelperTest(TestCase):
         with patch('mailer.management.commands.retry_deferred.logging') as logging:
             call_command_with_cron_arg('retry_deferred', 1)
             logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+
+
+class EmailBackendSettingLoopTest(TestCase):
+    def test_loop_detection(self):
+        with self.settings(EMAIL_BACKEND='mailer.backend.DbBackend',
+                           MAILER_EMAIL_BACKEND='mailer.backend.DbBackend'), \
+                self.assertRaises(ImproperlyConfigured) as catcher:
+            engine.send_all()
+
+        self.assertIn('mailer.backend.DbBackend', str(catcher.exception))
+        self.assertIn('EMAIL_BACKEND', str(catcher.exception))
+        self.assertIn('MAILER_EMAIL_BACKEND', str(catcher.exception))
