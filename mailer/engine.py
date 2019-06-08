@@ -118,7 +118,7 @@ def send_all():
     """
     # The actual backend to use for sending, defaulting to the Django default.
     # To make testing easier this is not stored at module level.
-    EMAIL_BACKEND = getattr(
+    mailer_email_backend = getattr(
         settings,
         "MAILER_EMAIL_BACKEND",
         "django.core.mail.backends.smtp.EmailBackend"
@@ -138,7 +138,7 @@ def send_all():
         for message in prioritize():
             try:
                 if connection is None:
-                    connection = get_connection(backend=EMAIL_BACKEND)
+                    connection = get_connection(backend=mailer_email_backend)
                 logging.info("sending message '{0}' to {1}".format(
                     message.subject,
                     ", ".join(message.to_addresses))
