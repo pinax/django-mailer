@@ -113,13 +113,14 @@ def release_lock(lock):
     logging.debug("released.")
 
 
-def error_handler(connection, message, err):
+def handle_backend_exception(connection, message, err):
+    """ simple error handler that marks messages failing due to SMTP
+    issues as deferred.  Only need to return the action type """
     error_type = type(err)
-    if error_type is socket_error or \
-        error_type is smtplib.SMTPSenderRefused or \
-        error_type is smtplib.SMTPRecipientsRefused or \
-        error_type is smtplib.SMTPDataError or \
-        error_type is smtplib.SMTPAuthenticationError:
+    action = None
+    if isinstance(error_type, (socket_error, smtplib.SMTPSenderRefused,
+        smtplib.SMTPRecipientsRefused, smtplib.SMTPDataError,
+        smtplib.SMTPAuthenticationError):
 
         message.defer()
         logging.info("message deferred due to failure: %s" % err)
@@ -128,7 +129,7 @@ def error_handler(connection, message, err):
         # Kill the connection, in case the connection itself has an error.
         connection = None
 
-    return connection, action
+    return action
 
 
 def send_all():
@@ -142,10 +143,11 @@ def send_all():
         "MAILER_EMAIL_BACKEND",
         "django.core.mail.backends.smtp.EmailBackend"
     )
-
+    
+    # The function to manage delivery errors that can be overriden in settings
     ERROR_HANDLER = import_string(
         getattr(settings, 'MAILER_ERROR_HANDLER',
-        'mailer.engine.error_handler')
+        'mailer.engine.handle_backend_exception')
     )
 
     acquired, lock = acquire_lock()
@@ -187,7 +189,7 @@ def send_all():
                 message.delete()
 
             except Exception as err:
-                connection, action = ERROR_HANDLER(connection, message, err)
+                action = ERROR_HANDLER(connection, message, err)
                 counts[action] = counts[action] + 1
 
             # Check if we reached the limits for the current run
@@ -200,7 +202,7 @@ def send_all():
         release_lock(lock)
 
     logging.info("")
-    logging.info("%s sent; %s deferred;" % (counts['sent'], counts['deferred']))
+    logging.info("%d sent; %d deferred;" % (counts['sent'], counts['deferred']))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 
