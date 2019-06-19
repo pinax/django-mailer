@@ -136,3 +136,12 @@ If you need to change the batch size used by django-mailer to save messages in
 value more suitable for you. This value, which defaults to `None`, will be passed to 
 `Django's bulk_create method <https://docs.djangoproject.com/en/stable/ref/models/querysets/#bulk-create>`_
  as the `batch_size` parameter.
+ 
+ Using the DontSendEntry table
+ =============================
+ 
+ Django-mailer creates a DontSendEntry model, which is used to filter-out recipients from messages being created.
+ 
+ But beware, it's actually only used when directly sending messages through mailer, not when mailer is used as an alternate EMAIL_BACKEND for django. Also, even if recipients become empty due to this filtering, the email will be queued for sending anyway.
+ 
+ 
