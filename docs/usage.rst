@@ -140,8 +140,12 @@ value more suitable for you. This value, which defaults to `None`, will be passe
  Using the DontSendEntry table
  =============================
  
- Django-mailer creates a DontSendEntry model, which is used to filter-out recipients from messages being created.
+ Django-mailer creates a DontSendEntry model, which is used to filter-out
+ recipients from messages being created.
  
- But beware, it's actually only used when directly sending messages through mailer, not when mailer is used as an alternate EMAIL_BACKEND for django. Also, even if recipients become empty due to this filtering, the email will be queued for sending anyway.
+ But beware, it's actually only used when directly sending messages through
+ mailer, not when mailer is used as an alternate EMAIL_BACKEND for django. Also,
+ even if recipients become empty due to this filtering, the email will be queued
+ for sending anyway. (A patch to fix these issues would be accepted)
  
  
