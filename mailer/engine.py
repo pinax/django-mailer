@@ -8,6 +8,7 @@ import lockfile
 from socket import error as socket_error
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
 
@@ -112,17 +113,27 @@ def release_lock(lock):
     logging.debug("released.")
 
 
+def _require_no_backend_loop(mailer_email_backend):
+    if mailer_email_backend == settings.EMAIL_BACKEND == 'mailer.backend.DbBackend':
+        raise ImproperlyConfigured('EMAIL_BACKEND and MAILER_EMAIL_BACKEND'
+                                   ' should not both be set to "{}"'
+                                   ' at the same time'
+                                   .format(settings.EMAIL_BACKEND))
+
+
 def send_all():
     """
     Send all eligible messages in the queue.
     """
     # The actual backend to use for sending, defaulting to the Django default.
     # To make testing easier this is not stored at module level.
-    EMAIL_BACKEND = getattr(
+    mailer_email_backend = getattr(
         settings,
         "MAILER_EMAIL_BACKEND",
         "django.core.mail.backends.smtp.EmailBackend"
     )
+
+    _require_no_backend_loop(mailer_email_backend)
 
     acquired, lock = acquire_lock()
     if not acquired:
@@ -138,7 +149,7 @@ def send_all():
         for message in prioritize():
             try:
                 if connection is None:
-                    connection = get_connection(backend=EMAIL_BACKEND)
+                    connection = get_connection(backend=mailer_email_backend)
                 logging.info("sending message '{0}' to {1}".format(
                     message.subject,
                     ", ".join(message.to_addresses))

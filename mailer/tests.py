@@ -9,6 +9,7 @@ import time
 import django
 import lockfile
 from django.core import mail
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 from django.core.management import call_command
 from django.test import TestCase
@@ -53,7 +54,7 @@ class FailingMailerEmailBackend(LocMemEmailBackend):
         raise smtplib.SMTPSenderRefused(1, "foo", "foo@foo.com")
 
 
-class TestBackend(TestCase):
+class BackendTest(TestCase):
     def test_save_to_db(self):
         """
         Test that using send_mail creates a Message object in DB instead, when EMAIL_BACKEND is set.
@@ -76,7 +77,7 @@ class TestBackend(TestCase):
             self.assertEqual(Message.objects.count(), 2)
 
 
-class TestSending(TestCase):
+class SendingTest(TestCase):
     def setUp(self):
         # Ensure outbox is empty at start
         del TestMailerEmailBackend.outbox[:]
@@ -383,7 +384,7 @@ class TestSending(TestCase):
             )
 
 
-class TestLockNormal(TestCase):
+class LockNormalTest(TestCase):
     def setUp(self):
         class CustomError(Exception):
             pass
@@ -409,7 +410,7 @@ class TestLockNormal(TestCase):
         self.patcher_prio.stop()
 
 
-class TestLockLocked(TestCase):
+class LockLockedTest(TestCase):
     def setUp(self):
         config = {
             "acquire.side_effect": lockfile.AlreadyLocked,
@@ -433,7 +434,7 @@ class TestLockLocked(TestCase):
         self.patcher_prio.stop()
 
 
-class TestLockTimeout(TestCase):
+class LockTimeoutTest(TestCase):
     def setUp(self):
         config = {
             "acquire.side_effect": lockfile.LockTimeout,
@@ -457,7 +458,7 @@ class TestLockTimeout(TestCase):
         self.patcher_prio.stop()
 
 
-class TestPrioritize(TestCase):
+class PrioritizeTest(TestCase):
     def test_prioritize(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mailer.send_mail("Subject", "Body", "prio1@example.com", ["r@example.com"],
@@ -549,7 +550,7 @@ class TestPrioritize(TestCase):
             self.assertEqual(Message.objects.deferred().count(), 1)
 
 
-class TestMessages(TestCase):
+class MessagesTest(TestCase):
     def test_message(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mailer.send_mail("Subject Msg", "Body", "msg1@example.com", ["rec1@example.com"])
@@ -641,7 +642,7 @@ class TestMessages(TestCase):
             self.assertEqual(str(log), '<MessageLog repr unavailable>')
 
 
-class TestDbToEmail(TestCase):
+class DbToEmailTest(TestCase):
     def test_db_to_email(self):
         # Empty/Invalid content
         self.assertEqual(db_to_email(""), None)
@@ -679,7 +680,7 @@ def call_command_with_cron_arg(command, cron_value):
     return call_command(command, '--cron={}'.format(cron_value))
 
 
-class TestCommandHelper(TestCase):
+class CommandHelperTest(TestCase):
     def test_send_mail_no_cron(self):
         with patch('mailer.management.commands.send_mail.logging') as logging:
             call_command('send_mail')
@@ -709,3 +710,15 @@ class TestCommandHelper(TestCase):
         with patch('mailer.management.commands.retry_deferred.logging') as logging:
             call_command_with_cron_arg('retry_deferred', 1)
             logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+
+
+class EmailBackendSettingLoopTest(TestCase):
+    def test_loop_detection(self):
+        with self.settings(EMAIL_BACKEND='mailer.backend.DbBackend',
+                           MAILER_EMAIL_BACKEND='mailer.backend.DbBackend'), \
+                self.assertRaises(ImproperlyConfigured) as catcher:
+            engine.send_all()
+
+        self.assertIn('mailer.backend.DbBackend', str(catcher.exception))
+        self.assertIn('EMAIL_BACKEND', str(catcher.exception))
+        self.assertIn('MAILER_EMAIL_BACKEND', str(catcher.exception))
