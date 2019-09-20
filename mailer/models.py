@@ -8,7 +8,8 @@ import datetime
 try:
     from django.utils.encoding import python_2_unicode_compatible
 except ImportError:
-    python_2_unicode_compatible = lambda c: c
+    def python_2_unicode_compatible(c):
+        return c
 from django.utils.timezone import now as datetime_now
 from django.core.mail import EmailMessage
 from django.db import models
