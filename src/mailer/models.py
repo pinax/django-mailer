@@ -72,11 +72,7 @@ class MessageManager(models.Manager):
         return self.filter(priority=PRIORITY_DEFERRED)
 
     def retry_deferred(self, new_priority=PRIORITY_MEDIUM):
-        count = 0
-        for message in self.deferred():
-            if message.retry(new_priority):
-                count += 1
-        return count
+        return self.deferred().update(priority=new_priority)
 
 
 base64_encode = base64.encodebytes if hasattr(base64, 'encodebytes') else base64.encodestring
@@ -136,14 +132,6 @@ class Message(models.Model):
     def defer(self):
         self.priority = PRIORITY_DEFERRED
         self.save()
-
-    def retry(self, new_priority=PRIORITY_MEDIUM):
-        if self.priority == PRIORITY_DEFERRED:
-            self.priority = new_priority
-            self.save()
-            return True
-        else:
-            return False
 
     def _get_email(self):
         return db_to_email(self.message_data)

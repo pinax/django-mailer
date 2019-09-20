@@ -27,6 +27,9 @@ Change log
   queue, you can get exceptions in other processes that are trying to add items
   to the queue. Use of SQLite with django-mailer is **not recommended**.
 
+* ``retry_deferred`` command has also been updated to be simpler and work
+  correctly for multiple processes.
+
 * Dropped some backwards compat support for Django < 1.8. If you are upgrading
   from a version of Django before 1.8, you should install a version of
   django-mailer < 2.0, do ``send_all`` to flush the queue, then upgrade
