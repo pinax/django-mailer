@@ -117,8 +117,6 @@ class Message(models.Model):
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default=PRIORITY_MEDIUM)
-    # @@@ campaign?
-    # @@@ content_type?
 
     objects = MessageManager()
 
@@ -229,8 +227,6 @@ class DontSendEntry(models.Model):
 
     to_address = models.EmailField(max_length=254)
     when_added = models.DateTimeField()
-    # @@@ who added?
-    # @@@ comment field?
 
     objects = DontSendEntryManager()
 
@@ -263,7 +259,6 @@ class MessageLogManager(models.Manager):
             message_id=get_message_id(message.email),
             when_added=message.when_added,
             priority=message.priority,
-            # @@@ other fields from Message
             result=result_code,
             log_message=log_message,
         )
@@ -284,7 +279,6 @@ class MessageLog(models.Model):
     message_id = models.TextField(editable=False, null=True)
     when_added = models.DateTimeField(db_index=True)
     priority = models.CharField(max_length=1, choices=PRIORITIES, db_index=True)
-    # @@@ campaign?
 
     # additional logging fields
     when_attempted = models.DateTimeField(default=datetime_now)
