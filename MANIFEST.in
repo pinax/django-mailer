@@ -1,13 +1,13 @@
-global-exclude *~
 include AUTHORS
 include LICENSE
-include CHANGES.rst
+include *.rst
 include MANIFEST.in
-include CONTRIBUTING.rst
-include README.rst
-include RELEASE.rst
-include *.py
 include .coveragerc
-include tox.ini
+include tox.ini .travis.yml
+include *.py
 
-recursive-include docs *
+graft docs
+graft src
+graft tests
+
+global-exclude *.py[cod] __pycache__/* *.so *.dylib *~

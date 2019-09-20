@@ -87,7 +87,7 @@ class SendingTest(TestCase):
         Test that calling "manage.py send_mail" actually sends mail using the
         specified MAILER_EMAIL_BACKEND
         """
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.TestMailerEmailBackend"):
             mailer.send_mail("Subject ☺", "Body", "sender1@example.com", ["recipient@example.com"])
             self.assertEqual(Message.objects.count(), 1)
             self.assertEqual(len(TestMailerEmailBackend.outbox), 0)
@@ -97,7 +97,7 @@ class SendingTest(TestCase):
             self.assertEqual(MessageLog.objects.count(), 1)
 
     def test_retry_deferred(self):
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend"):
             mailer.send_mail("Subject", "Body", "sender2@example.com", ["recipient@example.com"])
             engine.send_all()
             self.assertEqual(Message.objects.count(), 1)
@@ -126,7 +126,7 @@ class SendingTest(TestCase):
             engine.send_all()
 
         # And one failure
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend"):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend"):
             mailer.send_mail("Subject", "Body", "sender2@example.com",
                              ["recipient@example.com"])
 
@@ -269,7 +269,7 @@ class SendingTest(TestCase):
             self.assertEqual(sent.to, ["go@example.com"])
 
     def test_control_max_delivery_amount(self):
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend", MAILER_EMAIL_MAX_BATCH=2):  # noqa
+        with self.settings(MAILER_EMAIL_BACKEND="tests.TestMailerEmailBackend", MAILER_EMAIL_MAX_BATCH=2):  # noqa
             mailer.send_mail("Subject1", "Body1", "sender1@example.com", ["recipient1@example.com"])
             mailer.send_mail("Subject2", "Body2", "sender2@example.com", ["recipient2@example.com"])
             mailer.send_mail("Subject3", "Body3", "sender3@example.com", ["recipient3@example.com"])
@@ -281,7 +281,7 @@ class SendingTest(TestCase):
             self.assertEqual(MessageLog.objects.count(), 2)
 
     def test_control_max_retry_amount(self):
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):  # noqa
+        with self.settings(MAILER_EMAIL_BACKEND="tests.TestMailerEmailBackend"):  # noqa
             # 5 normal emails scheduled for delivery
             mailer.send_mail("Subject1", "Body1", "sender1@example.com", ["recipient1@example.com"])
             mailer.send_mail("Subject2", "Body2", "sender2@example.com", ["recipient2@example.com"])
@@ -291,7 +291,7 @@ class SendingTest(TestCase):
             self.assertEqual(Message.objects.count(), 5)
             self.assertEqual(Message.objects.deferred().count(), 0)
 
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.FailingMailerEmailBackend", MAILER_EMAIL_MAX_DEFERRED=2):  # noqa
+        with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend", MAILER_EMAIL_MAX_DEFERRED=2):  # noqa
             # 2 will get deferred 3 remain undeferred
             with patch("logging.warning") as w:
                 engine.send_all()
@@ -304,7 +304,7 @@ class SendingTest(TestCase):
             self.assertEqual(Message.objects.count(), 5)
             self.assertEqual(Message.objects.deferred().count(), 2)
 
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend", MAILER_EMAIL_MAX_DEFERRED=2):  # noqa
+        with self.settings(MAILER_EMAIL_BACKEND="tests.TestMailerEmailBackend", MAILER_EMAIL_MAX_DEFERRED=2):  # noqa
             # 3 will be delivered, 2 remain deferred
             engine.send_all()
             self.assertEqual(len(TestMailerEmailBackend.outbox), 3)
@@ -321,7 +321,7 @@ class SendingTest(TestCase):
     def test_throttling_delivery(self):
         TIME = 1  # throttle time = 1 second
 
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend", MAILER_EMAIL_THROTTLE=TIME):  # noqa
+        with self.settings(MAILER_EMAIL_BACKEND="tests.TestMailerEmailBackend", MAILER_EMAIL_THROTTLE=TIME):  # noqa
             mailer.send_mail("Subject", "Body", "sender13@example.com", ["recipient@example.com"])
             mailer.send_mail("Subject", "Body", "sender14@example.com", ["recipient@example.com"])
             start_time = time.time()
@@ -339,7 +339,7 @@ class SendingTest(TestCase):
         Test that changes made to the email by the backend are
         saved in MessageLog.
         """
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.TestMailerEmailBackend"):
             mailer.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
             engine.send_all()
             m = MessageLog.objects.get()
@@ -350,7 +350,7 @@ class SendingTest(TestCase):
         """
         Test that message-id is set and saved correctly
         """
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.TestMailerEmailBackend"):
             mailer.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
             engine.send_all()
             m = MessageLog.objects.get()
@@ -363,7 +363,7 @@ class SendingTest(TestCase):
         """
         Test that a preset message-id is saved correctly
         """
-        with self.settings(MAILER_EMAIL_BACKEND="mailer.tests.TestMailerEmailBackend"):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.TestMailerEmailBackend"):
             make_message(
                 subject="Subject",
                 body="Body",

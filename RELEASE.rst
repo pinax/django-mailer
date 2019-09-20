@@ -12,8 +12,7 @@ Release process
 
 * In CHANGES.rst, change the 'Unreleased' heading to the new version, and commit.
 
-* Change the version in mailer/__init__.py, changing "alpha" to "final" if
-  necessary.
+* Change the version in mailer/__init__.py, removing ``.dev1`` if necessary, and in setup.py
 
 * Release::
 
@@ -31,5 +30,5 @@ Post release
 
 * Add new section 'Unreleased' section at top of CHANGES.rst
 
-* Bump version in mailer/__init__.py (to what it is most likely to be next),
-  and change "final" to "alpha".
+* Bump version in mailer/__init__.py (to what it is most likely to be next), and in setup.py
+  including ``.dev1``.

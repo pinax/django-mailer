@@ -32,7 +32,7 @@ def runtests(*test_args):
     if not settings.configured:
         settings.configure(**DEFAULT_SETTINGS)
     if not test_args:
-        test_args = ['mailer.tests']
+        test_args = ['tests']
 
     os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.settings'
     django.setup()
@@ -40,7 +40,6 @@ def runtests(*test_args):
     test_runner = TestRunner()
     failures = test_runner.run_tests(test_args)
     sys.exit(bool(failures))
-
 
 
 if __name__ == "__main__":
