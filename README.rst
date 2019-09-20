@@ -34,6 +34,18 @@ django-mailer
 
 ``django-mailer`` is a reusable Django app for queuing the sending of email.
 
+Requirements
+------------
+
+* Django >= 1.11
+
+* Databases: django-mailer supports all databases that Django supports, with the following notes:
+
+  * SQLite: you may experience 'database is locked' errors if the ``send_mail``
+    command runs when anything else is attempting to put items on the queue. For this reason
+    SQLite is not recommended for use with django-mailer.
+
+
 
 Getting Started
 ---------------

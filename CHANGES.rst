@@ -6,6 +6,27 @@ Change log
 
 * Django 3.0 support
 * Dropped support for old Django versions (before 1.11)
+* Changed DB ``priority`` field to an integer, instead of text field container an integer
+* Multi-process safety for sending emails via database row-level locking.
+
+  Previously, there was a file-system based lock to ensure that multiple
+  processes were not attempting to send the mail queue, to stop multiple sending
+  of the same email. However, this mechanism only works if all processes that
+  might be attempting to do this are on the same machine with access to the same
+  file-system.
+
+  Now, in addition to this file lock, we use transactions and row-level locking
+  in the database when attempting to send a message, which guarantees that only
+  one process can send the message. In addition, for databases that support
+  ``NOWAIT`` with ``SELECT FOR UPDATE``, such as PostgreSQL, if multiple
+  processes attempt to send the mail queue at the same time, the work should be
+  distributed between them (rather than being done by only one process).
+
+  A negative consequence is that **SQLite support is degraded**: due to the way
+  it implements locking and our use of transactions when sending the email
+  queue, you can get exceptions in other processes that are trying to add items
+  to the queue. Use of SQLite with django-mailer is **not recommended**.
+
 
 1.2.6 - 2019-04-03
 ------------------

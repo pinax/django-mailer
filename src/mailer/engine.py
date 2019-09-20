@@ -1,21 +1,19 @@
 from __future__ import unicode_literals
 
-import time
-import smtplib
+import contextlib
 import logging
-
-import lockfile
+import smtplib
+import time
 from socket import error as socket_error
 
+import lockfile
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
-
-from mailer.models import (
-    Message, MessageLog, RESULT_SUCCESS, RESULT_FAILURE, get_message_id,
-)
-
+from django.db import NotSupportedError, OperationalError, transaction
+from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog,
+                           get_message_id)
 
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
@@ -31,23 +29,51 @@ LOCK_PATH = getattr(settings, "MAILER_LOCK_PATH", None)
 
 def prioritize():
     """
-    Yield the messages in the queue in the order they should be sent.
+    Returns the messages in the queue in the order they should be sent.
     """
+    return Message.objects.non_deferred().order_by('priority', 'when_added')
 
-    while True:
-        hp_qs = Message.objects.high_priority()
-        mp_qs = Message.objects.medium_priority()
-        lp_qs = Message.objects.low_priority()
-        while hp_qs.count() or mp_qs.count():
-            while hp_qs.count():
-                for message in hp_qs.order_by("when_added"):
-                    yield message
-            while hp_qs.count() == 0 and mp_qs.count():
-                yield mp_qs.order_by("when_added")[0]
-        while hp_qs.count() == 0 and mp_qs.count() == 0 and lp_qs.count():
-            yield lp_qs.order_by("when_added")[0]
-        if Message.objects.non_deferred().count() == 0:
-            break
+
+@contextlib.contextmanager
+def sender_context(message):
+    """
+    Makes a context manager appropriate for sending a message.
+    Entering the context using `with` may return a `None` object if the message
+    has been sent/deleted already.
+    """
+    # We wrap each message sending inside a transaction (otherwise
+    # select_for_update doesn't work).
+
+    # We also do `nowait` for databases that support it. The result of this is
+    # that if two processes (which might be on different machines) both attempt
+    # to send the same queue, the loser for the first message will immediately
+    # get an error, and will be able to try the second message. This means the
+    # work for sending the messages will be distributed between the two
+    # processes. Otherwise, the losing process has to wait for the winning
+    # process to finish and release the lock, and the winning process will
+    # almost always win the next message etc.
+    with transaction.atomic():
+        try:
+            try:
+                yield Message.objects.filter(id=message.id).select_for_update(nowait=True).get()
+            except NotSupportedError:
+                # MySQL
+                yield Message.objects.filter(id=message.id).select_for_update().get()
+        except Message.DoesNotExist:
+            # Deleted by someone else
+            yield None
+        except OperationalError:
+            # Locked by someone else
+            yield None
+
+
+def get_messages_for_sending():
+    """
+    Returns a series of context managers that are used for sending mails in the queue.
+    Entering the context manager returns the actual message
+    """
+    for message in prioritize():
+        yield sender_context(message)
 
 
 def ensure_message_id(msg):
@@ -146,44 +172,48 @@ def send_all():
 
     try:
         connection = None
-        for message in prioritize():
-            try:
-                if connection is None:
-                    connection = get_connection(backend=mailer_email_backend)
-                logging.info("sending message '{0}' to {1}".format(
-                    message.subject,
-                    ", ".join(message.to_addresses))
-                )
-                email = message.email
-                if email is not None:
-                    email.connection = connection
-                    if not hasattr(email, 'reply_to'):
-                        # Compatability fix for EmailMessage objects
-                        # pickled when running < Django 1.8 and then
-                        # unpickled under Django 1.8
-                        email.reply_to = []
-                    ensure_message_id(email)
-                    email.send()
+        for context in get_messages_for_sending():
+            with context as message:
+                if message is None:
+                    # We didn't acquire the lock
+                    continue
+                try:
+                    if connection is None:
+                        connection = get_connection(backend=mailer_email_backend)
+                    logging.info("sending message '{0}' to {1}".format(
+                        message.subject,
+                        ", ".join(message.to_addresses))
+                    )
+                    email = message.email
+                    if email is not None:
+                        email.connection = connection
+                        if not hasattr(email, 'reply_to'):
+                            # Compatability fix for EmailMessage objects
+                            # pickled when running < Django 1.8 and then
+                            # unpickled under Django 1.8
+                            email.reply_to = []
+                        ensure_message_id(email)
+                        email.send()
 
-                    # connection can't be stored in the MessageLog
-                    email.connection = None
-                    message.email = email  # For the sake of MessageLog
-                    MessageLog.objects.log(message, RESULT_SUCCESS)
-                    sent += 1
-                else:
-                    logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
-                message.delete()
+                        # connection can't be stored in the MessageLog
+                        email.connection = None
+                        message.email = email  # For the sake of MessageLog
+                        MessageLog.objects.log(message, RESULT_SUCCESS)
+                        sent += 1
+                    else:
+                        logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
+                    message.delete()
 
-            except (socket_error, smtplib.SMTPSenderRefused,
-                    smtplib.SMTPRecipientsRefused,
-                    smtplib.SMTPDataError,
-                    smtplib.SMTPAuthenticationError) as err:
-                message.defer()
-                logging.info("message deferred due to failure: %s" % err)
-                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
-                deferred += 1
-                # Get new connection, it case the connection itself has an error.
-                connection = None
+                except (socket_error, smtplib.SMTPSenderRefused,
+                        smtplib.SMTPRecipientsRefused,
+                        smtplib.SMTPDataError,
+                        smtplib.SMTPAuthenticationError) as err:
+                    message.defer()
+                    logging.info("message deferred due to failure: %s" % err)
+                    MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+                    deferred += 1
+                    # Get new connection, it case the connection itself has an error.
+                    connection = None
 
             # Check if we reached the limits for the current run
             if _limits_reached(sent, deferred):

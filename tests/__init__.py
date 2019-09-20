@@ -491,7 +491,7 @@ class PrioritizeTest(TestCase):
             self.assertEqual(Message.objects.deferred().count(), 1)
             self.assertEqual(Message.objects.non_deferred().count(), 12)
 
-            messages = engine.prioritize()
+            messages = iter(engine.prioritize())
 
             # High priority
             msg = next(messages)
@@ -533,13 +533,6 @@ class PrioritizeTest(TestCase):
             msg.delete()
             msg = next(messages)
             self.assertEqual(msg.email.from_email, "prio10@example.com")
-            msg.delete()
-
-            # Add one more mail that should still get delivered
-            mailer.send_mail("Subject", "Body", "prio14@example.com", ["r@example.com"],
-                             priority=PRIORITY_HIGH)
-            msg = next(messages)
-            self.assertEqual(msg.email.from_email, "prio14@example.com")
             msg.delete()
 
             # Ensure nothing else comes up

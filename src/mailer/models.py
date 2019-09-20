@@ -16,10 +16,10 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
-PRIORITY_HIGH = "1"
-PRIORITY_MEDIUM = "2"
-PRIORITY_LOW = "3"
-PRIORITY_DEFERRED = "4"
+PRIORITY_HIGH = 1
+PRIORITY_MEDIUM = 2
+PRIORITY_LOW = 3
+PRIORITY_DEFERRED = 4
 
 PRIORITIES = [
     (PRIORITY_HIGH, "high"),
@@ -116,7 +116,7 @@ class Message(models.Model):
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
-    priority = models.CharField(max_length=1, choices=PRIORITIES, default=PRIORITY_MEDIUM)
+    priority = models.PositiveSmallIntegerField(choices=PRIORITIES, default=PRIORITY_MEDIUM)
 
     objects = MessageManager()
 
@@ -278,7 +278,7 @@ class MessageLog(models.Model):
     message_data = models.TextField()
     message_id = models.TextField(editable=False, null=True)
     when_added = models.DateTimeField(db_index=True)
-    priority = models.CharField(max_length=1, choices=PRIORITIES, db_index=True)
+    priority = models.PositiveSmallIntegerField(choices=PRIORITIES, db_index=True)
 
     # additional logging fields
     when_attempted = models.DateTimeField(default=datetime_now)
