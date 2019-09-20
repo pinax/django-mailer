@@ -1,19 +1,7 @@
 language: python
+python: 3.4
 env:
-  - TOXENV=py27-django14-test
-  - TOXENV=py27-django15-test
-  - TOXENV=py27-django16-test
-  - TOXENV=py27-django17-test
-  - TOXENV=py27-django18-test
-  - TOXENV=py27-django19-test
-  - TOXENV=py27-django110-test
   - TOXENV=py27-django111-test
-  - TOXENV=py34-django15-test
-  - TOXENV=py34-django16-test
-  - TOXENV=py34-django17-test
-  - TOXENV=py34-django18-test
-  - TOXENV=py34-django19-test
-  - TOXENV=py34-django110-test
   - TOXENV=py34-django111-test
   - TOXENV=py34-django20-test
   - TOXENV=py27-flake
@@ -24,23 +12,11 @@ env:
 matrix:
   include:
   - python: 3.5
-    env: TOXENV=py35-django18-test
-  - python: 3.5
-    env: TOXENV=py35-django19-test
-  - python: 3.5
-    env: TOXENV=py35-django110-test
-  - python: 3.5
     env: TOXENV=py35-django111-test
   - python: 3.5
     env: TOXENV=py35-django20-test
   - python: 3.5
     env: TOXENV=py35-flake
-  - python: 3.6
-    env: TOXENV=py36-django18-test
-  - python: 3.6
-    env: TOXENV=py36-django19-test
-  - python: 3.6
-    env: TOXENV=py36-django110-test
   - python: 3.6
     env: TOXENV=py36-django111-test
   - python: 3.6
@@ -48,8 +24,9 @@ matrix:
   - python: 3.6
     env: TOXENV=py36-django21-test
   - python: 3.6
-    dist: xenial
     env: TOXENV=py36-django22-test
+  - python: 3.6
+    env: TOXENV=py36-django30-test
   - python: 3.6
     env: TOXENV=py36-flake
 
