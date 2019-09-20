@@ -1,9 +1,10 @@
 Change log
 ==========
 
-2.0
----
+2.0 - unreleased
+----------------
 
+* Django 3.0 support
 * Dropped support for old Django versions (before 1.11)
 
 1.2.6 - 2019-04-03

@@ -13,9 +13,9 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 from django.core.management import call_command
 from django.test import TestCase
-from django.utils import six
 from django.utils.timezone import now as datetime_now
 from mock import ANY, Mock, patch
+import six
 
 import mailer
 from mailer import engine

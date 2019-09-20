@@ -29,5 +29,6 @@ setup(
     install_requires=[
         'Django >= 1.11',
         'lockfile >= 0.8',
+        'six',
         ],
 )
