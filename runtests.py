@@ -4,8 +4,8 @@ import sys
 import warnings
 
 import django
-
 from django.conf import settings
+from django.test.utils import get_runner
 
 warnings.simplefilter("always", DeprecationWarning)
 
@@ -31,28 +31,16 @@ DEFAULT_SETTINGS = dict(
 def runtests(*test_args):
     if not settings.configured:
         settings.configure(**DEFAULT_SETTINGS)
+    if not test_args:
+        test_args = ['mailer.tests']
 
-    # Compatibility with Django 1.7's stricter initialization
-    if hasattr(django, "setup"):
-        django.setup()
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.settings'
+    django.setup()
+    TestRunner = get_runner(settings)
+    test_runner = TestRunner()
+    failures = test_runner.run_tests(test_args)
+    sys.exit(bool(failures))
 
-    parent = os.path.dirname(os.path.abspath(__file__))
-    sys.path.insert(0, parent)
-
-    try:
-        from django.test.runner import DiscoverRunner
-        runner_class = DiscoverRunner
-        if len(test_args) == 0:
-            test_args = ["mailer.tests"]
-    except ImportError:
-        from django.test.simple import DjangoTestSuiteRunner
-        runner_class = DjangoTestSuiteRunner
-        if len(test_args) == 0:
-            test_args = ["mailer"]
-
-    failures = runner_class(
-        verbosity=1, interactive=True, failfast=False).run_tests(test_args)
-    sys.exit(failures)
 
 
 if __name__ == "__main__":
