@@ -27,6 +27,10 @@ Change log
   queue, you can get exceptions in other processes that are trying to add items
   to the queue. Use of SQLite with django-mailer is **not recommended**.
 
+* Dropped some backwards compat support for Django < 1.8. If you are upgrading
+  from a version of Django before 1.8, you should install a version of
+  django-mailer < 2.0, do ``send_all`` to flush the queue, then upgrade
+  django-mailer to 2.0 or later.
 
 1.2.6 - 2019-04-03
 ------------------
