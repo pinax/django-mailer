@@ -35,9 +35,9 @@ def prioritize():
     """
 
     while True:
-        hp_qs = Message.objects.high_priority().using('default')
-        mp_qs = Message.objects.medium_priority().using('default')
-        lp_qs = Message.objects.low_priority().using('default')
+        hp_qs = Message.objects.high_priority()
+        mp_qs = Message.objects.medium_priority()
+        lp_qs = Message.objects.low_priority()
         while hp_qs.count() or mp_qs.count():
             while hp_qs.count():
                 for message in hp_qs.order_by("when_added"):
@@ -46,7 +46,7 @@ def prioritize():
                 yield mp_qs.order_by("when_added")[0]
         while hp_qs.count() == 0 and mp_qs.count() == 0 and lp_qs.count():
             yield lp_qs.order_by("when_added")[0]
-        if Message.objects.non_deferred().using('default').count() == 0:
+        if Message.objects.non_deferred().count() == 0:
             break
 
 
