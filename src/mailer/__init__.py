@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import warnings
 
 
-__version__ = '2.0.dev1'
+__version__ = '2.0'
 
 
 def get_priority(priority):

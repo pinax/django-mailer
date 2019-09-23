@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2.0 - unreleased
+2.0 - 2019-09-23
 ----------------
 
 * Django 3.0 support
