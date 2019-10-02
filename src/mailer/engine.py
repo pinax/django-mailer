@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
-from django.db import NotSupportedError, OperationalError, transaction
+from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
 from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog,
                            get_message_id)
 
@@ -56,7 +56,7 @@ def sender_context(message):
         try:
             try:
                 yield Message.objects.filter(id=message.id).select_for_update(nowait=True).get()
-            except NotSupportedError:
+            except (DatabaseError, NotSupportedError):
                 # MySQL
                 yield Message.objects.filter(id=message.id).select_for_update().get()
         except Message.DoesNotExist:
