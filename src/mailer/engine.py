@@ -7,13 +7,19 @@ import time
 from socket import error as socket_error
 
 import lockfile
+from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
-from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog,
-                           get_message_id)
+from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id)
+
+if DJANGO_VERSION[0] >= 2:
+    NotSupportedFeatureException = NotSupportedError
+else:
+    NotSupportedFeatureException = DatabaseError
+
 
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
@@ -56,7 +62,7 @@ def sender_context(message):
         try:
             try:
                 yield Message.objects.filter(id=message.id).select_for_update(nowait=True).get()
-            except (DatabaseError, NotSupportedError):
+            except NotSupportedFeatureException:
                 # MySQL
                 yield Message.objects.filter(id=message.id).select_for_update().get()
         except Message.DoesNotExist:
