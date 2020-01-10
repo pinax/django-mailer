@@ -18,6 +18,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='messagelog',
             name='priority',
+            field=models.PositiveSmallIntegerField(choices=[(1, 'high'), (2, 'medium'), (3, 'low'), (4, 'deferred')]),
+        ),
+        migrations.AlterField(
+            model_name='messagelog',
+            name='priority',
             field=models.PositiveSmallIntegerField(choices=[(1, 'high'), (2, 'medium'), (3, 'low'), (4, 'deferred')], db_index=True),
         ),
     ]
