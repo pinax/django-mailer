@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.0.1 - 2020-03-01
+------------------
+
+* Fixed issue with migration that some people experienced (see `PR 118
+  <https://github.com/pinax/django-mailer/pull/118>`_)
+
 2.0 - 2019-09-23
 ----------------
 
