@@ -32,7 +32,8 @@ This app was developed as part of the Pinax ecosystem but is just a Django app a
 django-mailer
 -------------
 
-``django-mailer`` is a reusable Django app for queuing the sending of email.
+``django-mailer`` is a reusable Django app for queuing the sending of email. 
+It works by storing email in the database for later sending.
 
 Requirements
 ------------
