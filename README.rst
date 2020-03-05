@@ -35,6 +35,8 @@ django-mailer
 ``django-mailer`` is a reusable Django app for queuing the sending of email. 
 It works by storing email in the database for later sending.
 
+Keep in mind that file attachments are also temporarily stored in the database, which means if you are sending files larger than several hundred KB in size, you are likely to run into database limitations on how large your query can be. If this happens, you'll either need to fall back to using Django's default mail backend, or increase your database limits (a procedure that depends on which database you are using).
+
 Requirements
 ------------
 
