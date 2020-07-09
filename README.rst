@@ -20,15 +20,6 @@ Django Mailer
     :target:  https://pypi.python.org/pypi/django-mailer/
 
 
-Pinax
------
-
-Pinax is an open-source platform built on the Django Web Framework. It is an ecosystem of reusable Django apps, themes, and starter project templates.
-This collection can be found at http://pinaxproject.com.
-
-This app was developed as part of the Pinax ecosystem but is just a Django app and can be used independently of other Pinax apps.
-
-
 django-mailer
 -------------
 
@@ -36,6 +27,9 @@ django-mailer
 It works by storing email in the database for later sending.
 
 Keep in mind that file attachments are also temporarily stored in the database, which means if you are sending files larger than several hundred KB in size, you are likely to run into database limitations on how large your query can be. If this happens, you'll either need to fall back to using Django's default mail backend, or increase your database limits (a procedure that depends on which database you are using).
+
+django-mailer was developed as part of the `Pinax ecosystem <http://pinaxproject.com>`_ but is just a Django app and can be used independently of other Pinax apps.
+
 
 Requirements
 ------------
@@ -81,29 +75,35 @@ To remove successful log entries older than a week, add this to a cron job file 
 
     0 0 * * * (/path/to/your/python /path/to/your/manage.py purge_mail_log 7 >> ~/cron_mail_purge.log 2>&1)
 
-Documentation
--------------
+Documentation and support
+-------------------------
 
-See ``usage.rst`` in the docs for more advanced use cases - https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage.
+See `usage.rst <https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage>`_
+in the docs for more advanced use cases.
 The Pinax documentation is available at http://pinaxproject.com/pinax/.
+
+This is an Open Source project maintained by volunteers, and outside this documentation the maintainers
+do not offer other support. For cases where you have found a bug you can file a GitHub issue. 
+In case of any questions we recommend you join the `Pinax Slack team <http://slack.pinaxproject.com>`_ 
+and ping the Pinax team there instead of creating an issue on GitHub. You may also be able to get help on
+other programming sites like `Stack Overflow <https://stackoverflow.com/>`_.
 
 
 Contribute
 ----------
 
-See ``CONTRIBUTING.rst`` for information about contributing patches to ``django-mailer``.
+See `CONTRIBUTING.rst <https://github.com/pinax/django-mailer/blob/master/CONTRIBUTING.rst>`_ for information about contributing patches to ``django-mailer``.
 
-See this blog post http://blog.pinaxproject.com/2016/02/26/recap-february-pinax-hangout/ including a video, or our How to Contribute (http://pinaxproject.com/pinax/how_to_contribute/) section for an overview on how contributing to Pinax works. For concrete contribution ideas, please see our Ways to Contribute/What We Need Help With (http://pinaxproject.com/pinax/ways_to_contribute/) section.
+See this `blog post including a video <http://blog.pinaxproject.com/2016/02/26/recap-february-pinax-hangout/>`_, or our `How to Contribute <http://pinaxproject.com/pinax/how_to_contribute/>`_ section for an overview on how contributing to Pinax works. For concrete contribution ideas, please see our `Ways to Contribute/What We Need Help With <http://pinaxproject.com/pinax/ways_to_contribute/>`_ section.
 
-In case of any questions we recommend you join our Pinax Slack team (http://slack.pinaxproject.com) and ping us there instead of creating an issue on GitHub. Creating issues on GitHub is of course also valid but we are usually able to help you faster if you ping us in Slack.
 
-We also highly recommend reading our Open Source and Self-Care blog post (http://blog.pinaxproject.com/2016/01/19/open-source-and-self-care/).
+We also highly recommend reading our `Open Source and Self-Care blog post <http://blog.pinaxproject.com/2016/01/19/open-source-and-self-care/>`_.
 
 
 Code of Conduct
 ---------------
 
-In order to foster a kind, inclusive, and harassment-free community, the Pinax Project has a code of conduct, which can be found here  http://pinaxproject.com/pinax/code_of_conduct/.
+In order to foster a kind, inclusive, and harassment-free community, the Pinax Project has a `code of conduct <http://pinaxproject.com/pinax/code_of_conduct/>`_.
 We ask you to treat everyone as a smart human programmer that shares an interest in Python, Django, and Pinax with you.
 
 
@@ -111,4 +111,4 @@ We ask you to treat everyone as a smart human programmer that shares an interest
 Pinax Project Blog and Twitter
 ------------------------------
 
-For updates and news regarding the Pinax Project, please follow us on Twitter at @pinaxproject and check out our blog http://blog.pinaxproject.com.
+For updates and news regarding the Pinax Project, please follow us on Twitter at @pinaxproject and check out `our blog <http://blog.pinaxproject.com>`_.
