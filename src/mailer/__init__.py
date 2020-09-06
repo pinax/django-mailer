@@ -41,7 +41,7 @@ def send_mail(subject, message, from_email, recipient_list, priority=None,
     return 1
 
 def send_attachment_mail(subject, message, from_email, recipient_list,
-                   attachment_filename, attachment,
+                   attachment_filename, attachment, attachment_content_type=None,
                    priority=None, fail_silently=False, auth_user=None,
                    auth_password=None):
     """
@@ -64,7 +64,10 @@ def send_attachment_mail(subject, message, from_email, recipient_list,
 
     # We have here the EmailMessage class
     email = msg.email
-    email.attach(attachment_filename, attachment)
+    if attachment_content_type == None:
+        email.attach(attachment_filename, attachment)
+    else:
+        email.attach(attachment_filename, attachment, attachment_content_type)
     msg.email = email
     msg.save()
     return 1
