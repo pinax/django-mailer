@@ -40,6 +40,35 @@ def send_mail(subject, message, from_email, recipient_list, priority=None,
                  priority=priority).save()
     return 1
 
+def send_attachment_mail(subject, message, from_email, recipient_list,
+                   attachment_filename, attachment,
+                   priority=None, fail_silently=False, auth_user=None,
+                   auth_password=None):
+    """
+    Function to queue text e-mails with attachments
+    """
+    from django.utils.encoding import force_text
+    from mailer.models import make_message
+
+    priority = get_priority(priority)
+
+    # need to do this in case subject used lazy version of ugettext
+    subject = force_text(subject)
+    message = force_text(message)
+
+    msg = make_message(subject=subject,
+                       body=message,
+                       from_email=from_email,
+                       to=recipient_list,
+                       priority=priority)
+
+    # We have here the EmailMessage class
+    email = msg.email
+    email.attach(attachment_filename, attachment)
+    msg.email = email
+    msg.save()
+    return 1
+
 
 def send_html_mail(subject, message, message_html, from_email, recipient_list,
                    priority=None, fail_silently=False, auth_user=None,
