@@ -23,7 +23,7 @@ Django Mailer
 django-mailer
 -------------
 
-``django-mailer`` is a reusable Django app for queuing the sending of email. 
+``django-mailer`` is a reusable Django app for queuing the sending of email.
 It works by storing email in the database for later sending.
 
 Keep in mind that file attachments are also temporarily stored in the database, which means if you are sending files larger than several hundred KB in size, you are likely to run into database limitations on how large your query can be. If this happens, you'll either need to fall back to using Django's default mail backend, or increase your database limits (a procedure that depends on which database you are using).
@@ -75,6 +75,8 @@ To remove successful log entries older than a week, add this to a cron job file 
 
     0 0 * * * (/path/to/your/python /path/to/your/manage.py purge_mail_log 7 >> ~/cron_mail_purge.log 2>&1)
 
+Use the `-r failure` option to remove only failed log entries instead, or `-r all` to remove them all.
+
 Documentation and support
 -------------------------
 
@@ -83,8 +85,8 @@ in the docs for more advanced use cases.
 The Pinax documentation is available at http://pinaxproject.com/pinax/.
 
 This is an Open Source project maintained by volunteers, and outside this documentation the maintainers
-do not offer other support. For cases where you have found a bug you can file a GitHub issue. 
-In case of any questions we recommend you join the `Pinax Slack team <http://slack.pinaxproject.com>`_ 
+do not offer other support. For cases where you have found a bug you can file a GitHub issue.
+In case of any questions we recommend you join the `Pinax Slack team <http://slack.pinaxproject.com>`_
 and ping the Pinax team there instead of creating an issue on GitHub. You may also be able to get help on
 other programming sites like `Stack Overflow <https://stackoverflow.com/>`_.
 
