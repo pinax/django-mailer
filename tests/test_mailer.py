@@ -112,6 +112,12 @@ class SendingTest(TestCase):
         self.assertNotEqual(MessageLog.objects.filter(result=RESULT_FAILURE).count(), 0)
         self.assertEqual(MessageLog.objects.filter(result=RESULT_SUCCESS).count(), 0)
 
+        with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
+            datetime_now_patch.return_value = datetime_now() + datetime.timedelta(days=2)
+            call_command('purge_mail_log', '1', '-r', 'failure')
+
+        self.assertEqual(MessageLog.objects.filter(result=RESULT_FAILURE).count(), 0)
+
     def test_send_loop(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             with patch("mailer.engine.send_all", side_effect=StopIteration) as send:
