@@ -33,6 +33,50 @@ matrix:
     env: TOXENV=py36-django30-test
   - python: 3.6
     env: TOXENV=py36-flake
+  # Adding ppc64le jobs
+  - python: 2.7
+    arch: ppc64le
+    env: TOXENV=py27-django111-test
+  - python: 2.7
+    arch: ppc64le
+    env: TOXENV=py27-flake
+  - python: 3.4
+    arch: ppc64le
+    env: TOXENV=py34-django111-test
+  - python: 3.4
+    arch: ppc64le
+    env: TOXENV=py34-django20-test
+  - python: 3.4
+    arch: ppc64le
+    env: TOXENV=py34-flake
+  - python: 3.5
+    arch: ppc64le
+    env: TOXENV=py35-django111-test
+  - python: 3.5
+    arch: ppc64le
+    env: TOXENV=py35-django20-test
+  - python: 3.5
+    arch: ppc64le
+    env: TOXENV=py35-flake
+  - python: 3.6
+    arch: ppc64le
+    env: TOXENV=py36-django111-test
+  - python: 3.6
+    arch: ppc64le
+    env: TOXENV=py36-django20-test
+  - python: 3.6
+    arch: ppc64le
+    env: TOXENV=py36-django21-test
+  - python: 3.6
+    arch: ppc64le
+    env: TOXENV=py36-django22-test
+  - python: 3.6
+    arch: ppc64le
+    env: TOXENV=py36-django30-test
+  - python: 3.6
+    arch: ppc64le
+    env: TOXENV=py36-flake
+
 
 install:
   - pip install coveralls tox>=2.1
@@ -41,3 +85,5 @@ script:
 after_script:
   - coveralls
 sudo: false
+before_install:
+  - if [[ "$TRAVIS_CPU_ARCH" == "ppc64le" ]]; then  sudo chown -R $USER:$GROUP ~/.cache/pip/wheels; fi
