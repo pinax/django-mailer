@@ -26,7 +26,7 @@ To set up your environment to be able to work on django-mailer, do the following
 
 4. Install test requirements::
 
-    $ pip install coverage mock
+    $ pip install coverage
 
 5. Create a branch for local development::
 
@@ -51,7 +51,7 @@ When writing code to be included in django-mailer keep our style in mind:
 
 * Follow `PEP8 <http://www.python.org/dev/peps/pep-0008/>`_ . There are some
   cases where we do not follow PEP8 but it is an excellent starting point.
-* Follow `Django's coding style <http://docs.djangoproject.com/en/dev/internals/contributing/#coding-style>`_ 
+* Follow `Django's coding style <http://docs.djangoproject.com/en/dev/internals/contributing/#coding-style>`_
   we're pretty much in agreement on Django style outlined there.
 
 

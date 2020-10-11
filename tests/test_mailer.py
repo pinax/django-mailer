@@ -5,6 +5,11 @@ import datetime
 import pickle
 import time
 
+try:
+    from unittest.mock import ANY, Mock, patch
+except ImportError:
+    from mock import ANY, Mock, patch
+
 import django
 import lockfile
 from django.core import mail
@@ -12,7 +17,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils.timezone import now as datetime_now
-from mock import ANY, Mock, patch
 import six
 
 import mailer
