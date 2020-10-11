@@ -120,7 +120,7 @@ class SendingTest(TestCase):
             call_command('purge_mail_log', '1', '-r', 'failure')
 
         self.assertEqual(MessageLog.objects.filter(result=RESULT_FAILURE).count(), 0)
-        self.assertNotEqual(MessageLog.objects.filter(result=RESULT_SUCCESS).count(), 0, MessageLog.objects.count())
+        self.assertNotEqual(MessageLog.objects.filter(result=RESULT_SUCCESS).count(), 0)
 
         # 1 success, 1 failure, and purge everything
         send_mail(False)
