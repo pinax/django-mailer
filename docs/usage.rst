@@ -74,7 +74,8 @@ you can run:
 * ``retry_deferred`` will move any deferred mail back into the normal queue
   (so it will be attempted again on the next ``send_mail``).
 
-* ``purge_mail_log`` will remove old successful message logs from the database, to prevent it from filling up your database
+* ``purge_mail_log`` will remove old successful message logs from the database, to prevent it from filling up your database.
+  Use the ``-r failure`` option to remove only failed message logs instead, or ``-r all`` to remove them all.
 
 
 You may want to set these up via cron to run regularly::
