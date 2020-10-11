@@ -252,7 +252,7 @@ class MessageLogManager(models.Manager):
         )
 
     def purge_old_entries(self, days, result_codes=None):
-        if not result_codes:
+        if result_codes is None:
             # retro-compatibility with previous versions
             result_codes = [RESULT_SUCCESS]
         limit = datetime_now() - datetime.timedelta(days=days)
