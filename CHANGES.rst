@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.1 - under development
+-----------------------
+
+* Added ``-r`` option to ``purge_mail_log`` management command. Thanks julienc91
+
+
 2.0.1 - 2020-03-01
 ------------------
 
