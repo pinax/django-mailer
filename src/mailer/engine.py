@@ -205,10 +205,7 @@ def send_all():
                         logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                     message.delete()
 
-                except (socket_error, smtplib.SMTPSenderRefused,
-                        smtplib.SMTPRecipientsRefused,
-                        smtplib.SMTPDataError,
-                        smtplib.SMTPAuthenticationError) as err:
+                except Exception as err:
                     message.defer()
                     logging.info("message deferred due to failure: %s" % err)
                     MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
