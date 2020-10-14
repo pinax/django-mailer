@@ -122,11 +122,12 @@ def _throttle_emails():
         
 def handle_backend_exception(connection, message, err):
     # default error handler
-    if err is socket_error or \
-        err is smtplib.SMTPSenderRefused or \
-        err is smtplib.SMTPRecipientsRefused or \
-        err is smtplib.SMTPDataError or \
-        err is smtplib.SMTPAuthenticationError:
+    action = None
+    if isinstance(err, (socket_error, 
+                        smtplib.SMTPSenderRefused,
+                        smtplib.SMTPRecipientsRefused,
+                        smtplib.SMTPDataError,
+                        smtplib.SMTPAuthenticationError)):
 
         message.defer()
         logging.info("message deferred due to failure: %s" % err)
@@ -185,7 +186,7 @@ def send_all():
         "django.core.mail.backends.smtp.EmailBackend"
     )
     
-    ERROR_HANDLER = import_string(
+    error_handler = import_string(
         getattr(settings, 'MAILER_ERROR_HANDLER',
         'mailer.engine.handle_backend_exception')
     )
@@ -232,7 +233,7 @@ def send_all():
                     message.delete()
 
                 except Exception as err:
-                    connection, action = ERROR_HANDLER(connection, message, err)
+                    connection, action = error_handler(connection, message, err)
                     counts[action] += 1
 
             # Check if we reached the limits for the current run
