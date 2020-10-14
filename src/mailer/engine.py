@@ -13,6 +13,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
+from django.utils.module_loading import import_string
+
 from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id)
 
 if DJANGO_VERSION[0] >= 2:
