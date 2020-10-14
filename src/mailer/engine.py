@@ -117,6 +117,24 @@ def _throttle_emails():
                       "Sleeping %s seconds", EMAIL_THROTTLE)
         time.sleep(EMAIL_THROTTLE)
 
+        
+def handle_backend_exception(connection, message, err):
+    # default error handler
+    if err is socket_error or \
+        err is smtplib.SMTPSenderRefused or \
+        err is smtplib.SMTPRecipientsRefused or \
+        err is smtplib.SMTPDataError or \
+        err is smtplib.SMTPAuthenticationError:
+
+        message.defer()
+        logging.info("message deferred due to failure: %s" % err)
+        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+        action = 'deferred'
+        # Kill the connection, in case the connection itself has an error.
+        connection = None
+
+    return connection, action
+
 
 def acquire_lock():
     logging.debug("acquiring lock...")
@@ -164,6 +182,11 @@ def send_all():
         "MAILER_EMAIL_BACKEND",
         "django.core.mail.backends.smtp.EmailBackend"
     )
+    
+    ERROR_HANDLER = import_string(
+        getattr(settings, 'MAILER_ERROR_HANDLER',
+        'mailer.engine.handle_backend_exception')
+    )
 
     _require_no_backend_loop(mailer_email_backend)
 
@@ -175,6 +198,7 @@ def send_all():
 
     deferred = 0
     sent = 0
+    counts = {'deferred': 0, 'sent': 0}
 
     try:
         connection = None
@@ -200,18 +224,14 @@ def send_all():
                         email.connection = None
                         message.email = email  # For the sake of MessageLog
                         MessageLog.objects.log(message, RESULT_SUCCESS)
-                        sent += 1
+                        counts['sent'] += 1
                     else:
                         logging.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                     message.delete()
 
                 except Exception as err:
-                    message.defer()
-                    logging.info("message deferred due to failure: %s" % err)
-                    MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
-                    deferred += 1
-                    # Get new connection, it case the connection itself has an error.
-                    connection = None
+                    connection, action = ERROR_HANDLER(connection, message, err)
+                    counts[action] += 1
 
             # Check if we reached the limits for the current run
             if _limits_reached(sent, deferred):
@@ -223,7 +243,7 @@ def send_all():
         release_lock(lock)
 
     logging.info("")
-    logging.info("%s sent; %s deferred;" % (sent, deferred))
+    logging.info("%s sent; %s deferred;" % (counts['sent'], counts['deferred']))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 
