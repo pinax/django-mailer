@@ -122,19 +122,12 @@ def _throttle_emails():
         
 def handle_backend_exception(connection, message, err):
     # default error handler
-    action = None
-    if isinstance(err, (socket_error, 
-                        smtplib.SMTPSenderRefused,
-                        smtplib.SMTPRecipientsRefused,
-                        smtplib.SMTPDataError,
-                        smtplib.SMTPAuthenticationError)):
-
-        message.defer()
-        logging.info("message deferred due to failure: %s" % err)
-        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
-        action = 'deferred'
-        # Kill the connection, in case the connection itself has an error.
-        connection = None
+    message.defer()
+    logging.info("message deferred due to failure: %s" % err)
+    MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
+    action = 'deferred'
+    # Kill the connection, in case the connection itself has an error.
+    connection = None
 
     return connection, action
 
