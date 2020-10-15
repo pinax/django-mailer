@@ -138,6 +138,10 @@ value more suitable for you. This value, which defaults to `None`, will be passe
 `Django's bulk_create method <https://docs.djangoproject.com/en/stable/ref/models/querysets/#bulk-create>`_
 as the `batch_size` parameter.
 
+If you want to change how errors are handled you can create your own error handler
+and set ``MAILER_ERROR_HANDLER``. Your handler should return a connection (could be None)
+and an action (one of 'sent' or 'deferred').
+
 Using the DontSendEntry table
 =============================
 
