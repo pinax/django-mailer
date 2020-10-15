@@ -192,8 +192,6 @@ def send_all():
 
     start_time = time.time()
 
-    deferred = 0
-    sent = 0
     counts = {'deferred': 0, 'sent': 0}
 
     try:
@@ -230,7 +228,7 @@ def send_all():
                     counts[action] += 1
 
             # Check if we reached the limits for the current run
-            if _limits_reached(sent, deferred):
+            if _limits_reached(counts['sent'], counts['deferred']):
                 break
 
             _throttle_emails()
