@@ -142,7 +142,7 @@ If you want to change how errors are handled you can create your own error handl
 and set ``MAILER_ERROR_HANDLER`` as a string for import (default is
 ``"mailer.engine.handle_backend_exception"``). Your handler should return a connection
 (could be ``None`` causing a new connection to be created) and an action_taken (one
-of ``sent`` or ``deferred``).
+of ``"sent"`` or ``"deferred"``).
 
 Using the DontSendEntry table
 =============================
