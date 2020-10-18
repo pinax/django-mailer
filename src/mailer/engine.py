@@ -177,7 +177,7 @@ def send_all():
 
     error_handler = import_string(
         getattr(settings, 'MAILER_ERROR_HANDLER',
-            'mailer.engine.handle_backend_exception')
+                'mailer.engine.handle_backend_exception')
     )
 
     _require_no_backend_loop(mailer_email_backend)
