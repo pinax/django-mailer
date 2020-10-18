@@ -6,6 +6,8 @@ Change log
 
 * Added ``-r`` option to ``purge_mail_log`` management command. Thanks julienc91
 * Fixed deprecation warnings on Django 3.1
+* Drop support for end-of-life Python 2.7, 3.4, 3.5
+* Drop support for end-of-life Django 1.11, 2.0, 2.1
 
 
 2.0.1 - 2020-03-01

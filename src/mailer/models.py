@@ -5,20 +5,10 @@ import logging
 import pickle
 import datetime
 
-import six
-
-try:
-    from django.utils.encoding import python_2_unicode_compatible
-except ImportError:
-    def python_2_unicode_compatible(c):
-        return c
 from django.utils.timezone import now as datetime_now
 from django.core.mail import EmailMessage
 from django.db import models
-if six.PY2:
-    from django.utils.translation import ugettext_lazy as _
-else:
-    from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 PRIORITY_HIGH = 1
@@ -111,7 +101,6 @@ def db_to_email(data):
                 return None
 
 
-@python_2_unicode_compatible
 class Message(models.Model):
 
     # The actual data - a pickled EmailMessage
@@ -267,7 +256,6 @@ class MessageLogManager(models.Manager):
         return count
 
 
-@python_2_unicode_compatible
 class MessageLog(models.Model):
 
     # fields from Message
