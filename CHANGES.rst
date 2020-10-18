@@ -16,6 +16,7 @@ Change log
 * Fixed issue with migration that some people experienced (see `PR 118
   <https://github.com/pinax/django-mailer/pull/118>`_)
 
+
 2.0 - 2019-09-23
 ----------------
 
@@ -50,6 +51,7 @@ Change log
   django-mailer < 2.0, do ``send_all`` to flush the queue, then upgrade
   django-mailer to 2.0 or later.
 
+
 1.2.6 - 2019-04-03
 ------------------
 
@@ -57,21 +59,25 @@ Change log
 * Don't close DB connection in management commands.
   This is unnecessary with modern Django.
 
+
 1.2.5
 -----
 
 * Fixed packaging file permission problems.
 * Added Japanese locale (thanks msk7777)
 
+
 1.2.4
 -----
 
 * Django 2.0 support.
 
+
 1.2.3
 -----
 
 * Fixed crasher with models ``__str__``
+
 
 1.2.2
 -----
@@ -79,11 +85,13 @@ Change log
 * Django 1.10 support.
 * Fixed reprs for Message and MessageLog.
 
+
 1.2.1
 -----
 
 * More helpful admin for Message and MessageLog
 * Handle exceptions from really old Django versions
+
 
 1.2.0
 -----
@@ -119,6 +127,7 @@ Change log
   These migrations were supposed to be in 1.0.0 but were omitted due to a
   packaging error.
 
+
 1.0.0
 -----
 
@@ -126,6 +135,7 @@ Change log
 * Django 1.8 support
 * Admin tweaks and improvements
 * Various other fixes, especially from Renato Alves <alves.rjc@gmail.com> - thank you!
+
 
 0.1.0
 -----
