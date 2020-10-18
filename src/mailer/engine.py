@@ -166,12 +166,9 @@ def _require_no_backend_loop(mailer_email_backend):
 
 
 def send_all():
-    """
-    Send all eligible messages in the queue.
-
-    The actual backend to use for sending, defaulting to the Django default.
-    To make testing easier this is not stored at module level.
-    """
+    """ Send all eligible messages in the queue. """
+    # The actual backend to use for sending, defaulting to the Django default.
+    # To make testing easier this is not stored at module level.
     mailer_email_backend = getattr(
         settings,
         "MAILER_EMAIL_BACKEND",
@@ -236,7 +233,7 @@ def send_all():
         release_lock(lock)
 
     logging.info("")
-    for action_taken, cnt in counts.items():
+    for action_taken, cnt in sorted(counts.items()):
         logging.info("%d %s" % (cnt, action_taken))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
