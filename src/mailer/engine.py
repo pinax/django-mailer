@@ -2,9 +2,7 @@ from __future__ import unicode_literals
 
 import contextlib
 import logging
-import smtplib
 import time
-from socket import error as socket_error
 
 import lockfile
 from django import VERSION as DJANGO_VERSION
