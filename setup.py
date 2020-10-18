@@ -9,7 +9,7 @@ setup(
     long_description=open("docs/usage.rst").read() + open("CHANGES.rst").read(),
     author="Pinax Team",
     author_email="developers@pinaxproject.com",
-    url="http://github.com/pinax/django-mailer/",
+    url="https://github.com/pinax/django-mailer/",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     package_data={'mailer': ['locale/*/LC_MESSAGES/*.*']},
