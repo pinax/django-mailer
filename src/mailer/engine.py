@@ -117,7 +117,7 @@ def _throttle_emails():
                       "Sleeping %s seconds", EMAIL_THROTTLE)
         time.sleep(EMAIL_THROTTLE)
 
-        
+
 def handle_backend_exception(connection, message, err):
     # default error handler
     message.defer()
@@ -168,18 +168,19 @@ def _require_no_backend_loop(mailer_email_backend):
 def send_all():
     """
     Send all eligible messages in the queue.
+
+    The actual backend to use for sending, defaulting to the Django default.
+    To make testing easier this is not stored at module level.
     """
-    # The actual backend to use for sending, defaulting to the Django default.
-    # To make testing easier this is not stored at module level.
     mailer_email_backend = getattr(
         settings,
         "MAILER_EMAIL_BACKEND",
         "django.core.mail.backends.smtp.EmailBackend"
     )
-    
+
     error_handler = import_string(
         getattr(settings, 'MAILER_ERROR_HANDLER',
-        'mailer.engine.handle_backend_exception')
+            'mailer.engine.handle_backend_exception')
     )
 
     _require_no_backend_loop(mailer_email_backend)
@@ -245,7 +246,6 @@ def send_loop():
     Loop indefinitely, checking queue at intervals of EMPTY_QUEUE_SLEEP and
     sending messages if any are on queue.
     """
-
     while True:
         while not Message.objects.all():
             logging.debug("sleeping for %s seconds before checking queue again" % EMPTY_QUEUE_SLEEP)
