@@ -235,7 +235,8 @@ def send_all():
         release_lock(lock)
 
     logging.info("")
-    logging.info("%s sent; %s deferred;" % (counts['sent'], counts['deferred']))
+    for k, v in counts.items():
+        logging.info("%d %s" % (v, k))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 
