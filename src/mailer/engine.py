@@ -222,8 +222,8 @@ def send_all():
                     message.delete()
 
                 except Exception as err:
-                    connection, action = error_handler(connection, message, err)
-                    counts[action] += 1
+                    connection, action_taken = error_handler(connection, message, err)
+                    counts[action_taken] += 1
 
             # Check if we reached the limits for the current run
             if _limits_reached(counts['sent'], counts['deferred']):
@@ -235,8 +235,8 @@ def send_all():
         release_lock(lock)
 
     logging.info("")
-    for k, v in counts.items():
-        logging.info("%d %s" % (v, k))
+    for action_taken, cnt in counts.items():
+        logging.info("%d %s" % (cnt, action_taken))
     logging.info("done in %.2f seconds" % (time.time() - start_time))
 
 
