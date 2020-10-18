@@ -6,7 +6,8 @@ Change log
 
 * Added ``-r`` option to ``purge_mail_log`` management command. Thanks julienc91
 * Fixed deprecation warnings on Django 3.1
-* added ability to override the default error handler
+* Added ability to override the default error handler via the MAILER_ERROR_HANDLER
+  settings key
 
 
 2.0.1 - 2020-03-01
