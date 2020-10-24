@@ -680,21 +680,6 @@ class CommandHelperTest(TestCase):
             call_command_with_cron_arg('send_mail', 1)
             mock_setup_logger.assert_called_with(ANY, level=logging.ERROR)
 
-    def test_retry_deferred_no_cron(self):
-        with patch('mailer.management.commands.retry_deferred.setup_logger') as mock_setup_logger:
-            call_command('retry_deferred')
-            mock_setup_logger.assert_called_with(ANY, level=logging.DEBUG)
-
-    def test_retry_deferred_cron_0(self):
-        with patch('mailer.management.commands.retry_deferred.setup_logger') as mock_setup_logger:
-            call_command_with_cron_arg('retry_deferred', 0)
-            mock_setup_logger.assert_called_with(ANY, level=logging.DEBUG)
-
-    def test_retry_deferred_cron_1(self):
-        with patch('mailer.management.commands.retry_deferred.setup_logger') as mock_setup_logger:
-            call_command_with_cron_arg('retry_deferred', 1)
-            mock_setup_logger.assert_called_with(ANY, level=logging.ERROR)
-
 
 class EmailBackendSettingLoopTest(TestCase):
     def test_loop_detection(self):
