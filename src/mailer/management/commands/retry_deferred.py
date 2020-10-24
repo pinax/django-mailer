@@ -3,7 +3,9 @@ import logging
 from django.core.management.base import BaseCommand
 
 from mailer.models import Message
-from mailer.management.helpers import CronArgMixin
+from mailer.management.helpers import setup_logger, CronArgMixin
+
+logger = logging.getLogger(__name__)
 
 
 class Command(CronArgMixin, BaseCommand):
@@ -11,8 +13,8 @@ class Command(CronArgMixin, BaseCommand):
 
     def handle(self, *args, **options):
         if options['cron'] == 0:
-            logging.basicConfig(level=logging.DEBUG, format="%(message)s")
+            setup_logger(logger, level=logging.DEBUG)
         else:
-            logging.basicConfig(level=logging.ERROR, format="%(message)s")
+            setup_logger(logger, level=logging.ERROR)
         count = Message.objects.retry_deferred()  # @@@ new_priority not yet supported
-        logging.info("%s message(s) retried" % count)
+        logger.info("%s message(s) retried" % count)

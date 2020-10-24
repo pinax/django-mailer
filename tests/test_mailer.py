@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import datetime
+import logging
 import pickle
 import time
 
@@ -282,12 +283,12 @@ class SendingTest(TestCase):
             self.assertEqual(Message.objects.deferred().count(), 0)
 
         with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend", MAILER_EMAIL_MAX_DEFERRED=2):  # noqa
-            # 2 will get deferred 3 remain undeferred
-            with patch("logging.warning") as w:
+            with patch('mailer.engine.logger.warning') as mock_warning:
+                # 2 will get deferred 3 remain undeferred
                 engine.send_all()
 
-                w.assert_called_once()
-                arg = w.call_args[0][0]
+                mock_warning.assert_called_once()
+                arg = mock_warning.call_args[0][0]
                 self.assertIn("EMAIL_MAX_DEFERRED", arg)
                 self.assertIn("stopping for this round", arg)
 
@@ -556,11 +557,11 @@ class MessagesTest(TestCase):
 
             msg.save()
 
-            with patch("logging.warning") as w:
+            with patch('mailer.engine.logger.warning') as mock_warning:
                 engine.send_all()
 
-                w.assert_called_once()
-                arg = w.call_args[0][0]
+                mock_warning.assert_called_once()
+                arg = mock_warning.call_args[0][0]
                 self.assertIn("message discarded due to failure in converting from DB", arg)
 
             self.assertEqual(Message.objects.count(), 0)
@@ -665,34 +666,34 @@ def call_command_with_cron_arg(command, cron_value):
 
 class CommandHelperTest(TestCase):
     def test_send_mail_no_cron(self):
-        with patch('mailer.management.commands.send_mail.logging') as logging:
+        with patch('mailer.management.commands.send_mail.setup_logger') as mock_setup_logger:
             call_command('send_mail')
-            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+            mock_setup_logger.assert_called_with(ANY, level=logging.DEBUG)
 
     def test_send_mail_cron_0(self):
-        with patch('mailer.management.commands.send_mail.logging') as logging:
+        with patch('mailer.management.commands.send_mail.setup_logger') as mock_setup_logger:
             call_command_with_cron_arg('send_mail', 0)
-            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+            mock_setup_logger.assert_called_with(ANY, level=logging.DEBUG)
 
     def test_send_mail_cron_1(self):
-        with patch('mailer.management.commands.send_mail.logging') as logging:
+        with patch('mailer.management.commands.send_mail.setup_logger') as mock_setup_logger:
             call_command_with_cron_arg('send_mail', 1)
-            logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+            mock_setup_logger.assert_called_with(ANY, level=logging.ERROR)
 
     def test_retry_deferred_no_cron(self):
-        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+        with patch('mailer.management.commands.retry_deferred.setup_logger') as mock_setup_logger:
             call_command('retry_deferred')
-            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+            mock_setup_logger.assert_called_with(ANY, level=logging.DEBUG)
 
     def test_retry_deferred_cron_0(self):
-        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+        with patch('mailer.management.commands.retry_deferred.setup_logger') as mock_setup_logger:
             call_command_with_cron_arg('retry_deferred', 0)
-            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+            mock_setup_logger.assert_called_with(ANY, level=logging.DEBUG)
 
     def test_retry_deferred_cron_1(self):
-        with patch('mailer.management.commands.retry_deferred.logging') as logging:
+        with patch('mailer.management.commands.retry_deferred.setup_logger') as mock_setup_logger:
             call_command_with_cron_arg('retry_deferred', 1)
-            logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+            mock_setup_logger.assert_called_with(ANY, level=logging.ERROR)
 
 
 class EmailBackendSettingLoopTest(TestCase):

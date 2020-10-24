@@ -4,6 +4,8 @@ Change log
 2.1 - under development
 -----------------------
 
+* Changed logging to use module specific loggers to avoid interfering
+  with other loggers.
 * Added ``-r`` option to ``purge_mail_log`` management command. Thanks julienc91
 * Fixed deprecation warnings on Django 3.1
 

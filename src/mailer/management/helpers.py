@@ -1,3 +1,5 @@
+import logging
+
 from optparse import make_option
 from django.core.management.base import BaseCommand
 
@@ -22,3 +24,12 @@ else:
                 type=int,
                 help=help_msg,
             )
+
+
+def setup_logger(logger, level):
+    """Configures a logger to only show the message and sets the log level"""
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(level)

@@ -35,6 +35,8 @@ PRIORITIES = [
 
 PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 
+logger = logging.getLogger(__name__)
+
 
 def get_message_id(msg):
     # From django.core.mail.message: Email header names are case-insensitive
@@ -113,6 +115,9 @@ def db_to_email(data):
 
 @python_2_unicode_compatible
 class Message(models.Model):
+    """
+    The email stored for later sending.
+    """
 
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
@@ -173,7 +178,7 @@ def filter_recipient_list(lst):
     retval = []
     for e in lst:
         if DontSendEntry.objects.has_address(e):
-            logging.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
+            logger.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
         else:
             retval.append(e)
     return retval
@@ -269,6 +274,10 @@ class MessageLogManager(models.Manager):
 
 @python_2_unicode_compatible
 class MessageLog(models.Model):
+    """
+    A log entry which stores the result (and optionally a log message) for an
+    attempt to send a Message.
+    """
 
     # fields from Message
     message_data = models.TextField()
