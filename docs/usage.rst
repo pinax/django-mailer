@@ -132,6 +132,9 @@ added. The process running ``send_mail`` needs to have permissions to create and
 delete this file, and others in the same directory. With the default value of
 ``None`` django-mailer will use a path in current working directory.
 
+If you need to disable the file-based locking, you can set the
+``MAILER_USE_FILE_LOCK`` setting to ``False``.
+
 If you need to change the batch size used by django-mailer to save messages in
 ``mailer.backend.DbBackend``, you can set ``MAILER_MESSAGES_BATCH_SIZE`` to a
 value more suitable for you. This value, which defaults to `None`, will be passed to

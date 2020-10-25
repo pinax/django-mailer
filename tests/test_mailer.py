@@ -705,3 +705,32 @@ class EmailBackendSettingLoopTest(TestCase):
         self.assertIn('mailer.backend.DbBackend', str(catcher.exception))
         self.assertIn('EMAIL_BACKEND', str(catcher.exception))
         self.assertIn('MAILER_EMAIL_BACKEND', str(catcher.exception))
+
+
+class UseFileLockTest(TestCase):
+    """Test the MAILER_USE_FILE_LOCK setting."""
+
+    def setUp(self):
+        # mocking return_value to prevent "ValueError: not enough values to unpack"
+        self.patcher_acquire_lock = patch("mailer.engine.acquire_lock", return_value=(True, True))
+        self.patcher_release_lock = patch("mailer.engine.release_lock", return_value=(True, True))
+
+        self.mock_acquire_lock = self.patcher_acquire_lock.start()
+        self.mock_release_lock = self.patcher_release_lock.start()
+
+    def test_mailer_use_file_lock_enabled(self):
+        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            engine.send_all()
+        self.mock_acquire_lock.assert_called_once()
+        self.mock_release_lock.assert_called_once()
+
+    def test_mailer_use_file_lock_disabled(self):
+        with self.settings(MAILER_USE_FILE_LOCK=False,
+                           MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+            engine.send_all()
+        self.mock_acquire_lock.assert_not_called()
+        self.mock_release_lock.assert_not_called()
+
+    def tearDown(self):
+        self.patcher_acquire_lock.stop()
+        self.patcher_release_lock.stop()
