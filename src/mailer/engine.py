@@ -132,10 +132,10 @@ def acquire_lock():
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
     except lockfile.AlreadyLocked:
-        logger.debug("lock already in place. quitting.")
+        logger.error("lock already in place. quitting.")
         return False, lock
     except lockfile.LockTimeout:
-        logger.debug("waiting for the lock timed out. quitting.")
+        logger.error("waiting for the lock timed out. quitting.")
         return False, lock
     logger.debug("acquired.")
     return True, lock
