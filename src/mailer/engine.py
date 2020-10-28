@@ -12,6 +12,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
+from django.core.mail.utils import DNS_NAME
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
 from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id)
 
@@ -84,7 +85,8 @@ def get_messages_for_sending():
 
 def ensure_message_id(msg):
     if get_message_id(msg) is None:
-        msg.extra_headers['Message-ID'] = make_msgid()
+        # Use cached DNS_NAME for performance
+        msg.extra_headers['Message-ID'] = make_msgid(domain=DNS_NAME)
 
 
 def _limits_reached(sent, deferred):
