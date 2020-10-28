@@ -10,6 +10,7 @@ Change log
   format has been removed.
 * Changed logging to use module specific loggers to avoid interfering
   with other loggers.
+* Added ``MAILER_USE_FILE_LOCK`` setting to allow disabling file based locking.
 * Added ``-r`` option to ``purge_mail_log`` management command. Thanks julienc91
 * Fixed deprecation warnings on Django 3.1
 

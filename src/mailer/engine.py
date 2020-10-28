@@ -166,12 +166,15 @@ def send_all():
         "MAILER_EMAIL_BACKEND",
         "django.core.mail.backends.smtp.EmailBackend"
     )
+    # allows disabling file locking. The default is True
+    use_file_lock = getattr(settings, "MAILER_USE_FILE_LOCK", True)
 
     _require_no_backend_loop(mailer_email_backend)
 
-    acquired, lock = acquire_lock()
-    if not acquired:
-        return
+    if use_file_lock:
+        acquired, lock = acquire_lock()
+        if not acquired:
+            return
 
     start_time = time.time()
 
@@ -225,7 +228,8 @@ def send_all():
             _throttle_emails()
 
     finally:
-        release_lock(lock)
+        if use_file_lock:
+            release_lock(lock)
 
     logger.info("")
     logger.info("%s sent; %s deferred;" % (sent, deferred))
