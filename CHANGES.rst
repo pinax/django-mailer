@@ -4,9 +4,10 @@ Change log
 2.1 - under development
 -----------------------
 
-* Deprecated the ``-c/--cron`` option in the ``retry_deferred`` management
-  command and removed unnecessary logic to configure log levels and the message
-  format. This command relies on the log level set in your django project now.
+* The ``retry_deferred`` and ``send_mail`` commands rely on the log level set
+  in your django project now. The ``-c/--cron`` option in those commands has
+  been deprecated and the logic to configure log levels and the message
+  format has been removed.
 * Changed logging to use module specific loggers to avoid interfering
   with other loggers.
 * Added ``-r`` option to ``purge_mail_log`` management command. Thanks julienc91

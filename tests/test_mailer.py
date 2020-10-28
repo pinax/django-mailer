@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import datetime
-import logging
 import pickle
 import time
 
@@ -13,7 +12,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils.timezone import now as datetime_now
-from mock import ANY, Mock, patch
+from mock import Mock, patch
 import six
 
 import mailer
@@ -661,24 +660,32 @@ def call_command_with_cron_arg(command, cron_value):
         return call_command(command, cron=cron_value)
 
     # newer django; test parsing by passing argument as string
+    # --cron/c command option is deprecated
     return call_command(command, '--cron={}'.format(cron_value))
 
 
 class CommandHelperTest(TestCase):
     def test_send_mail_no_cron(self):
-        with patch('mailer.management.commands.send_mail.setup_logger') as mock_setup_logger:
-            call_command('send_mail')
-            mock_setup_logger.assert_called_with(ANY, level=logging.DEBUG)
+        call_command('send_mail')
 
     def test_send_mail_cron_0(self):
-        with patch('mailer.management.commands.send_mail.setup_logger') as mock_setup_logger:
-            call_command_with_cron_arg('send_mail', 0)
-            mock_setup_logger.assert_called_with(ANY, level=logging.DEBUG)
+        # deprecated
+        call_command_with_cron_arg('send_mail', 0)
 
     def test_send_mail_cron_1(self):
-        with patch('mailer.management.commands.send_mail.setup_logger') as mock_setup_logger:
-            call_command_with_cron_arg('send_mail', 1)
-            mock_setup_logger.assert_called_with(ANY, level=logging.ERROR)
+        # deprecated
+        call_command_with_cron_arg('send_mail', 1)
+
+    def test_retry_deferred_no_cron(self):
+        call_command('retry_deferred')
+
+    def test_retry_deferred_cron_0(self):
+        # deprecated
+        call_command_with_cron_arg('retry_deferred', 0)
+
+    def test_retry_deferred_cron_1(self):
+        # deprecated
+        call_command_with_cron_arg('retry_deferred', 1)
 
 
 class EmailBackendSettingLoopTest(TestCase):

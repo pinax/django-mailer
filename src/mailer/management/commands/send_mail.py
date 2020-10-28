@@ -1,10 +1,11 @@
 import logging
+import warnings
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from mailer.engine import send_all
-from mailer.management.helpers import setup_logger, CronArgMixin
+from mailer.management.helpers import CronArgMixin
 
 
 # allow a sysadmin to pause the sending of mail temporarily.
@@ -18,9 +19,9 @@ class Command(CronArgMixin, BaseCommand):
 
     def handle(self, *args, **options):
         if options['cron'] == 0:
-            setup_logger(logger, level=logging.DEBUG)
-        else:
-            setup_logger(logger, level=logging.ERROR)
+            warnings.warn("send_mail's -c/--cron option is no longer "
+                          "necessary and will be removed in a future release",
+                          DeprecationWarning)
         logger.info("-" * 72)
         # if PAUSE_SEND is turned on don't do anything.
         if not PAUSE_SEND:
