@@ -8,6 +8,8 @@ RESULT_CODES = {
     'all': [RESULT_SUCCESS, RESULT_FAILURE]
 }
 
+logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     help = "Delete mailer log"
@@ -23,4 +25,4 @@ class Command(BaseCommand):
         result_codes = RESULT_CODES.get(options['result'])
 
         count = MessageLog.objects.purge_old_entries(days, result_codes)
-        logging.info("%s log entries deleted " % count)
+        logger.info("%s log entries deleted " % count)

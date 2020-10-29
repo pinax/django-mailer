@@ -12,7 +12,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils.timezone import now as datetime_now
-from mock import ANY, Mock, patch
+from mock import Mock, patch
 import six
 
 import mailer
@@ -282,12 +282,12 @@ class SendingTest(TestCase):
             self.assertEqual(Message.objects.deferred().count(), 0)
 
         with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend", MAILER_EMAIL_MAX_DEFERRED=2):  # noqa
-            # 2 will get deferred 3 remain undeferred
-            with patch("logging.warning") as w:
+            with patch('mailer.engine.logger.warning') as mock_warning:
+                # 2 will get deferred 3 remain undeferred
                 engine.send_all()
 
-                w.assert_called_once()
-                arg = w.call_args[0][0]
+                mock_warning.assert_called_once()
+                arg = mock_warning.call_args[0][0]
                 self.assertIn("EMAIL_MAX_DEFERRED", arg)
                 self.assertIn("stopping for this round", arg)
 
@@ -556,11 +556,11 @@ class MessagesTest(TestCase):
 
             msg.save()
 
-            with patch("logging.warning") as w:
+            with patch('mailer.engine.logger.warning') as mock_warning:
                 engine.send_all()
 
-                w.assert_called_once()
-                arg = w.call_args[0][0]
+                mock_warning.assert_called_once()
+                arg = mock_warning.call_args[0][0]
                 self.assertIn("message discarded due to failure in converting from DB", arg)
 
             self.assertEqual(Message.objects.count(), 0)
@@ -660,39 +660,32 @@ def call_command_with_cron_arg(command, cron_value):
         return call_command(command, cron=cron_value)
 
     # newer django; test parsing by passing argument as string
+    # --cron/c command option is deprecated
     return call_command(command, '--cron={}'.format(cron_value))
 
 
 class CommandHelperTest(TestCase):
     def test_send_mail_no_cron(self):
-        with patch('mailer.management.commands.send_mail.logging') as logging:
-            call_command('send_mail')
-            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+        call_command('send_mail')
 
     def test_send_mail_cron_0(self):
-        with patch('mailer.management.commands.send_mail.logging') as logging:
-            call_command_with_cron_arg('send_mail', 0)
-            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+        # deprecated
+        call_command_with_cron_arg('send_mail', 0)
 
     def test_send_mail_cron_1(self):
-        with patch('mailer.management.commands.send_mail.logging') as logging:
-            call_command_with_cron_arg('send_mail', 1)
-            logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+        # deprecated
+        call_command_with_cron_arg('send_mail', 1)
 
     def test_retry_deferred_no_cron(self):
-        with patch('mailer.management.commands.retry_deferred.logging') as logging:
-            call_command('retry_deferred')
-            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+        call_command('retry_deferred')
 
     def test_retry_deferred_cron_0(self):
-        with patch('mailer.management.commands.retry_deferred.logging') as logging:
-            call_command_with_cron_arg('retry_deferred', 0)
-            logging.basicConfig.assert_called_with(level=logging.DEBUG, format=ANY)
+        # deprecated
+        call_command_with_cron_arg('retry_deferred', 0)
 
     def test_retry_deferred_cron_1(self):
-        with patch('mailer.management.commands.retry_deferred.logging') as logging:
-            call_command_with_cron_arg('retry_deferred', 1)
-            logging.basicConfig.assert_called_with(level=logging.ERROR, format=ANY)
+        # deprecated
+        call_command_with_cron_arg('retry_deferred', 1)
 
 
 class EmailBackendSettingLoopTest(TestCase):
