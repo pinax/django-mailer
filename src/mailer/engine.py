@@ -2,9 +2,13 @@ from __future__ import unicode_literals
 
 import contextlib
 import logging
+import smtplib
+import sys
 import time
+from socket import error as socket_error
 
 import lockfile
+import six
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -122,16 +126,24 @@ def _throttle_emails():
         time.sleep(EMAIL_THROTTLE)
 
 
-def handle_backend_exception(connection, message, err):
-    # default error handler
-    message.defer()
-    logger.info("message deferred due to failure: %s" % err)
-    MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
-    action = 'deferred'
-    # Kill the connection, in case the connection itself has an error.
-    connection = None
+def handle_delivery_exception(connection, message, exc):
+    if isinstance(exc, (smtplib.SMTPAuthenticationError,
+                        smtplib.SMTPDataError,
+                        smtplib.SMTPRecipientsRefused,
+                        smtplib.SMTPSenderRefused,
+                        socket_error)):
+        message.defer()
+        logger.info("message deferred due to failure: %s" % exc)
+        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(exc))
 
-    return connection, action
+        connection = None  # i.e. enforce creation of a new connection
+        status = 'deferred'
+
+        return connection, status
+
+    # The idea is (1) to be backwards compatible with existing behavior
+    # and (2) not have delivery errors go unnoticed
+    six.reraise(*sys.exc_info())
 
 
 def acquire_lock():
@@ -186,7 +198,7 @@ def send_all():
 
     error_handler = import_string(
         getattr(settings, 'MAILER_ERROR_HANDLER',
-                'mailer.engine.handle_backend_exception')
+                'mailer.engine.handle_delivery_exception')
     )
 
     _require_no_backend_loop(mailer_email_backend)

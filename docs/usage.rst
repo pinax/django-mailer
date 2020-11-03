@@ -143,7 +143,7 @@ as the `batch_size` parameter.
 
 If you want to change how errors are handled you can create your own error handler
 and set ``MAILER_ERROR_HANDLER`` as a string for import (default is
-``"mailer.engine.handle_backend_exception"``). Your handler should return a connection
+``"mailer.engine.handle_delivery_exception"``). Your handler should return a connection
 (could be ``None`` causing a new connection to be created) and an action_taken (one
 of ``"sent"`` or ``"deferred"``).
 
