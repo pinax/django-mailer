@@ -3,10 +3,12 @@ from __future__ import unicode_literals
 import contextlib
 import logging
 import smtplib
+import sys
 import time
 from socket import error as socket_error
 
 import lockfile
+import six
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -14,6 +16,8 @@ from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
 from django.core.mail.utils import DNS_NAME
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
+from django.utils.module_loading import import_string
+
 from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id)
 
 if DJANGO_VERSION[0] >= 2:
@@ -122,6 +126,26 @@ def _throttle_emails():
         time.sleep(EMAIL_THROTTLE)
 
 
+def handle_delivery_exception(connection, message, exc):
+    if isinstance(exc, (smtplib.SMTPAuthenticationError,
+                        smtplib.SMTPDataError,
+                        smtplib.SMTPRecipientsRefused,
+                        smtplib.SMTPSenderRefused,
+                        socket_error)):
+        message.defer()
+        logger.info("message deferred due to failure: %s" % exc)
+        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(exc))
+
+        connection = None  # i.e. enforce creation of a new connection
+        status = 'deferred'
+
+        return connection, status
+
+    # The idea is (1) to be backwards compatible with existing behavior
+    # and (2) not have delivery errors go unnoticed
+    six.reraise(*sys.exc_info())
+
+
 def acquire_lock():
     logger.debug("acquiring lock...")
     if LOCK_PATH is not None:
@@ -168,8 +192,14 @@ def send_all():
         "MAILER_EMAIL_BACKEND",
         "django.core.mail.backends.smtp.EmailBackend"
     )
+
     # allows disabling file locking. The default is True
     use_file_lock = getattr(settings, "MAILER_USE_FILE_LOCK", True)
+
+    error_handler = import_string(
+        getattr(settings, 'MAILER_ERROR_HANDLER',
+                'mailer.engine.handle_delivery_exception')
+    )
 
     _require_no_backend_loop(mailer_email_backend)
 
@@ -180,8 +210,7 @@ def send_all():
 
     start_time = time.time()
 
-    deferred = 0
-    sent = 0
+    counts = {'deferred': 0, 'sent': 0}
 
     try:
         connection = None
@@ -207,24 +236,17 @@ def send_all():
                         email.connection = None
                         message.email = email  # For the sake of MessageLog
                         MessageLog.objects.log(message, RESULT_SUCCESS)
-                        sent += 1
+                        counts['sent'] += 1
                     else:
                         logger.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
                     message.delete()
 
-                except (socket_error, smtplib.SMTPSenderRefused,
-                        smtplib.SMTPRecipientsRefused,
-                        smtplib.SMTPDataError,
-                        smtplib.SMTPAuthenticationError) as err:
-                    message.defer()
-                    logger.info("message deferred due to failure: %s" % err)
-                    MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err))
-                    deferred += 1
-                    # Get new connection, it case the connection itself has an error.
-                    connection = None
+                except Exception as err:
+                    connection, action_taken = error_handler(connection, message, err)
+                    counts[action_taken] += 1
 
             # Check if we reached the limits for the current run
-            if _limits_reached(sent, deferred):
+            if _limits_reached(counts['sent'], counts['deferred']):
                 break
 
             _throttle_emails()
@@ -234,7 +256,7 @@ def send_all():
             release_lock(lock)
 
     logger.info("")
-    logger.info("%s sent; %s deferred;" % (sent, deferred))
+    logger.info("%s sent; %s deferred;" % (counts['sent'], counts['deferred']))
     logger.info("done in %.2f seconds" % (time.time() - start_time))
 
 

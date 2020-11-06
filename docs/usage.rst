@@ -122,6 +122,60 @@ each email `MAILER_EMAIL_THROTTLE`.
 
 Unprocessed emails will be evaluated in the following delivery iterations.
 
+Error handling
+==============
+
+django-mailer comes with a default error handler
+``mailer.engine.handle_delivery_exception``.
+
+It marks the related message as deferred for any of these exceptions:
+
+- ``smtplib.SMTPAuthenticationError``
+- ``smtplib.SMTPDataError``
+- ``smtplib.SMTPRecipientsRefused``
+- ``smtplib.SMTPSenderRefused``
+- ``socket.error``
+
+Any other exceptions is re-raised.
+That is done for backwords-compatiblity as well as for flexibility:
+we would otherwise have to maintain an extensive and changing
+list of exception types, which does not scale, and you get
+the chance to do error handling that fits your environment like a glove.
+
+When the default behavior does not fit your environment, you can specify your
+own custom delivery error handler through setting ``MAILER_ERROR_HANDLER``.
+The value should be a string for use with Django's ``import_string``,
+the default is ``"mailer.engine.handle_delivery_exception"``.
+
+Your handler is passed three arguments, in order:
+
+- ``connection`` — the backend connection instance that failed delivery
+- ``message`` — the ``Message`` instance that failed delivery
+- ``exc`` — the exception instance raised by the mailer backend
+
+Your handler should return a 2-tuple of:
+
+1. a connection instance (or ``None`` to cause a new connection to be created)
+2. a string denoting the action taken by the handler,
+   either ``"sent"`` or ``"deferred"`` precisely
+
+For an example of a custom error handler::
+
+    def my_handler(connection, message, exc):
+        if isinstance(exc, SomeDeliveryException):
+            # trying to re-send this very message desparately
+            # (if you have good reason to)
+            [..]
+            status = 'sent'
+        elif isinstance(exc, SomeOtherException):
+            message.defer()
+            connection = None  # i.e. ask for a new connection
+            status = 'deferred'
+        else:
+            six.reraise(*sys.exc_info())
+
+        return connection, status
+
 Other settings
 ==============
 
