@@ -75,7 +75,8 @@ def send_attachment_mail(subject, message, from_email, recipient_list,
 
 def send_html_mail(subject, message, message_html, from_email, recipient_list,
                    priority=None, fail_silently=False, auth_user=None,
-                   auth_password=None, headers={}):
+                   auth_password=None, headers={},
+                   attachment=None, attachment_filename=None, attachment_content_type=None):
     """
     Function to queue HTML e-mails
     """
@@ -94,6 +95,8 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
                        from_email=from_email,
                        to=recipient_list,
                        priority=priority)
+
+    # Attach alternative
     email = msg.email
     email = EmailMultiAlternatives(
         email.subject,
@@ -103,6 +106,15 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
         headers=headers
     )
     email.attach_alternative(message_html, "text/html")
+
+    # Attach file attachment
+    if attachment and attachment_filename:
+        if attachment_content_type == None:
+            email.attach(attachment_filename, attachment)
+        else:
+            email.attach(attachment_filename, attachment, attachment_content_type)
+
+    # Publish msg
     msg.email = email
     msg.save()
     return 1
