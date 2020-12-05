@@ -1,8 +1,8 @@
 Change log
 ==========
 
-2.1 - under development
------------------------
+2.1 - 2020-12-05
+----------------
 
 * The ``retry_deferred`` and ``send_mail`` commands rely on the log level set
   in your django project now. The ``-c/--cron`` option in those commands has

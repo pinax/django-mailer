@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="django-mailer",
-    version="2.0.1",
+    version="2.1",
     description="A reusable Django app for queuing the sending of email",
     long_description=open("docs/usage.rst").read() + open("CHANGES.rst").read(),
     author="Pinax Team",
@@ -24,6 +24,9 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Framework :: Django",
     ],
     install_requires=[
