@@ -137,7 +137,7 @@ It marks the related message as deferred for any of these exceptions:
 - ``socket.error``
 
 Any other exceptions is re-raised.
-That is done for backwords-compatiblity as well as for flexibility:
+That is done for backwards-compatibility as well as for flexibility:
 we would otherwise have to maintain an extensive and changing
 list of exception types, which does not scale, and you get
 the chance to do error handling that fits your environment like a glove.

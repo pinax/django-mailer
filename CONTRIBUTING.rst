@@ -59,7 +59,7 @@ Pull Requests
 -------------
 
 Please keep your pull requests focused on one specific thing only. If you
-have a number of contributions to make, then please send seperate pull
+have a number of contributions to make, then please send separate pull
 requests. It is much easier on maintainers to receive small, well defined,
 pull requests, than it is to have a single large one that batches up a
 lot of unrelated commits.
