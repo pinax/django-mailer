@@ -77,6 +77,12 @@ To remove successful log entries older than a week, add this to a cron job file 
 
 Use the `-r failure` option to remove only failed log entries instead, or `-r all` to remove them all.
 
+Note that the ``send_mail`` cronjob can only run at a maximum frequency of once each minute. If a maximum
+delay of 60 seconds between creating an email and sending it is too much, an alternative is available.
+
+Using ``./manage.py runmailer`` a long running process is started that will check the database
+for new emails each ``MAILER_EMPTY_QUEUE_SLEEP`` (default: 30 seconds).
+
 Documentation and support
 -------------------------
 

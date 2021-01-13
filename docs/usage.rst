@@ -64,12 +64,17 @@ or all managers as defined in the ``MANAGERS`` setting by calling::
 Clear queue with command extensions
 ===================================
 
-With mailer in your INSTALLED_APPS, there will be three new manage.py commands
-you can run:
+With mailer in your ``INSTALLED_APPS``, there will be four new
+``manage.py`` commands you can run:
 
 * ``send_mail`` will clear the current message queue. If there are any
   failures, they will be marked deferred and will not be attempted again by
   ``send_mail``.
+
+* ``runmailer`` similar to ``send_mail``, but will keep running and checking the
+  database for new messages each ``MAILER_EMPTY_QUEUE_SLEEP`` (default: 30) seconds.
+  Can be used *instead* of ``send_mail`` to circumvent the maximum frequency
+  of once per minutes inherent to cron.
 
 * ``retry_deferred`` will move any deferred mail back into the normal queue
   (so it will be attempted again on the next ``send_mail``).
@@ -102,7 +107,12 @@ this command from the virtualenv. The same, naturally, applies also if you're
 executing it with cron. The `Pinax documentation`_ explains that in more
 details.
 
+If you intend to use ``manage.py runmailer`` instead of ``send_mail`` it's
+up to you to keep this command running in the background. This can be achieved
+using `supervisord`_ or similar software.
+
 .. _pinax documentation: http://pinaxproject.com/docs/dev/deployment.html#sending-mail-and-notices
+.. _supervisord: http://supervisord.org/
 
 Controlling the delivery process
 ================================

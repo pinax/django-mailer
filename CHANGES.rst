@@ -4,6 +4,10 @@ Change log
 2.1.1 - Unreleased
 ------------------
 
+* Add ``runmailer`` management command. This command starts a loop that
+  frequently checks the database for new emails. The wait time between
+  checks can be controlled using the ``MAILER_EMPTY_QUEUE_SLEEP`` setting.
+
 2.1 - 2020-12-05
 ----------------
 
