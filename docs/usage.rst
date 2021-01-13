@@ -87,9 +87,9 @@ You may want to set these up via cron to run regularly::
 
 For use in Pinax, for example, that might look like::
 
-    * * * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py send_mail >> $PINAX/cron_mail.log 2>&1)
-    0,20,40 * * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py retry_deferred >> $PINAX/cron_mail_deferred.log 2>&1)
-    0 0 * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py purge_mail_log 7 >> $PINAX/cron_mail_purge.log 2>&1)
+    * * * * * (cd $PINAX; /usr/local/bin/python manage.py send_mail >> $PINAX/cron_mail.log 2>&1)
+    0,20,40 * * * * (cd $PINAX; /usr/local/bin/python manage.py retry_deferred >> $PINAX/cron_mail_deferred.log 2>&1)
+    0 0 * * * (cd $PINAX; /usr/local/bin/python manage.py purge_mail_log 7 >> $PINAX/cron_mail_purge.log 2>&1)
 
 This attempts to send mail every minute with a retry on failure every 20
 minutes, and purges the mail log for entries older than 7 days.
