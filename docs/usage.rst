@@ -2,7 +2,7 @@
 Usage
 =====
 
-First, add "mailer" to your ``INSTALLED_APPS`` in your settings.py.
+First, add "mailer" to your ``INSTALLED_APPS`` in your ``settings.py``.
 Run ``./manage.py migrate`` to install models.
 
 Using EMAIL_BACKEND
@@ -11,12 +11,12 @@ Using EMAIL_BACKEND
 This is the preferred and easiest way to use django-mailer.
 
 To automatically switch all your mail to use django-mailer, first set
-EMAIL_BACKEND::
+``EMAIL_BACKEND``::
 
     EMAIL_BACKEND = "mailer.backend.DbBackend"
 
-If you were previously using a non-default EMAIL_BACKEND, you need to configure
-the MAILER_EMAIL_BACKEND setting, so that django-mailer knows how to actually send
+If you were previously using a non-default ``EMAIL_BACKEND``, you need to configure
+the ``MAILER_EMAIL_BACKEND`` setting, so that django-mailer knows how to actually send
 the mail::
 
     MAILER_EMAIL_BACKEND = "your.actual.EmailBackend"
@@ -87,9 +87,9 @@ You may want to set these up via cron to run regularly::
 
 For use in Pinax, for example, that might look like::
 
-    * * * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py send_mail >> $PINAX/cron_mail.log 2>&1)
-    0,20,40 * * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py retry_deferred >> $PINAX/cron_mail_deferred.log 2>&1)
-    0 0 * * * (cd $PINAX; /usr/local/bin/python2.5 manage.py purge_mail_log 7 >> $PINAX/cron_mail_purge.log 2>&1)
+    * * * * * (cd $PINAX; /usr/local/bin/python manage.py send_mail >> $PINAX/cron_mail.log 2>&1)
+    0,20,40 * * * * (cd $PINAX; /usr/local/bin/python manage.py retry_deferred >> $PINAX/cron_mail_deferred.log 2>&1)
+    0 0 * * * (cd $PINAX; /usr/local/bin/python manage.py purge_mail_log 7 >> $PINAX/cron_mail_purge.log 2>&1)
 
 This attempts to send mail every minute with a retry on failure every 20
 minutes, and purges the mail log for entries older than 7 days.
@@ -116,9 +116,9 @@ to deliver everything in the queue, you can use the following 3 variables
     MAILER_EMAIL_THROTTLE = 0  # passed to time.sleep()
 
 These control how many emails are sent successfully before stopping the
-current run `MAILER_EMAIL_MAX_BATCH`, after how many failed/deferred emails
-should it stop `MAILER_EMAIL_MAX_DEFERRED` and how much time to wait between
-each email `MAILER_EMAIL_THROTTLE`.
+current run ``MAILER_EMAIL_MAX_BATCH``, after how many failed/deferred emails
+should it stop ``MAILER_EMAIL_MAX_DEFERRED`` and how much time to wait between
+each email ``MAILER_EMAIL_THROTTLE``.
 
 Unprocessed emails will be evaluated in the following delivery iterations.
 
@@ -137,7 +137,7 @@ It marks the related message as deferred for any of these exceptions:
 - ``socket.error``
 
 Any other exceptions is re-raised.
-That is done for backwords-compatiblity as well as for flexibility:
+That is done for backwards-compatibility as well as for flexibility:
 we would otherwise have to maintain an extensive and changing
 list of exception types, which does not scale, and you get
 the chance to do error handling that fits your environment like a glove.
@@ -191,9 +191,9 @@ If you need to disable the file-based locking, you can set the
 
 If you need to change the batch size used by django-mailer to save messages in
 ``mailer.backend.DbBackend``, you can set ``MAILER_MESSAGES_BATCH_SIZE`` to a
-value more suitable for you. This value, which defaults to `None`, will be passed to
+value more suitable for you. This value, which defaults to ``None``, will be passed to
 `Django's bulk_create method <https://docs.djangoproject.com/en/stable/ref/models/querysets/#bulk-create>`_
-as the `batch_size` parameter.
+as the ``batch_size`` parameter.
 
 Using the DontSendEntry table
 =============================
