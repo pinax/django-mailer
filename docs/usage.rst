@@ -74,7 +74,7 @@ With mailer in your ``INSTALLED_APPS``, there will be four new
 * ``runmailer`` similar to ``send_mail``, but will keep running and checking the
   database for new messages each ``MAILER_EMPTY_QUEUE_SLEEP`` (default: 30) seconds.
   Can be used *instead* of ``send_mail`` to circumvent the maximum frequency
-  of once per minutes inherent to cron.
+  of once per minute inherent to cron.
 
 * ``retry_deferred`` will move any deferred mail back into the normal queue
   (so it will be attempted again on the next ``send_mail``).
