@@ -133,7 +133,7 @@ def handle_delivery_exception(connection, message, exc):
                         smtplib.SMTPSenderRefused,
                         socket_error)):
         message.defer()
-        logger.info("message deferred due to failure: %s" % exc)
+        logger.error("message deferred due to failure: %s" % exc)
         MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(exc))
 
         connection = None  # i.e. enforce creation of a new connection
