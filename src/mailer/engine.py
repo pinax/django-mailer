@@ -324,6 +324,7 @@ def send_all():
                             ensure_message_id(email)
                             if ASYNC_SEND:
                                 send_async_mail(email, message, account)
+                                sent += 1
                             else:
                                 email.send()
 
