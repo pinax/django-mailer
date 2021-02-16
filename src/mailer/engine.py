@@ -104,12 +104,10 @@ def ensure_message_id(msg):
 
 
 def send_async_mail(email, message, account):
-    t = EmailThread(email)
-    t.start()
-
-    # Exception handled in Caller thread 
     try: 
-        t.join() 
+        t = EmailThread(email)
+        t.start()
+        # t.join() 
 
         # connection can't be stored in the MessageLog
         email.connection = None
