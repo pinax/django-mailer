@@ -22,21 +22,36 @@ perform the task asynchronously using Python’s threading.
 
 http://ui.co.id/blog/asynchronous-send_mail-in-django
 """
+import logging
 import threading
+
+from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, MessageLog)
 
 
 class EmailThread(threading.Thread):
-    def __init__(self, msg):
-        self.msg = msg
+    def __init__(self, email, message, account):
+        self.email = email
+        self.message = message
+        self.account = account
         threading.Thread.__init__(self)
 
     def run(self):
         # Variable that stores the exception, if raised by someFunction 
         self.exc = None
         try:
-            self.msg.send()
+            self.email.send()
+            raise Exception('An error ocurred')
+
+            self.email.connection = None
+            self.message.email = self.email  # For the sake of MessageLog
+            MessageLog.objects.log(self.message, RESULT_SUCCESS, account=self.account)
+            
+            self.message.delete()
         except BaseException as e: 
             self.exc = e
+            self.message.defer()
+            logging.info("Message deferred due to failure: %s" % e)
+            MessageLog.objects.log(self.message, RESULT_FAILURE, log_message=str(e), account=self.account)
     
     def join(self): 
         threading.Thread.join(self) 
@@ -46,3 +61,7 @@ class EmailThread(threading.Thread):
         if self.exc: 
             raise self.exc 
 
+
+def send_async_mail(email, message, account):
+    t = EmailThread(email, message, account)
+    t.start()
