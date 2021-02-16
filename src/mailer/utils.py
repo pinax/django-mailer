@@ -35,7 +35,6 @@ class EmailThread(threading.Thread):
         self.exc = None
         try:
             self.msg.send()
-            raise Exception('An error ocurred')
         except BaseException as e: 
             self.exc = e
     
