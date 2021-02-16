@@ -16,7 +16,7 @@ from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
 from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id)
-from mailer.utils import EmailThread, send_async_mail
+from mailer.utils import EmailThread
 
 
 if DJANGO_VERSION[0] >= 2:
@@ -103,22 +103,22 @@ def ensure_message_id(msg):
         msg.extra_headers['Message-ID'] = make_msgid()
 
 
-# def send_async_mail(email, message, account):
-#     try: 
-#         t = EmailThread(email)
-#         t.start()
-#         # t.join() 
+def send_async_mail(email, message, account):
+    try: 
+        t = EmailThread(email)
+        t.start()
+        # t.join() 
 
-#         # connection can't be stored in the MessageLog
-#         email.connection = None
-#         message.email = email  # For the sake of MessageLog
-#         MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
+        # connection can't be stored in the MessageLog
+        email.connection = None
+        message.email = email  # For the sake of MessageLog
+        MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
         
-#         message.delete()
-#     except Exception as e: 
-#         message.defer()
-#         logging.info("Message deferred due to failure: %s" % e)
-#         MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(e), account=account)
+        message.delete()
+    except Exception as e: 
+        message.defer()
+        logging.info("Message deferred due to failure: %s" % e)
+        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(e), account=account)
 
 
 def _limits_reached(sent, deferred):
