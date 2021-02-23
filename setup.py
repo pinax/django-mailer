@@ -4,9 +4,15 @@ from setuptools import setup, find_packages
 
 setup(
     name="django-mailer",
-    version="2.0.1",
+    version="2.1",
     description="A reusable Django app for queuing the sending of email",
-    long_description=open("docs/usage.rst").read() + open("CHANGES.rst").read(),
+    long_description="""``django-mailer`` is a reusable Django app for queuing the sending of email.
+It works by storing email in the database for later sending.
+The main reason for doing this is that for many apps, the database will be
+much more reliable and faster than other email sending backends which require
+3rd party services e.g. SMTP or an HTTP API. By storing and sending later, we can
+return succeed immediately, and then attempt actual email sending in the background,
+with retries if needed.""",
     author="Pinax Team",
     author_email="developers@pinaxproject.com",
     url="http://github.com/pinax/django-mailer/",
@@ -24,6 +30,9 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Framework :: Django",
     ],
     install_requires=[

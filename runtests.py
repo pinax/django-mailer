@@ -8,6 +8,7 @@ from django.conf import settings
 from django.test.utils import get_runner
 
 warnings.simplefilter("always", DeprecationWarning)
+warnings.simplefilter("always", PendingDeprecationWarning)
 
 DEFAULT_SETTINGS = dict(
     INSTALLED_APPS=[

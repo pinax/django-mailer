@@ -5,6 +5,8 @@ import logging
 import pickle
 import datetime
 
+import six
+
 try:
     from django.utils.encoding import python_2_unicode_compatible
 except ImportError:
@@ -13,7 +15,10 @@ except ImportError:
 from django.utils.timezone import now as datetime_now
 from django.core.mail import EmailMessage
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+if six.PY2:
+    from django.utils.translation import ugettext_lazy as _
+else:
+    from django.utils.translation import gettext_lazy as _
 
 
 PRIORITY_HIGH = 1
@@ -29,6 +34,8 @@ PRIORITIES = [
 ]
 
 PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
+
+logger = logging.getLogger(__name__)
 
 
 def get_message_id(msg):
@@ -108,6 +115,9 @@ def db_to_email(data):
 
 @python_2_unicode_compatible
 class Message(models.Model):
+    """
+    The email stored for later sending.
+    """
 
     # The actual data - a pickled EmailMessage
     message_data = models.TextField()
@@ -168,7 +178,7 @@ def filter_recipient_list(lst):
     retval = []
     for e in lst:
         if DontSendEntry.objects.has_address(e):
-            logging.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
+            logger.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
         else:
             retval.append(e)
     return retval
@@ -251,9 +261,12 @@ class MessageLogManager(models.Manager):
             log_message=log_message,
         )
 
-    def purge_old_entries(self, days):
+    def purge_old_entries(self, days, result_codes=None):
+        if result_codes is None:
+            # retro-compatibility with previous versions
+            result_codes = [RESULT_SUCCESS]
         limit = datetime_now() - datetime.timedelta(days=days)
-        query = self.filter(when_attempted__lt=limit, result=RESULT_SUCCESS)
+        query = self.filter(when_attempted__lt=limit, result__in=result_codes)
         count = query.count()
         query.delete()
         return count
@@ -261,6 +274,10 @@ class MessageLogManager(models.Manager):
 
 @python_2_unicode_compatible
 class MessageLog(models.Model):
+    """
+    A log entry which stores the result (and optionally a log message) for an
+    attempt to send a Message.
+    """
 
     # fields from Message
     message_data = models.TextField()

@@ -1,16 +1,28 @@
 import logging
 from django.core.management.base import BaseCommand
-from mailer.models import MessageLog
+from mailer.models import MessageLog, RESULT_SUCCESS, RESULT_FAILURE
+
+RESULT_CODES = {
+    'success': [RESULT_SUCCESS],
+    'failure': [RESULT_FAILURE],
+    'all': [RESULT_SUCCESS, RESULT_FAILURE]
+}
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
     help = "Delete mailer log"
 
     def add_arguments(self, parser):
-        parser.add_argument('days', nargs=1, type=int)
+        parser.add_argument('days', type=int)
+        parser.add_argument('-r', '--result', choices=RESULT_CODES.keys(),
+                            help='Delete logs of messages with the given result code(s) '
+                                 '(default: success)')
 
     def handle(self, *args, **options):
-        # Compatiblity with Django-1.6
-        days = int(options.get('days', args)[0])
-        count = MessageLog.objects.purge_old_entries(days)
-        logging.info("%s log entries deleted " % count)
+        days = options['days']
+        result_codes = RESULT_CODES.get(options['result'])
+
+        count = MessageLog.objects.purge_old_entries(days, result_codes)
+        logger.info("%s log entries deleted " % count)

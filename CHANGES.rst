@@ -1,6 +1,29 @@
 Change log
 ==========
 
+2.1.1 - Unreleased
+------------------
+
+* Add ``runmailer`` management command. This command starts a loop that
+  frequently checks the database for new emails. The wait time between
+  checks can be controlled using the ``MAILER_EMPTY_QUEUE_SLEEP`` setting.
+
+2.1 - 2020-12-05
+----------------
+
+* The ``retry_deferred`` and ``send_mail`` commands rely on the log level set
+  in your django project now. The ``-c/--cron`` option in those commands has
+  been deprecated and the logic to configure log levels and the message
+  format has been removed.
+* Changed logging to use module specific loggers to avoid interfering
+  with other loggers.
+* Added ``MAILER_USE_FILE_LOCK`` setting to allow disabling file based locking.
+* Added ``-r`` option to ``purge_mail_log`` management command. Thanks julienc91
+* Fixed deprecation warnings on Django 3.1
+* Use cached DNS_NAME for performance
+* Added ability to override the default error handler via the ``MAILER_ERROR_HANDLER``
+  settings key
+
 2.0.1 - 2020-03-01
 ------------------
 
