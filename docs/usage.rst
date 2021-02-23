@@ -52,6 +52,14 @@ There is also a convenience function ``mailer.send_html_mail`` for creating HTML
 
     send_html_mail(subject, message_plaintext, message_html, settings.DEFAULT_FROM_EMAIL, recipients)
 
+You can attach a file as a standard attachment with (specific function to keep the Django send_mail() compatibility)::
+
+    send_attachment_mail(subject, message_body, settings.DEFAULT_FROM_EMAIL, recipients, attachment_filename, attachment, attachment_content_type)
+
+or with HTML mail, with send_html_mail() and attachment parameters::
+
+    send_html_mail(subject, message_plaintext, message_html, settings.DEFAULT_FROM_EMAIL, recipients, attachment, attachment_filename, attachment_content_type)
+
 Additionally you can send all the admins as specified in the ``ADMIN``
 setting by calling::
 
