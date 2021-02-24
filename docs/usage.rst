@@ -61,6 +61,18 @@ or all managers as defined in the ``MANAGERS`` setting by calling::
 
     mail_managers(subject, message_body)
 
+.. note::
+
+   The functions in this section are convenience functions that are kept in
+   django-mailer only for backwards compatibility. You can implement all of
+   their behaviour, including HTML emails and other features like attachments
+   etc., using the `EmailMessage
+   <https://docs.djangoproject.com/en/stable/topics/email/#the-emailmessage-class>`_
+   class. If you need to explicitly choose the django-mailer backend for sending
+   emails, you can do so using `django.core.mail.get_connection
+   <https://docs.djangoproject.com/en/stable/topics/email/#obtaining-an-instance-of-an-email-backend>`_.
+
+
 Clear queue with command extensions
 ===================================
 
