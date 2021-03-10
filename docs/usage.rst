@@ -29,49 +29,17 @@ below.
 Explicitly putting mail on the queue
 ====================================
 
-If you don't want to send all email through django-mailer, you can send mail
-using ``mailer.send_mail``, which has the same signature as Django's
-``send_mail`` function.
+The best method to explicitly send some messages through the django-mailer queue (and perhaps 
+not others), is to use the ``connection`` parameter to the normal ``django.core.mail.send_mail``
+function or the ``django.core.mail.EmailMessage`` constructor - see the Django docs as above and
+the `django.core.mail.get_connection <https://docs.djangoproject.com/en/stable/topics/email/#obtaining-an-instance-of-an-email-backend>`_
+function.
 
-You can also do the following::
-
-    # favour django-mailer but fall back to django.core.mail
-    from django.conf import settings
-
-    if "mailer" in settings.INSTALLED_APPS:
-        from mailer import send_mail
-    else:
-        from django.core.mail import send_mail
-
-and then just call send_mail like you normally would in Django::
-
-    send_mail(subject, message_body, settings.DEFAULT_FROM_EMAIL, recipients)
-
-There is also a convenience function ``mailer.send_html_mail`` for creating HTML
-(this function is **not** in Django)::
-
-    send_html_mail(subject, message_plaintext, message_html, settings.DEFAULT_FROM_EMAIL, recipients)
-
-Additionally you can send all the admins as specified in the ``ADMIN``
-setting by calling::
-
-    mail_admins(subject, message_body)
-
-or all managers as defined in the ``MANAGERS`` setting by calling::
-
-    mail_managers(subject, message_body)
-
-.. note::
-
-   The functions in this section are convenience functions that are kept in
-   django-mailer only for backwards compatibility. You can implement all of
-   their behaviour, including HTML emails and other features like attachments
-   etc., using the `EmailMessage
-   <https://docs.djangoproject.com/en/stable/topics/email/#the-emailmessage-class>`_
-   class. If you need to explicitly choose the django-mailer backend for sending
-   emails, you can do so using `django.core.mail.get_connection
-   <https://docs.djangoproject.com/en/stable/topics/email/#obtaining-an-instance-of-an-email-backend>`_.
-
+Another method to use the django-mailer queue directly, which dates from before there was such 
+as thing as an "email backend" in Django, is to import the ``send_mail`` function (and similar)
+from ``mailer`` instead of from ``django.core.mail``. There is also a ``send_html_mail`` convenience
+function. However, we no longer guarantee that these functions will have a 100% compatible signature
+with the Django version, so we recommend you don't use these functions.
 
 Clear queue with command extensions
 ===================================
@@ -223,7 +191,7 @@ Using the DontSendEntry table
 django-mailer creates a ``DontSendEntry`` model, which is used to filter out
 recipients from messages being created.
 
-But beware, it's actually only used when directly sending messages through
-mailer, not when mailer is used as an alternate ``EMAIL_BACKEND`` for Django.
+However, note that it's actually only used when directly sending messages through
+``mailer.send_mail``, not when mailer is used as an alternate ``EMAIL_BACKEND`` for Django.
 Also, even if recipients become empty due to this filtering, the email will be
 queued for sending anyway. (A patch to fix these issues would be accepted)
