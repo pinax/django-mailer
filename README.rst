@@ -38,7 +38,7 @@ Getting Started
 
 Simple usage instructions:
 
-You need to set at least the variables above. 
+You need to set at least the variables below. 
 
 In ``settings.py``:
 ::
