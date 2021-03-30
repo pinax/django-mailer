@@ -4,7 +4,7 @@ Django Mailer
 ``django-mailer`` is a reusable Django app for queuing the sending of email. 
 It works by storing email in the database for later sending. This is a fork of 
 `django-mailer by Pinax <https://github.com/pinax/django-mailer/>`_ adding some new features,
-such as asynchronously mail sending, multi account support, and celery tasks instead of cron jobs.
+such as asynchronously email sending, multi account support, and celery tasks instead of cron jobs.
 
 Keep in mind that file attachments are also temporarily stored in the database, which 
 means if you are sending files larger than several hundred KB in size, you are likely 
@@ -25,6 +25,12 @@ Requirements
     command runs when anything else is attempting to put items on the queue. For this reason
     SQLite is not recommended for use with django-mailer.
 
+
+Instalation
+-----------
+::
+
+    pip install git+git://github.com/danielslz/django-mailer
 
 
 Getting Started
