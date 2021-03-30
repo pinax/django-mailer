@@ -49,7 +49,6 @@ In ``settings.py``:
 
     EMAIL_BACKEND = 'mailer.backend.DbBackend'
     
-    MAILER_NUM_ACCOUNTS = 2
     MAILER_EMAIL_ACCOUNT_LIST = [
         {
             'EMAIL_HOST_1': 'smtp.mailserver.com',
