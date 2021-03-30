@@ -92,7 +92,7 @@ Or, if your project use celery, run a worker with beat scheduler::
 Advanced usage
 --------------
 
-If you want more control over how this lib is executed, you can use the settings above:
+If you want more control over how this lib is executed, you can use the following settings:
 
 * MAILER_ASYNC_SEND
     * Default: False
