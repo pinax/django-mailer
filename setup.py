@@ -31,6 +31,7 @@ setup(
         'Django >= 1.11',
         'lockfile >= 0.8',
         'celery >= 4.2',
+        'click < 8.0.0',
         'six',
     ],
 )
