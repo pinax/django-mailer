@@ -1,0 +1,2 @@
+flake8==3.8.4
+check-manifest
