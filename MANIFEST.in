@@ -6,6 +6,7 @@ include .coveragerc
 include tox.ini .travis.yml
 include *.py
 include *.sh
+include *.txt
 
 graft docs
 graft src
