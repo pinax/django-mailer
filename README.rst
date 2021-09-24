@@ -4,8 +4,8 @@ Django Mailer
 .. image:: http://slack.pinaxproject.com/badge.svg
    :target: http://slack.pinaxproject.com/
 
-.. image:: https://img.shields.io/travis/pinax/django-mailer.svg
-    :target: https://travis-ci.org/pinax/django-mailer
+.. image:: https://github.com/pinax/django-mailer/actions/workflows/build.yml/badge.svg
+   :target: https://github.com/pinax/django-mailer/actions/workflows/build.yml
 
 .. image:: https://img.shields.io/coveralls/pinax/django-mailer.svg
     :target: https://coveralls.io/r/pinax/django-mailer

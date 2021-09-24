@@ -1,7 +1,8 @@
 Release process
 ---------------
 
-* Check that the master branching is passing all tests - https://travis-ci.org/pinax/django-mailer
+* Check that the master branching is passing all tests:
+  https://github.com/pinax/django-mailer/actions/workflows/build.yml
 
 * In CHANGES.rst, change the 'Unreleased' heading to the new version, and commit.
 
