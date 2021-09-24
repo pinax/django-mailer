@@ -255,7 +255,11 @@ def send_all():
         if use_file_lock:
             release_lock(lock)
 
-    logger.info("Sent", extra={'sent': counts['sent'], 'deferred': counts['deferred'], 'duration': time.time() - start_time})
+    logger.info("Sent", extra={
+        'sent': counts['sent'],
+        'deferred': counts['deferred'],
+        'duration': time.time() - start_time,
+    })
 
 
 def send_loop():
