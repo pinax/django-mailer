@@ -134,6 +134,9 @@ class SendingTest(TestCase):
     def test_send_loop(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             with patch("mailer.engine.send_all", side_effect=StopIteration) as send:
+                mailer.send_mail("Subject", "Body", "deferred@example.com",
+                                 ["rec@example.com"], priority=PRIORITY_DEFERRED)
+
                 with patch("time.sleep", side_effect=StopIteration) as sleep:
                     self.assertRaises(StopIteration, engine.send_loop)
 
