@@ -38,6 +38,16 @@ PRIORITY_MAPPING = dict((label, v) for (v, label) in PRIORITIES)
 logger = logging.getLogger(__name__)
 
 
+class BigAutoModel(models.Model):
+    # default_auto_field = 'django.db.models.BigAutoField' isn't supported
+    # by Django < 3.2. Use an explicit field definition instead.
+    # This workaround can be removed once support for Django < 3.2 is dropped.
+    id = models.BigAutoField(auto_created=True, primary_key=True, verbose_name='ID')
+
+    class Meta:
+        abstract = True
+
+
 def get_message_id(msg):
     # From django.core.mail.message: Email header names are case-insensitive
     # (RFC 2045), so we have to accommodate that when doing comparisons.
@@ -114,7 +124,7 @@ def db_to_email(data):
 
 
 @python_2_unicode_compatible
-class Message(models.Model):
+class Message(BigAutoModel):
     """
     The email stored for later sending.
     """
@@ -221,7 +231,7 @@ class DontSendEntryManager(models.Manager):
         return queryset.exists()
 
 
-class DontSendEntry(models.Model):
+class DontSendEntry(BigAutoModel):
 
     to_address = models.EmailField(max_length=254)
     when_added = models.DateTimeField()
@@ -273,7 +283,7 @@ class MessageLogManager(models.Manager):
 
 
 @python_2_unicode_compatible
-class MessageLog(models.Model):
+class MessageLog(BigAutoModel):
     """
     A log entry which stores the result (and optionally a log message) for an
     attempt to send a Message.
