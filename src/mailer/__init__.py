@@ -4,7 +4,7 @@ import warnings
 
 import six
 
-__version__ = '2.1'
+__version__ = '2.2'
 
 
 def get_priority(priority):
