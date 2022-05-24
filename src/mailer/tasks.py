@@ -16,17 +16,20 @@ beat_schedule = {
     'send_mail': {
         'task': 'mailer.tasks.send_mail',
         'schedule': crontab(minute='*/{}'.format(MAILER_MINUTS_TO_SEND_MAIL)),
+        'options': {'queue' : 'celery_beat'},
     },
     # Execute every MAILER_MINUTS_TO_RETRY_DEFERRED minutes
     'retry_deferred': {
         'task': 'mailer.tasks.retry_deferred',
         'schedule': crontab(minute='*/{}'.format(MAILER_MINUTS_TO_RETRY_DEFERRED)),
+        'options': {'queue' : 'celery_beat'},
     },
     # Execute twice a day
     'purge_mail_log': {
         'task': 'mailer.tasks.purge_mail_log',
         'schedule': crontab(minute=0, hour='*/12'),
         'kwargs': {'days': MAILER_DAYS_PURGE_MAIL_LOG},
+        'options': {'queue' : 'celery_beat'},
     },
 }
 
