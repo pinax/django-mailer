@@ -303,6 +303,7 @@ def send_all():
             messages_to_send = get_messages_for_sending(to_send_per_account)
 
             if MASS_SEND:
+                emails_ready = []
                 messages_ready = []
                 logging.info("Preparing messages to send.")
                 # format email message
@@ -320,21 +321,22 @@ def send_all():
                                 message.when_added, message.priority))  # noqa
                         else:
                             ensure_message_id(email_msg)
-                            messages_ready.append(email_msg)
+                            emails_ready.append(email_msg)
+                            messages_ready.append(message)
 
                 try:
                     # send mass mail
-                    connection.send_messages(messages_ready)
+                    connection.send_messages(emails_ready)
                     
                     # delete message and add log
-                    for message in messages_to_send:
+                    for message in messages_ready:
                         logging.info("Sending message '{0}' to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
                         MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
                         sent += 1
                         message.delete()
                 except Exception as err:
                     # defer message and add log
-                    for message in messages_to_send:
+                    for message in messages_ready:
                         message.defer()
                         logging.info("Message deferred due to failure: %s" % err)
                         MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
