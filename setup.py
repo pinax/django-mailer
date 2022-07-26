@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="django-mailer",
-    version="2.1.0.beta",
+    version="2.2.0.beta",
     description="A reusable Django app for queuing the sending of email",
     long_description=open("docs/usage.rst").read() + open("CHANGES.rst").read(),
     author="Pinax Team",
