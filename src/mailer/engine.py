@@ -333,13 +333,9 @@ def send_all():
                     for context in messages_to_send:
                         with context as message:
                             MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
-                            sent += 1                        
+                            sent += 1
                             message.delete()
-                except (socket_error, 
-                        smtplib.SMTPSenderRefused,
-                        smtplib.SMTPRecipientsRefused,
-                        smtplib.SMTPDataError,
-                        smtplib.SMTPAuthenticationError) as err:
+                except Exception as err:
                     # defer message and add log
                     for context in messages_to_send:
                         with context as message:
