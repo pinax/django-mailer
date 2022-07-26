@@ -323,30 +323,30 @@ def send_all():
                             ensure_message_id(email_msg)
                             messages_ready.append(email_msg)
 
-                    try:
-                        # send mass mail
-                        connection.open()
-                        connection.send_messages(messages_ready)
-                        connection.close()
-                        
-                        # delete message and add log
-                        for context in messages_to_send:
-                            with context as message:
-                                MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
-                                sent += 1                        
-                                message.delete()
-                    except (socket_error, 
-                            smtplib.SMTPSenderRefused,
-                            smtplib.SMTPRecipientsRefused,
-                            smtplib.SMTPDataError,
-                            smtplib.SMTPAuthenticationError) as err:
-                        # defer message and add log
-                        for context in messages_to_send:
-                            with context as message:
-                                message.defer()
-                                logging.info("Message deferred due to failure: %s" % err)
-                                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
-                                deferred += 1
+                try:
+                    # send mass mail
+                    connection.open()
+                    connection.send_messages(messages_ready)
+                    connection.close()
+                    
+                    # delete message and add log
+                    for context in messages_to_send:
+                        with context as message:
+                            MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
+                            sent += 1                        
+                            message.delete()
+                except (socket_error, 
+                        smtplib.SMTPSenderRefused,
+                        smtplib.SMTPRecipientsRefused,
+                        smtplib.SMTPDataError,
+                        smtplib.SMTPAuthenticationError) as err:
+                    # defer message and add log
+                    for context in messages_to_send:
+                        with context as message:
+                            message.defer()
+                            logging.info("Message deferred due to failure: %s" % err)
+                            MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
+                            deferred += 1
             else:
                 for context in messages_to_send:
                     with context as message:
