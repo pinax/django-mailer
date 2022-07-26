@@ -305,38 +305,46 @@ def send_all():
             if MASS_SEND:
                 messages_ready = []
                 # format email message
-                for message in messages_to_send:
-                    logging.info("Sending message '{0}' to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
+                for context in messages_to_send:
+                    with context as message:
+                        if message is None:
+                            # We didn't acquire the lock
+                            logging.error("Error on acquiring lock.")
+                            break
 
-                    email_msg = message.email
-                    if email_msg is None:
-                        logging.warning(
-                            "Message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (
-                            message.when_added, message.priority))  # noqa
-                    else:
-                        ensure_message_id(email_msg)
-                        messages_ready.append(email_msg)
+                        logging.info("Sending message '{0}' to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
 
-                try:
-                    # send mass mail
-                    connection.send_messages(messages_ready)
-                    
-                    # delete message and add log
-                    for message in messages_to_send:
-                        MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
-                        sent += 1                        
-                        message.delete()
-                except (socket_error, 
-                        smtplib.SMTPSenderRefused,
-                        smtplib.SMTPRecipientsRefused,
-                        smtplib.SMTPDataError,
-                        smtplib.SMTPAuthenticationError) as err:
-                    # defer message and add log
-                    for message in messages_to_send:
-                        message.defer()
-                        logging.info("Message deferred due to failure: %s" % err)
-                        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
-                        deferred += 1
+                        email_msg = message.email
+                        if email_msg is None:
+                            logging.warning(
+                                "Message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (
+                                message.when_added, message.priority))  # noqa
+                        else:
+                            ensure_message_id(email_msg)
+                            messages_ready.append(email_msg)
+
+                    try:
+                        # send mass mail
+                        connection.send_messages(messages_ready)
+                        
+                        # delete message and add log
+                        for context in messages_to_send:
+                            with context as message:
+                                MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
+                                sent += 1                        
+                                message.delete()
+                    except (socket_error, 
+                            smtplib.SMTPSenderRefused,
+                            smtplib.SMTPRecipientsRefused,
+                            smtplib.SMTPDataError,
+                            smtplib.SMTPAuthenticationError) as err:
+                        # defer message and add log
+                        for context in messages_to_send:
+                            with context as message:
+                                message.defer()
+                                logging.info("Message deferred due to failure: %s" % err)
+                                MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
+                                deferred += 1
             else:
                 for context in messages_to_send:
                     with context as message:
