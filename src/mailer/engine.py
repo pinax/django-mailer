@@ -325,7 +325,9 @@ def send_all():
 
                     try:
                         # send mass mail
+                        connection.open()
                         connection.send_messages(messages_ready)
+                        connection.close()
                         
                         # delete message and add log
                         for context in messages_to_send:
