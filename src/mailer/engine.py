@@ -304,9 +304,9 @@ def send_all():
 
             if MASS_SEND:
                 messages_ready = []
+                logging.info("Preparing messages to send.")
                 # format email message
                 for context in messages_to_send:
-                    logging.info("Preparing messages to send.")
                     with context as message:
                         if message is None:
                             # We didn't acquire the lock
@@ -324,6 +324,7 @@ def send_all():
 
                 try:
                     # send mass mail
+                    print(messages_ready)
                     # connection.open()
                     connection.send_messages(messages_ready)
                     # connection.close()
@@ -336,6 +337,7 @@ def send_all():
                             sent += 1
                             message.delete()
                 except Exception as err:
+                    print(err)
                     # defer message and add log
                     for context in messages_to_send:
                         with context as message:
