@@ -324,27 +324,21 @@ def send_all():
 
                 try:
                     # send mass mail
-                    print(messages_ready)
-                    # connection.open()
                     connection.send_messages(messages_ready)
-                    # connection.close()
                     
                     # delete message and add log
-                    for context in messages_to_send:
-                        with context as message:
-                            logging.info("Sending message '{0}' to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
-                            MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
-                            sent += 1
-                            message.delete()
+                    for message in messages_to_send:
+                        logging.info("Sending message '{0}' to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
+                        MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
+                        sent += 1
+                        message.delete()
                 except Exception as err:
-                    print(err)
                     # defer message and add log
-                    for context in messages_to_send:
-                        with context as message:
-                            message.defer()
-                            logging.info("Message deferred due to failure: %s" % err)
-                            MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
-                            deferred += 1
+                    for message in messages_to_send:
+                        message.defer()
+                        logging.info("Message deferred due to failure: %s" % err)
+                        MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
+                        deferred += 1
             else:
                 for context in messages_to_send:
                     with context as message:
