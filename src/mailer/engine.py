@@ -305,7 +305,7 @@ def send_all():
             if MASS_SEND:
                 emails_ready = []
                 messages_ready = []
-                logging.info("Preparing messages to send.")
+                logging.info("Preparing messages to send using account {}.".format(account))
                 # format email message
                 for context in messages_to_send:
                     with context as message:
@@ -323,6 +323,7 @@ def send_all():
                             ensure_message_id(email_msg)
                             emails_ready.append(email_msg)
                             messages_ready.append(message)
+                            logging.info("Preparing message '{0}' to {1}".format(message.subject, ", ".join(message.to_addresses)))
 
                 try:
                     # send mass mail
