@@ -328,15 +328,13 @@ def send_all():
                             if USE_ACCOUNT_AS_FROM_EMAIL:
                                 email_msg.from_email = account
                             # check if dest is valid
-                            print('to: {}'.format(email_msg.to))
-                            print('valid_to: {}'.format(get_valid_email_to(email_msg.to)))
-                            # valid_recipient_list = get_valid_email_to(email_msg.to)
-                            # if valid_recipient_list and len(valid_recipient_list) > 1:
-                            #     email_msg.to = valid_recipient_list
-                            # else:
-                            #     logging.info("Message '{0}' has no valid recipient list. Deleting...".format(message.subject))
-                            #     MessageLog.objects.log(message, RESULT_DONT_SEND, account=account)
-                            #     message.delete()
+                            valid_recipient_list = get_valid_email_to(email_msg.to)
+                            if valid_recipient_list and len(valid_recipient_list) > 0:
+                                email_msg.to = valid_recipient_list
+                            else:
+                                logging.info("Message '{0}' has no valid recipient list. Deleting...".format(message.subject))
+                                MessageLog.objects.log(message, RESULT_DONT_SEND, account=account)
+                                message.delete()
                             # add message to valid lists    
                             emails_ready.append(email_msg)
                             messages_ready.append(message)
@@ -383,7 +381,7 @@ def send_all():
                                 ensure_message_id(email)
                                 # check if dest is valid
                                 valid_recipient_list = get_valid_email_to(email.to)
-                                if valid_recipient_list and len(valid_recipient_list) > 1:
+                                if valid_recipient_list and len(valid_recipient_list) > 0:
                                     email.to = valid_recipient_list
                                 else:
                                     logging.info("Message '{0}' has no valid recipient list. Deleting...".format(message.subject))
