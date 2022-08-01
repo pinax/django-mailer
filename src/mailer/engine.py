@@ -51,6 +51,9 @@ ASYNC_SEND = getattr(settings, 'MAILER_ASYNC_SEND', False)
 # Use mass_send to deliver mail
 MASS_SEND = getattr(settings, 'MAILER_MASS_SEND', False)
 
+# Use account as from_email instead DEFAULT_FROM_EMAIL
+USE_ACCOUNT_AS_FROM_EMAIL = getattr(settings, 'MAILER_USE_ACCOUNT_AS_FROM_EMAIL', False)
+
 
 def prioritize(limit):
     """
@@ -321,6 +324,8 @@ def send_all():
                                 message.when_added, message.priority))  # noqa
                         else:
                             ensure_message_id(email_msg)
+                            if USE_ACCOUNT_AS_FROM_EMAIL:
+                                email_msg.from_email = account
                             emails_ready.append(email_msg)
                             messages_ready.append(message)
                             logging.info("Preparing message '{0}' to {1}".format(message.subject, ", ".join(message.to_addresses)))
@@ -364,6 +369,8 @@ def send_all():
                             else:
                                 email.connection = connection
                                 ensure_message_id(email)
+                                if USE_ACCOUNT_AS_FROM_EMAIL:
+                                    email.from_email = account
                                 if ASYNC_SEND:
                                     send_async_mail(email, message, account)
                                     sent += 1
