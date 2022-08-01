@@ -11,9 +11,11 @@ except ImportError:
     def python_2_unicode_compatible(c):
         return c
 from django.conf import settings
-from django.utils.timezone import now as datetime_now
 from django.core.mail import EmailMessage
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.timezone import now as datetime_now
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -43,6 +45,14 @@ def get_message_id(msg):
             return value
 
 
+def is_valid_email_address(email):
+    try:
+        validate_email(email)
+        return True
+    except ValidationError:
+        return False
+
+
 class MessageManager(models.Manager):
 
     def high_priority(self):
@@ -64,7 +74,7 @@ class MessageManager(models.Manager):
         return self.filter(priority=PRIORITY_LOW)
 
     def non_deferred(self):
-        """
+        """s
         the messages in the queue not deferred
         """
         return self.exclude(priority=PRIORITY_DEFERRED)
@@ -188,8 +198,10 @@ def filter_recipient_list(lst):
     for e in lst:
         if DontSendEntry.objects.has_address(e):
             logging.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
-        else:
+        elif is_valid_email_address(e):
             retval.append(e)
+        else:
+            logging.info("skipping email to %s as is not a valid e-mail address " % e.encode("utf-8"))
     return retval
 
 
