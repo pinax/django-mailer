@@ -453,7 +453,7 @@ def is_valid_email_address(email):
 
 def get_valid_email_to(lst):
     valid_emails = []
-    for email in lst.split(','):
+    for email in lst:
         if is_valid_email_address(email):
             valid_emails.append(email)
     return valid_emails
