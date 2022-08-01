@@ -11,11 +11,12 @@ from itertools import cycle
 import lockfile
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.validators import validate_email
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.mail import get_connection
 from django.core.mail.message import make_msgid
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
-from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id)
+from mailer.models import (RESULT_DONT_SEND, RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id)
 from mailer.utils import EmailThread
 
 
@@ -326,6 +327,15 @@ def send_all():
                             ensure_message_id(email_msg)
                             if USE_ACCOUNT_AS_FROM_EMAIL:
                                 email_msg.from_email = account
+                            # check if dest is valid
+                            valid_recipient_list = get_valid_email_to(email_msg.to)
+                            if valid_recipient_list and len(valid_recipient_list) > 1:
+                                email_msg.to = valid_recipient_list
+                            else:
+                                logging.info("Message '{0}' has no valid recipient list. Deleting...".format(message.subject))
+                                MessageLog.objects.log(message, RESULT_DONT_SEND, account=account)
+                                message.delete()
+                            # add message to valid lists    
                             emails_ready.append(email_msg)
                             messages_ready.append(message)
                             logging.info("Preparing message '{0}' to {1}".format(message.subject, ", ".join(message.to_addresses)))
@@ -369,6 +379,14 @@ def send_all():
                             else:
                                 email.connection = connection
                                 ensure_message_id(email)
+                                # check if dest is valid
+                                valid_recipient_list = get_valid_email_to(email.to)
+                                if valid_recipient_list and len(valid_recipient_list) > 1:
+                                    email.to = valid_recipient_list
+                                else:
+                                    logging.info("Message '{0}' has no valid recipient list. Deleting...".format(message.subject))
+                                    MessageLog.objects.log(message, RESULT_DONT_SEND, account=account)
+                                    message.delete()
                                 if USE_ACCOUNT_AS_FROM_EMAIL:
                                     email.from_email = account
                                 if ASYNC_SEND:
@@ -423,3 +441,19 @@ def send_loop():
             logging.debug("sleeping for %s seconds before checking queue again" % EMPTY_QUEUE_SLEEP)
             time.sleep(EMPTY_QUEUE_SLEEP)
         send_all()
+
+
+def is_valid_email_address(email):
+    try:
+        validate_email(email)
+        return True
+    except ValidationError:
+        return False
+
+
+def get_valid_email_to(lst):
+    valid_emails = []
+    for email in lst.split(','):
+        if is_valid_email_address(email):
+            valid_emails.append(email)
+    return valid_emails

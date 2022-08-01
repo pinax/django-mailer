@@ -12,8 +12,6 @@ except ImportError:
         return c
 from django.conf import settings
 from django.core.mail import EmailMessage
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now as datetime_now
 from django.utils.translation import ugettext_lazy as _
@@ -43,14 +41,6 @@ def get_message_id(msg):
     for key, value in msg.extra_headers.items():
         if key.lower() == 'message-id':
             return value
-
-
-def is_valid_email_address(email):
-    try:
-        validate_email(email)
-        return True
-    except ValidationError:
-        return False
 
 
 class MessageManager(models.Manager):
