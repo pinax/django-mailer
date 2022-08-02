@@ -305,7 +305,7 @@ def send_all():
             )
 
             messages_to_send = get_messages_for_sending(to_send_per_account)
-
+            messages_to_delete = []
             if MASS_SEND:
                 emails_ready = []
                 messages_ready = []
@@ -324,21 +324,23 @@ def send_all():
                                 "Message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (
                                 message.when_added, message.priority))  # noqa
                         else:
+                            email_msg.connection = connection
                             ensure_message_id(email_msg)
                             if USE_ACCOUNT_AS_FROM_EMAIL:
                                 email_msg.from_email = account
                             # check if dest is valid
                             valid_recipient_list = get_valid_email_to(email_msg.to)
                             if valid_recipient_list and len(valid_recipient_list) > 0:
+                                # add message to valid list
                                 email_msg.to = valid_recipient_list
+                                emails_ready.append(email_msg)
+                                messages_ready.append(message)
+                                logging.info("Preparing message '{0}' to {1}".format(message.subject, ", ".join(message.to_addresses)))
                             else:
+                                # add message to error lists
+                                messages_to_delete.append(message.id)
                                 logging.info("Message '{0}' has no valid recipient list. Deleting...".format(message.subject))
                                 MessageLog.objects.log(message, RESULT_DONT_SEND, account=account)
-                                message.delete()
-                            # add message to valid lists    
-                            emails_ready.append(email_msg)
-                            messages_ready.append(message)
-                            logging.info("Preparing message '{0}' to {1}".format(message.subject, ", ".join(message.to_addresses)))
 
                 try:
                     # send mass mail
@@ -356,7 +358,7 @@ def send_all():
                         message.defer()
                         logging.info("Message deferred due to failure: %s" % err)
                         MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
-                        deferred += 1
+                        deferred += 1                
             else:
                 for context in messages_to_send:
                     with context as message:
@@ -386,7 +388,7 @@ def send_all():
                                 else:
                                     logging.info("Message '{0}' has no valid recipient list. Deleting...".format(message.subject))
                                     MessageLog.objects.log(message, RESULT_DONT_SEND, account=account)
-                                    message.delete()
+                                    messages_to_delete.append(message.id)
                                 if USE_ACCOUNT_AS_FROM_EMAIL:
                                     email.from_email = account
                                 if ASYNC_SEND:
@@ -419,6 +421,11 @@ def send_all():
                         break
 
                     _throttle_emails()
+            
+            if len(messages_to_delete) > 0:
+                # delete error messages
+                Message.objects.filter(pk__in=messages_to_delete).delete()                
+
         else:
             logging.info('No account available to send messages.') 
 
@@ -453,7 +460,8 @@ def is_valid_email_address(email):
 
 def get_valid_email_to(lst):
     valid_emails = []
-    for email in lst:
-        if is_valid_email_address(email):
-            valid_emails.append(email)
+    if lst is not None:
+        for email in lst:
+            if is_valid_email_address(email):
+                valid_emails.append(email)
     return valid_emails
