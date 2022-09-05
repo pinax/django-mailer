@@ -55,6 +55,9 @@ MASS_SEND = getattr(settings, 'MAILER_MASS_SEND', False)
 # Use account as from_email instead DEFAULT_FROM_EMAIL
 USE_ACCOUNT_AS_FROM_EMAIL = getattr(settings, 'MAILER_USE_ACCOUNT_AS_FROM_EMAIL', False)
 
+# 
+MINUTS_TO_SEND_MAIL = int(getattr(settings, 'MAILER_MINUTS_TO_SEND_MAIL', 1))
+
 
 def prioritize(limit):
     """
@@ -166,7 +169,7 @@ def acquire_lock():
     else:
         lock_file_path = "send_mail"
 
-    lock = lockfile.FileLock(lock_file_path)
+    lock = lockfile.FileLock(lock_file_path, timeout=60*MINUTS_TO_SEND_MAIL*5)  # five times MINUTS_TO_SEND_MAIL
 
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
@@ -174,7 +177,8 @@ def acquire_lock():
         logging.debug("lock already in place. quitting.")
         return False, lock
     except lockfile.LockTimeout:
-        logging.debug("waiting for the lock timed out. quitting.")
+        logging.debug("releasing lock after timed out.")
+        release_lock(lock)
         return False, lock
     logging.debug("acquired.")
     return True, lock
