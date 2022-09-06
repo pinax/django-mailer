@@ -288,6 +288,7 @@ def send_all():
 
     acquired, lock = acquire_lock()
     if not acquired:
+        logging.error("Error on acquiring lock.")
         return
 
     start_time = time.time()
@@ -348,11 +349,12 @@ def send_all():
 
                 try:
                     # send mass mail
+                    logging.info("Sending messages using account {0}".format(account))
                     connection.send_messages(emails_ready)
                     
                     # delete message and add log
                     for message in messages_ready:
-                        logging.info("Sending message '{0}' to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
+                        logging.info("Sent message '{0}' to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
                         MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
                         sent += 1
                         message.delete()
