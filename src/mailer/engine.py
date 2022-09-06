@@ -288,7 +288,7 @@ def send_all():
 
     acquired, lock = acquire_lock()
     if not acquired:
-        logging.error("Error on acquiring lock.")
+        logging.info("Lock already in place.")
         return
 
     start_time = time.time()
