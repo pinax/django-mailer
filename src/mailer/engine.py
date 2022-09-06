@@ -354,7 +354,7 @@ def send_all():
                     
                     # delete message and add log
                     for message in messages_ready:
-                        logging.info("Sent message '{0}' to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
+                        logging.info("Message '{0}' sent to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
                         MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
                         sent += 1
                         message.delete()
