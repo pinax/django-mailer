@@ -224,7 +224,7 @@ def send_all():
                         connection = get_connection(backend=mailer_email_backend)
                     logger.info("sending message '{0}' to {1}".format(
                         message.subject,
-                        ", ".join(message.to_addresses))
+                        ", ".join(map(str, message.to_addresses)))
                     )
                     email = message.email
                     if email is not None:
