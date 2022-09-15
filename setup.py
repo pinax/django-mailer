@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="django-mailer",
-    version="2.2",
+    version="2.2.1",
     description="A reusable Django app for queuing the sending of email",
     long_description="""``django-mailer`` is a reusable Django app for queuing the sending of email.
 It works by storing email in the database for later sending.

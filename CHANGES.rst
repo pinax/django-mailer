@@ -1,6 +1,11 @@
 Change log
 ==========
 
+2.2.1 - 2022-09-15
+------------------
+
+* Add fix for email address that is a NoneType
+
 2.2 - 2022-03-11
 ----------------
 
