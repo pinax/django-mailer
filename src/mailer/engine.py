@@ -458,6 +458,10 @@ def send_loop():
 
 def is_valid_email_address(email):
     try:
+        if '<' and '>' in email:
+            start = email.index('<') + 1
+            end = email.index('>')
+            email = email[start:end]
         validate_email(email)
         return True
     except ValidationError:
