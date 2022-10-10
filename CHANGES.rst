@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2.2.1 - 2022-09-15
+2.2.1 - unreleased
 ------------------
 
 * Add fix for email address that is a NoneType
