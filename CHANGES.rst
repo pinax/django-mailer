@@ -5,7 +5,6 @@ Change log
 ----------------
 
 * Migrate models ``id`` fields to ``BigAutoField``.
-* Add ``runmailer`` management command. This command starts a loop that
 * Added ``runmailer`` management command. This command starts a loop that
   frequently checks the database for new emails. The wait time between
   checks can be controlled using the ``MAILER_EMPTY_QUEUE_SLEEP`` setting.
