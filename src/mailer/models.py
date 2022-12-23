@@ -289,8 +289,8 @@ class MessageLog(models.Model):
     # fields from Message
     message_data = models.TextField()
     message_id = models.TextField(editable=False, null=True)
-    when_added = models.DateTimeField(db_index=True)
-    priority = models.PositiveSmallIntegerField(choices=PRIORITIES, db_index=True)
+    when_added = models.DateTimeField()
+    priority = models.PositiveSmallIntegerField(choices=PRIORITIES)
     to = models.TextField(blank=True, null=True)
 
     # additional logging fields
