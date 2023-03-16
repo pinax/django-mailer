@@ -55,7 +55,7 @@ MASS_SEND = getattr(settings, 'MAILER_MASS_SEND', False)
 # Use account as from_email instead DEFAULT_FROM_EMAIL
 USE_ACCOUNT_AS_FROM_EMAIL = getattr(settings, 'MAILER_USE_ACCOUNT_AS_FROM_EMAIL', False)
 
-# 
+#
 MINUTS_TO_SEND_MAIL = int(getattr(settings, 'MAILER_MINUTS_TO_SEND_MAIL', 1))
 
 
@@ -114,18 +114,18 @@ def ensure_message_id(msg):
 
 
 def send_async_mail(email, message, account):
-    try: 
+    try:
         t = EmailThread(email)
         t.start()
-        # t.join() 
+        # t.join()
 
         # connection can't be stored in the MessageLog
         email.connection = None
         message.email = email  # For the sake of MessageLog
         MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
-        
+
         message.delete()
-    except Exception as e: 
+    except Exception as e:
         message.defer()
         logging.info("Message deferred due to failure: %s" % e)
         MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(e), account=account)
@@ -169,7 +169,7 @@ def acquire_lock():
     else:
         lock_file_path = "send_mail"
 
-    lock = lockfile.FileLock(lock_file_path, timeout=60*MINUTS_TO_SEND_MAIL*5)  # five times MINUTS_TO_SEND_MAIL
+    lock = lockfile.FileLock(lock_file_path, timeout=60 * MINUTS_TO_SEND_MAIL * 5)  # five times MINUTS_TO_SEND_MAIL
 
     try:
         lock.acquire(LOCK_WAIT_TIMEOUT)
@@ -351,7 +351,7 @@ def send_all():
                     # send mass mail
                     logging.info("Sending messages using account {0}".format(account))
                     connection.send_messages(emails_ready)
-                    
+
                     # delete message and add log
                     for message in messages_ready:
                         logging.info("Message '{0}' sent to {1} using account {2}".format(message.subject, ", ".join(message.to_addresses), account))
@@ -364,7 +364,7 @@ def send_all():
                         message.defer()
                         logging.info("Message deferred due to failure: %s" % err)
                         MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(err), account=account)
-                        deferred += 1                
+                        deferred += 1
             else:
                 for context in messages_to_send:
                     with context as message:
@@ -408,7 +408,7 @@ def send_all():
                                     message.email = email  # For the sake of MessageLog
                                     MessageLog.objects.log(message, RESULT_SUCCESS, account=account)
                                     sent += 1
-                                    
+
                                     message.delete()
 
                         except (socket_error, smtplib.SMTPSenderRefused,
@@ -427,13 +427,13 @@ def send_all():
                         break
 
                     _throttle_emails()
-            
+
             if len(messages_to_delete) > 0:
                 # delete error messages
-                Message.objects.filter(pk__in=messages_to_delete).delete()                
+                Message.objects.filter(pk__in=messages_to_delete).delete()
 
         else:
-            logging.info('No account available to send messages.') 
+            logging.info('No account available to send messages.')
 
     finally:
         release_lock(lock)
