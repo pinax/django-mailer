@@ -157,20 +157,19 @@ set the attribute again to cause the underlying serialised data to be updated.""
             return email.to
         else:
             return []
-    
+
     def set_priority(self, val):
         self.priority = PRIORITY_MEDIUM
         if len(SUBJECTS_LOW_PRIORITY) > 0:
             for k in SUBJECTS_LOW_PRIORITY:
-                key = k.strip() 
+                key = k.strip()
                 if key and key in val.subject:
                     self.priority = PRIORITY_LOW
         if len(SUBJECTS_HIGH_PRIORITY) > 0:
             for k in SUBJECTS_HIGH_PRIORITY:
-                key = k.strip() 
+                key = k.strip()
                 if key and key in val.subject:
                     self.priority = PRIORITY_HIGH
-            
 
     @property
     def subject(self):
@@ -188,8 +187,8 @@ def filter_recipient_list(lst):
     for e in lst:
         if DontSendEntry.objects.has_address(e):
             logging.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
-        elif is_valid_email_address(e):
-            retval.append(e)
+        # elif is_valid_email_address(e):
+        #     retval.append(e)
         else:
             logging.info("skipping email to %s as is not a valid e-mail address " % e.encode("utf-8"))
     return retval
