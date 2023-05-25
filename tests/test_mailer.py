@@ -88,6 +88,7 @@ class SendingTest(TestCase):
             engine.send_all()
             self.assertEqual(len(mail.outbox), 1)
             self.assertEqual(Message.objects.count(), 0)
+            self.assertEqual(MessageLog.objects.count(), 2)
 
     def test_purge_old_entries(self):
 
