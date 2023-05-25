@@ -7,6 +7,8 @@ import datetime
 
 import six
 
+from django.conf import settings
+
 try:
     from django.utils.encoding import python_2_unicode_compatible
 except ImportError:
@@ -89,7 +91,10 @@ class MessageManager(models.Manager):
         return self.filter(priority=PRIORITY_DEFERRED)
 
     def retry_deferred(self, new_priority=PRIORITY_MEDIUM):
-        return self.deferred().update(priority=new_priority)
+        qs = self.deferred()
+        if getattr(settings, 'MAILER_EMAIL_MAX_RETRIES', None) is not None:
+            qs = qs.filter(retry_count__lt=settings.MAILER_EMAIL_MAX_RETRIES)
+        return qs.update(priority=new_priority, retry_count=models.F('retry_count') + 1)
 
 
 base64_encode = base64.encodebytes if hasattr(base64, 'encodebytes') else base64.encodestring
@@ -133,6 +138,7 @@ class Message(BigAutoModel):
     message_data = models.TextField()
     when_added = models.DateTimeField(default=datetime_now)
     priority = models.PositiveSmallIntegerField(choices=PRIORITIES, default=PRIORITY_MEDIUM)
+    retry_count = models.IntegerField(default=0)
 
     objects = MessageManager()
 

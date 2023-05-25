@@ -22,7 +22,7 @@ class MessageAdminMixin(object):
 
 class MessageAdmin(MessageAdminMixin, admin.ModelAdmin):
 
-    list_display = ["id", show_to, "subject", "when_added", "priority"]
+    list_display = ["id", show_to, "subject", "when_added", "priority", "retry_count"]
     readonly_fields = ['plain_text_body']
     date_hierarchy = "when_added"
 

@@ -90,6 +90,53 @@ class SendingTest(TestCase):
             self.assertEqual(Message.objects.count(), 0)
             self.assertEqual(MessageLog.objects.count(), 2)
 
+    def test_max_retry_deferred(self):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend", MAILER_EMAIL_MAX_RETRIES=2):  # noqa
+            mailer.send_mail("Subject", "Body", "sender@examle.com", ["recipient@example.com"])
+            engine.send_all()
+            # First try fails, message is deferred
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(MessageLog.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 1)
+            for n in range(4):
+                with self.subTest(tries=n):
+                    # Re-que the deferred message
+                    Message.objects.retry_deferred()
+                    # Retry count is updated, unless the max is reached
+                    self.assertEqual(
+                        Message.objects.values_list('retry_count', flat=True).get(),
+                        n + 1 if n < 2 else 2,
+                        msg="Expected retry_count to be at most 2, got %d" % n
+                    )
+                    # Send all messages
+                    engine.send_all()
+                    # Message is retried (log entry is added), unless the max is reached
+                    self.assertEqual(
+                        MessageLog.objects.count(), 1 + (n + 1) if n < 2 else 3,
+                        msg="Expected at most 3 attempts (log entries), got %d" % n
+                    )
+                    # Message remain deferred
+                    self.assertEqual(Message.objects.deferred().count(), 1)
+
+    def test_max_retry_zero(self):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend", MAILER_EMAIL_MAX_RETRIES=0):  # noqa
+            mailer.send_mail("Subject", "Body", "sender@examle.com", ["recipient@example.com"])
+            engine.send_all()
+            # First try fails, message is deferred
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(MessageLog.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 1)
+            # Re-que the deferred message
+            Message.objects.retry_deferred()
+            # Retry count remains at 0, the message is not retried
+            self.assertEqual(Message.objects.values_list('retry_count', flat=True).get(), 0)
+            # Send all messages
+            engine.send_all()
+            # Message is not retried (log entry is not added)
+            self.assertEqual(MessageLog.objects.count(), 1)
+            # Message remain deferred
+            self.assertEqual(Message.objects.deferred().count(), 1)
+
     def test_purge_old_entries(self):
 
         def send_mail(success):
