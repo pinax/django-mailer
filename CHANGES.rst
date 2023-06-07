@@ -5,6 +5,8 @@ Change log
 ------------------
 
 * Add fix for email address that is a NoneType
+* Stop testing on unsupported Python (<3.7) and Django (<2.2) versions
+* Start testing on Python 3.11 and Django 4.1/4.2
 
 2.2 - 2022-03-11
 ----------------
