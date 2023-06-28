@@ -185,6 +185,12 @@ value more suitable for you. This value, which defaults to ``None``, will be pas
 `Django's bulk_create method <https://docs.djangoproject.com/en/stable/ref/models/querysets/#bulk-create>`_
 as the ``batch_size`` parameter.
 
+To limit the amount of times a deferred message is retried, you can set
+``MAILER_EMAIL_MAX_RETRIES`` to an integer value. The default is ``None``, which means
+that the message will be retried indefinitely. If you set this to a value of ``0``,
+the message will not be retried at all, any number greater than ``0`` will be the
+maximum number of retries (excluding the initial attempt).
+
 Using the DontSendEntry table
 =============================
 

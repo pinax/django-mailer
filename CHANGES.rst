@@ -7,6 +7,9 @@ Change log
 * Add fix for email address that is a NoneType
 * Stop testing on unsupported Python (<3.7) and Django (<2.2) versions
 * Start testing on Python 3.11 and Django 4.1/4.2
+* Add setting to limit the amount of retries for deferred messages
+  (``MAILER_EMAIL_MAX_RETRIES``), defaults to ``None`` (unlimited)
+  (See Issue `#161 <https://github.com/pinax/django-mailer/issues/161>`_)
 
 2.2 - 2022-03-11
 ----------------
