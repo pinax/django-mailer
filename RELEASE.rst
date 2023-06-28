@@ -6,7 +6,7 @@ Release process
 
 * In CHANGES.rst, change the 'Unreleased' heading to the new version, and commit.
 
-* Change the version in mailer/__init__.py, removing ``.dev1`` if necessary, and in setup.py, and commit.
+* Change the version in mailer/__init__.py, removing ``.dev1`` if necessary, and commit.
 
 * Release::
 
