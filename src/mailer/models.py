@@ -4,6 +4,7 @@ import base64
 import logging
 import pickle
 import datetime
+import six
 
 try:
     from django.utils.encoding import python_2_unicode_compatible
@@ -14,7 +15,10 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.db import models
 from django.utils.timezone import now as datetime_now
-from django.utils.translation import ugettext_lazy as _
+if six.PY2:
+    from django.utils.translation import ugettext_lazy as _
+else:
+    from django.utils.translation import gettext_lazy as _
 
 
 PRIORITY_HIGH = 1
