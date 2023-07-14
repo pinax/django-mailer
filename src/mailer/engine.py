@@ -40,10 +40,12 @@ LOCK_PATH = getattr(settings, "MAILER_LOCK_PATH", None)
 logger = logging.getLogger(__name__)
 
 
-def prioritize():
+def prioritize(queryset=None):
     """
     Returns the messages in the queue in the order they should be sent.
     """
+    if queryset:
+        return queryset.order_by('priority', 'when_added')
     return Message.objects.non_deferred().order_by('priority', 'when_added')
 
 
@@ -80,12 +82,12 @@ def sender_context(message):
             yield None
 
 
-def get_messages_for_sending():
+def get_messages_for_sending(queryset=None):
     """
     Returns a series of context managers that are used for sending mails in the queue.
     Entering the context manager returns the actual message
     """
-    for message in prioritize():
+    for message in prioritize(queryset):
         yield sender_context(message)
 
 
@@ -181,7 +183,7 @@ def _require_no_backend_loop(mailer_email_backend):
                                    .format(settings.EMAIL_BACKEND))
 
 
-def send_all():
+def send_all(queryset=None):
     """
     Send all eligible messages in the queue.
     """
@@ -214,7 +216,7 @@ def send_all():
 
     try:
         connection = None
-        for context in get_messages_for_sending():
+        for context in get_messages_for_sending(queryset):
             with context as message:
                 if message is None:
                     # We didn't acquire the lock
