@@ -162,7 +162,7 @@ For an example of a custom error handler::
             connection = None  # i.e. ask for a new connection
             status = 'deferred'
         else:
-            six.reraise(*sys.exc_info())
+            raise exc
 
         return connection, status
 
