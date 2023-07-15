@@ -1,8 +1,11 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
+from django.contrib import messages
+from django.utils.translation import gettext_lazy as _
 
 from mailer.models import Message, DontSendEntry, MessageLog
+from mailer.engine import send_all
 
 
 def show_to(message):
@@ -25,6 +28,11 @@ class MessageAdmin(MessageAdminMixin, admin.ModelAdmin):
     list_display = ["id", show_to, "subject", "when_added", "priority", "retry_count"]
     readonly_fields = ['plain_text_body']
     date_hierarchy = "when_added"
+    actions = ['send_messages']
+
+    def send_messages(self, request, queryset):
+        send_all(queryset)
+        messages.add_message(request, messages.INFO, _("Message(s) sent."))
 
 
 class DontSendEntryAdmin(admin.ModelAdmin):
