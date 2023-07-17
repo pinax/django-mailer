@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 import warnings
 
-import six
-
 __version__ = '2.2'
 
 
@@ -26,11 +24,7 @@ def get_priority(priority):
 
 def send_mail(subject, message, from_email, recipient_list, priority=None,
               fail_silently=False, auth_user=None, auth_password=None):
-    if six.PY2:
-        # Only runs Django 1.11
-        from django.utils.encoding import force_unicode as force_str
-    else:
-        from django.utils.encoding import force_str
+    from django.utils.encoding import force_str
     from mailer.models import make_message
 
     priority = get_priority(priority)
@@ -52,11 +46,7 @@ def send_html_mail(subject, message, message_html, from_email, recipient_list,
     """
     Function to queue HTML e-mails
     """
-    if six.PY2:
-        # Only runs Django 1.11
-        from django.utils.encoding import force_unicode as force_str
-    else:
-        from django.utils.encoding import force_str
+    from django.utils.encoding import force_str
     from django.core.mail import EmailMultiAlternatives
     from mailer.models import make_message
 
@@ -95,11 +85,7 @@ def send_mass_mail(datatuple, fail_silently=False, auth_user=None,
 
 def mail_admins(subject, message, fail_silently=False, connection=None, priority=None):
     from django.conf import settings
-    if six.PY2:
-        # Only runs Django 1.11
-        from django.utils.encoding import force_unicode as force_str
-    else:
-        from django.utils.encoding import force_str
+    from django.utils.encoding import force_str
 
     return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_str(subject),
                      message,
@@ -109,11 +95,7 @@ def mail_admins(subject, message, fail_silently=False, connection=None, priority
 
 def mail_managers(subject, message, fail_silently=False, connection=None, priority=None):
     from django.conf import settings
-    if six.PY2:
-        # Only runs Django 1.11
-        from django.utils.encoding import force_unicode as force_str
-    else:
-        from django.utils.encoding import force_str
+    from django.utils.encoding import force_str
 
     return send_mail(settings.EMAIL_SUBJECT_PREFIX + force_str(subject),
                      message,

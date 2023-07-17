@@ -5,22 +5,13 @@ import logging
 import pickle
 import datetime
 
-import six
 
 from django.conf import settings
 
-try:
-    from django.utils.encoding import python_2_unicode_compatible
-except ImportError:
-    def python_2_unicode_compatible(c):
-        return c
 from django.utils.timezone import now as datetime_now
 from django.core.mail import EmailMessage
 from django.db import models
-if six.PY2:
-    from django.utils.translation import ugettext_lazy as _
-else:
-    from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 PRIORITY_HIGH = 1
@@ -128,7 +119,6 @@ def db_to_email(data):
                 return None
 
 
-@python_2_unicode_compatible
 class Message(BigAutoModel):
     """
     The email stored for later sending.
@@ -288,7 +278,6 @@ class MessageLogManager(models.Manager):
         return count
 
 
-@python_2_unicode_compatible
 class MessageLog(BigAutoModel):
     """
     A log entry which stores the result (and optionally a log message) for an

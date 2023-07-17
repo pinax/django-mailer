@@ -13,7 +13,6 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils.timezone import now as datetime_now
 from mock import Mock, patch
-import six
 
 import mailer
 from mailer import engine
@@ -653,7 +652,7 @@ class MessagesTest(TestCase):
 
             msg = Message.objects.get()
             self.assertEqual(
-                six.text_type(msg),
+                str(msg),
                 'On {0}, "Subject Msg 中" to rec1@example.com'.format(msg.when_added),
             )
             msg.message_data = None
@@ -668,7 +667,7 @@ class MessagesTest(TestCase):
 
             log = MessageLog.objects.get()
             self.assertEqual(
-                six.text_type(log),
+                str(log),
                 'On {0}, "Subject Log 中" to 1gol@example.com'.format(log.when_attempted),
             )
 
