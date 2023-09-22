@@ -1,13 +1,14 @@
 import smtplib
+
 from django.core.mail.backends.locmem import EmailBackend as LocMemEmailBackend
 
 
-class FakeConnection(object):
+class FakeConnection:
     def __getstate__(self):
         raise TypeError("Connections can't be pickled")
 
 
-class TestMailerEmailBackend(object):
+class TestMailerEmailBackend:
     outbox = []
 
     def __init__(self, **kwargs):
@@ -22,7 +23,7 @@ class TestMailerEmailBackend(object):
 
     def send_messages(self, email_messages):
         for m in email_messages:
-            m.extra_headers['X-Sent-By'] = 'django-mailer-tests'
+            m.extra_headers["X-Sent-By"] = "django-mailer-tests"
         self.outbox.extend(email_messages)
 
 

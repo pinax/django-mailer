@@ -1,18 +1,13 @@
-from __future__ import unicode_literals
-
 import base64
+import datetime
 import logging
 import pickle
-import datetime
-
 
 from django.conf import settings
-
-from django.utils.timezone import now as datetime_now
 from django.core.mail import EmailMessage
 from django.db import models
+from django.utils.timezone import now as datetime_now
 from django.utils.translation import gettext_lazy as _
-
 
 PRIORITY_HIGH = 1
 PRIORITY_MEDIUM = 2
@@ -35,7 +30,7 @@ class BigAutoModel(models.Model):
     # default_auto_field = 'django.db.models.BigAutoField' isn't supported
     # by Django < 3.2. Use an explicit field definition instead.
     # This workaround can be removed once support for Django < 3.2 is dropped.
-    id = models.BigAutoField(auto_created=True, primary_key=True, verbose_name='ID')
+    id = models.BigAutoField(auto_created=True, primary_key=True, verbose_name="ID")
 
     class Meta:
         abstract = True
@@ -45,12 +40,11 @@ def get_message_id(msg):
     # From django.core.mail.message: Email header names are case-insensitive
     # (RFC 2045), so we have to accommodate that when doing comparisons.
     for key, value in msg.extra_headers.items():
-        if key.lower() == 'message-id':
+        if key.lower() == "message-id":
             return value
 
 
 class MessageManager(models.Manager):
-
     def high_priority(self):
         """
         the high priority messages in the queue
@@ -83,13 +77,13 @@ class MessageManager(models.Manager):
 
     def retry_deferred(self, new_priority=PRIORITY_MEDIUM):
         qs = self.deferred()
-        if getattr(settings, 'MAILER_EMAIL_MAX_RETRIES', None) is not None:
+        if getattr(settings, "MAILER_EMAIL_MAX_RETRIES", None) is not None:
             qs = qs.filter(retry_count__lt=settings.MAILER_EMAIL_MAX_RETRIES)
-        return qs.update(priority=new_priority, retry_count=models.F('retry_count') + 1)
+        return qs.update(priority=new_priority, retry_count=models.F("retry_count") + 1)
 
 
-base64_encode = base64.encodebytes if hasattr(base64, 'encodebytes') else base64.encodestring
-base64_decode = base64.decodebytes if hasattr(base64, 'decodebytes') else base64.decodestring
+base64_encode = base64.encodebytes if hasattr(base64, "encodebytes") else base64.encodestring
+base64_decode = base64.decodebytes if hasattr(base64, "decodebytes") else base64.decodestring
 
 
 def email_to_db(email):
@@ -97,7 +91,7 @@ def email_to_db(email):
     # encode to store in a unicode field. finally we encode back to make sure
     # we only try to insert unicode strings into the db, since we use a
     # TextField
-    return base64_encode(pickle.dumps(email)).decode('ascii')
+    return base64_encode(pickle.dumps(email)).decode("ascii")
 
 
 def db_to_email(data):
@@ -139,9 +133,7 @@ class Message(BigAutoModel):
     def __str__(self):
         try:
             email = self.email
-            return "On {0}, \"{1}\" to {2}".format(self.when_added,
-                                                   email.subject,
-                                                   ", ".join(email.to))
+            return f"On {self.when_added}, \"{email.subject}\" to {', '.join(email.to)}"
         except Exception:
             return "<Message repr unavailable>"
 
@@ -159,7 +151,8 @@ class Message(BigAutoModel):
         _get_email,
         _set_email,
         doc="""EmailMessage object. If this is mutated, you will need to
-set the attribute again to cause the underlying serialised data to be updated.""")
+set the attribute again to cause the underlying serialised data to be updated.""",
+    )
 
     @property
     def to_addresses(self):
@@ -184,14 +177,15 @@ def filter_recipient_list(lst):
     retval = []
     for e in lst:
         if DontSendEntry.objects.has_address(e):
-            logger.info("skipping email to %s as on don't send list " % e.encode("utf-8"))
+            logger.info(f"skipping email to {e.encode('utf-8')} as on don't send list ")
         else:
             retval.append(e)
     return retval
 
 
-def make_message(subject="", body="", from_email=None, to=None, bcc=None,
-                 attachments=None, headers=None, priority=None):
+def make_message(
+    subject="", body="", from_email=None, to=None, bcc=None, attachments=None, headers=None, priority=None
+):
     """
     Creates a simple message for the email parameters supplied.
     The 'to' and 'bcc' lists are filtered using DontSendEntry.
@@ -204,13 +198,7 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
     to = filter_recipient_list(to)
     bcc = filter_recipient_list(bcc)
     core_msg = EmailMessage(
-        subject=subject,
-        body=body,
-        from_email=from_email,
-        to=to,
-        bcc=bcc,
-        attachments=attachments,
-        headers=headers
+        subject=subject, body=body, from_email=from_email, to=to, bcc=bcc, attachments=attachments, headers=headers
     )
     db_msg = Message(priority=priority)
     db_msg.email = core_msg
@@ -218,7 +206,6 @@ def make_message(subject="", body="", from_email=None, to=None, bcc=None,
 
 
 class DontSendEntryManager(models.Manager):
-
     def has_address(self, address):
         """
         is the given address on the don't send list?
@@ -252,7 +239,6 @@ RESULT_CODES = (
 
 
 class MessageLogManager(models.Manager):
-
     def log(self, message, result_code, log_message=""):
         """
         create a log entry for an attempt to send the given message and
@@ -304,9 +290,7 @@ class MessageLog(BigAutoModel):
     def __str__(self):
         try:
             email = self.email
-            return "On {0}, \"{1}\" to {2}".format(self.when_attempted,
-                                                   email.subject,
-                                                   ", ".join(email.to))
+            return f"On {self.when_attempted}, \"{email.subject}\" to {', '.join(email.to)}"
         except Exception:
             return "<MessageLog repr unavailable>"
 

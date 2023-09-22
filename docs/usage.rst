@@ -29,13 +29,13 @@ below.
 Explicitly putting mail on the queue
 ====================================
 
-The best method to explicitly send some messages through the django-mailer queue (and perhaps 
+The best method to explicitly send some messages through the django-mailer queue (and perhaps
 not others), is to use the ``connection`` parameter to the normal ``django.core.mail.send_mail``
 function or the ``django.core.mail.EmailMessage`` constructor - see the Django docs as above and
 the `django.core.mail.get_connection <https://docs.djangoproject.com/en/stable/topics/email/#obtaining-an-instance-of-an-email-backend>`_
 function.
 
-Another method to use the django-mailer queue directly, which dates from before there was such 
+Another method to use the django-mailer queue directly, which dates from before there was such
 as thing as an "email backend" in Django, is to import the ``send_mail`` function (and similar)
 from ``mailer`` instead of from ``django.core.mail``. There is also a ``send_html_mail`` convenience
 function. However, we no longer guarantee that these functions will have a 100% compatible signature

@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-from django.db import models, migrations
+from django.db import migrations, models
 
 # This might be a no-op migration on some installations. However, some
 # installations will have had EmailField with a default max_length=75 (pre
@@ -12,13 +9,13 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('mailer', '0001_initial'),
+        ("mailer", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='dontsendentry',
-            name='to_address',
+            model_name="dontsendentry",
+            name="to_address",
             field=models.EmailField(max_length=254),
         ),
     ]

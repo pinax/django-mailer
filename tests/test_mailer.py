@@ -1,25 +1,31 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import datetime
 import pickle
 import time
+from unittest.mock import Mock, patch
 
 import django
 import lockfile
+import mailer
 from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils.timezone import now as datetime_now
-from mock import Mock, patch
-
-import mailer
 from mailer import engine
-from mailer.models import (PRIORITY_DEFERRED, PRIORITY_HIGH, PRIORITY_LOW,
-                           PRIORITY_MEDIUM, RESULT_FAILURE, RESULT_SUCCESS,
-                           DontSendEntry, Message, MessageLog, db_to_email,
-                           email_to_db, make_message)
+from mailer.models import (
+    PRIORITY_DEFERRED,
+    PRIORITY_HIGH,
+    PRIORITY_LOW,
+    PRIORITY_MEDIUM,
+    RESULT_FAILURE,
+    RESULT_SUCCESS,
+    DontSendEntry,
+    Message,
+    MessageLog,
+    db_to_email,
+    email_to_db,
+    make_message,
+)
 
 from . import TestMailerEmailBackend
 
@@ -41,8 +47,8 @@ class BackendTest(TestCase):
         """
         self.assertEqual(Message.objects.count(), 0)
         with self.settings(EMAIL_BACKEND="mailer.backend.DbBackend"):
-            message1 = ('Subject ☺', 'Body', 'sender@example.com', ['first@example.com'])
-            message2 = ('Another Subject ☺', 'Body', 'sender@example.com', ['second@test.com'])
+            message1 = ("Subject ☺", "Body", "sender@example.com", ["first@example.com"])
+            message2 = ("Another Subject ☺", "Body", "sender@example.com", ["second@test.com"])
             mail.send_mass_mail((message1, message2))
             self.assertEqual(Message.objects.count(), 2)
 
@@ -103,16 +109,17 @@ class SendingTest(TestCase):
                     Message.objects.retry_deferred()
                     # Retry count is updated, unless the max is reached
                     self.assertEqual(
-                        Message.objects.values_list('retry_count', flat=True).get(),
+                        Message.objects.values_list("retry_count", flat=True).get(),
                         n + 1 if n < 2 else 2,
-                        msg="Expected retry_count to be at most 2, got %d" % n
+                        msg="Expected retry_count to be at most 2, got %d" % n,
                     )
                     # Send all messages
                     engine.send_all()
                     # Message is retried (log entry is added), unless the max is reached
                     self.assertEqual(
-                        MessageLog.objects.count(), 1 + (n + 1) if n < 2 else 3,
-                        msg="Expected at most 3 attempts (log entries), got %d" % n
+                        MessageLog.objects.count(),
+                        1 + (n + 1) if n < 2 else 3,
+                        msg="Expected at most 3 attempts (log entries), got %d" % n,
                     )
                     # Message remain deferred
                     self.assertEqual(Message.objects.deferred().count(), 1)
@@ -128,7 +135,7 @@ class SendingTest(TestCase):
             # Re-que the deferred message
             Message.objects.retry_deferred()
             # Retry count remains at 0, the message is not retried
-            self.assertEqual(Message.objects.values_list('retry_count', flat=True).get(), 0)
+            self.assertEqual(Message.objects.values_list("retry_count", flat=True).get(), 0)
             # Send all messages
             engine.send_all()
             # Message is not retried (log entry is not added)
@@ -137,10 +144,8 @@ class SendingTest(TestCase):
             self.assertEqual(Message.objects.deferred().count(), 1)
 
     def test_purge_old_entries(self):
-
         def send_mail(success):
-            backend = ("django.core.mail.backends.locmem.EmailBackend"
-                       if success else "tests.FailingMailerEmailBackend")
+            backend = "django.core.mail.backends.locmem.EmailBackend" if success else "tests.FailingMailerEmailBackend"
             with self.settings(MAILER_EMAIL_BACKEND=backend):
                 mailer.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
                 engine.send_all()
@@ -152,9 +157,9 @@ class SendingTest(TestCase):
         send_mail(True)
         send_mail(False)
 
-        with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
+        with patch.object(mailer.models, "datetime_now") as datetime_now_patch:
             datetime_now_patch.return_value = datetime_now() + datetime.timedelta(days=2)
-            call_command('purge_mail_log', '1')
+            call_command("purge_mail_log", "1")
 
         self.assertNotEqual(MessageLog.objects.filter(result=RESULT_FAILURE).count(), 0)
         self.assertEqual(MessageLog.objects.filter(result=RESULT_SUCCESS).count(), 0)
@@ -162,9 +167,9 @@ class SendingTest(TestCase):
         # 1 success, 1 failure, and purge only failures
         send_mail(True)
 
-        with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
+        with patch.object(mailer.models, "datetime_now") as datetime_now_patch:
             datetime_now_patch.return_value = datetime_now() + datetime.timedelta(days=2)
-            call_command('purge_mail_log', '1', '-r', 'failure')
+            call_command("purge_mail_log", "1", "-r", "failure")
 
         self.assertEqual(MessageLog.objects.filter(result=RESULT_FAILURE).count(), 0)
         self.assertNotEqual(MessageLog.objects.filter(result=RESULT_SUCCESS).count(), 0)
@@ -172,17 +177,18 @@ class SendingTest(TestCase):
         # 1 success, 1 failure, and purge everything
         send_mail(False)
 
-        with patch.object(mailer.models, 'datetime_now') as datetime_now_patch:
+        with patch.object(mailer.models, "datetime_now") as datetime_now_patch:
             datetime_now_patch.return_value = datetime_now() + datetime.timedelta(days=2)
-            call_command('purge_mail_log', '1', '-r', 'all')
+            call_command("purge_mail_log", "1", "-r", "all")
 
         self.assertEqual(MessageLog.objects.count(), 0)
 
     def test_send_loop(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             with patch("mailer.engine.send_all", side_effect=StopIteration) as send:
-                mailer.send_mail("Subject", "Body", "deferred@example.com",
-                                 ["rec@example.com"], priority=PRIORITY_DEFERRED)
+                mailer.send_mail(
+                    "Subject", "Body", "deferred@example.com", ["rec@example.com"], priority=PRIORITY_DEFERRED
+                )
 
                 with patch("time.sleep", side_effect=StopIteration) as sleep:
                     self.assertRaises(StopIteration, engine.send_loop)
@@ -197,9 +203,14 @@ class SendingTest(TestCase):
 
     def test_send_html(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            mailer.send_html_mail("Subject", "Body", "<html><body>Body</body></html>",
-                                  "htmlsender1@example.com", ["recipient@example.com"],
-                                  priority=PRIORITY_HIGH)
+            mailer.send_html_mail(
+                "Subject",
+                "Body",
+                "<html><body>Body</body></html>",
+                "htmlsender1@example.com",
+                ["recipient@example.com"],
+                priority=PRIORITY_HIGH,
+            )
 
             # Ensure deferred was not deleted
             self.assertEqual(Message.objects.count(), 1)
@@ -215,8 +226,7 @@ class SendingTest(TestCase):
             self.assertEqual(sent.content_subtype, "plain")
 
             # Alternative "text/html"
-            self.assertEqual(sent.alternatives[0],
-                             ("<html><body>Body</body></html>", "text/html"))
+            self.assertEqual(sent.alternatives[0], ("<html><body>Body</body></html>", "text/html"))
 
     def test_send_mass_mail(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
@@ -241,11 +251,14 @@ class SendingTest(TestCase):
             for i, sent in enumerate(mail.outbox):
                 # Default "plain text"
                 self.assertEqual(sent.subject, "Subject ☺")
-                self.assertEqual(sent.from_email, "mass{0}@example.com".format(i))
-                self.assertEqual(sent.to, ["recipient{0}@example.com".format(i)])
+                self.assertEqual(sent.from_email, f"mass{i}@example.com")
+                self.assertEqual(sent.to, [f"recipient{i}@example.com"])
 
     def test_mail_admins(self):
-        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", ADMINS=(("Test", "testadmin@example.com"),)):  # noqa
+        with self.settings(
+            MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+            ADMINS=(("Test", "testadmin@example.com"),),
+        ):  # noqa
             mailer.mail_admins("Subject", "Admin Body")
 
             self.assertEqual(Message.objects.count(), 1)
@@ -264,7 +277,10 @@ class SendingTest(TestCase):
             self.assertEqual(sent.to, ["testadmin@example.com"])
 
     def test_mail_managers(self):
-        with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend", MANAGERS=(("Test", "testmanager@example.com"),)):  # noqa
+        with self.settings(
+            MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+            MANAGERS=(("Test", "testmanager@example.com"),),
+        ):  # noqa
             mailer.mail_managers("Subject", "Manager Body")
 
             self.assertEqual(Message.objects.count(), 1)
@@ -332,7 +348,7 @@ class SendingTest(TestCase):
             self.assertEqual(Message.objects.deferred().count(), 0)
 
         with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend", MAILER_EMAIL_MAX_DEFERRED=2):  # noqa
-            with patch('mailer.engine.logger.warning') as mock_warning:
+            with patch("mailer.engine.logger.warning") as mock_warning:
                 # 2 will get deferred 3 remain undeferred
                 engine.send_all()
 
@@ -383,8 +399,7 @@ class SendingTest(TestCase):
             mailer.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
             engine.send_all()
             m = MessageLog.objects.get()
-            self.assertEqual(m.email.extra_headers['X-Sent-By'],
-                             'django-mailer-tests')
+            self.assertEqual(m.email.extra_headers["X-Sent-By"], "django-mailer-tests")
 
     def test_set_and_save_message_id(self):
         """
@@ -394,10 +409,7 @@ class SendingTest(TestCase):
             mailer.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
             engine.send_all()
             m = MessageLog.objects.get()
-            self.assertEqual(
-                m.email.extra_headers['Message-ID'],
-                m.message_id
-            )
+            self.assertEqual(m.email.extra_headers["Message-ID"], m.message_id)
 
     def test_save_existing_message_id(self):
         """
@@ -410,18 +422,12 @@ class SendingTest(TestCase):
                 from_email="sender@example.com",
                 to=["recipient@example.com"],
                 priority=PRIORITY_MEDIUM,
-                headers={'message-id': 'foo'},
+                headers={"message-id": "foo"},
             ).save()
             engine.send_all()
             m = MessageLog.objects.get()
-            self.assertEqual(
-                m.email.extra_headers['message-id'],
-                'foo'
-            )
-            self.assertEqual(
-                m.message_id,
-                'foo'
-            )
+            self.assertEqual(m.email.extra_headers["message-id"], "foo")
+            self.assertEqual(m.message_id, "foo")
 
 
 class LockNormalTest(TestCase):
@@ -501,32 +507,19 @@ class LockTimeoutTest(TestCase):
 class PrioritizeTest(TestCase):
     def test_prioritize(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-            mailer.send_mail("Subject", "Body", "prio1@example.com", ["r@example.com"],
-                             priority=PRIORITY_HIGH)
-            mailer.send_mail("Subject", "Body", "prio2@example.com", ["r@example.com"],
-                             priority=PRIORITY_MEDIUM)
-            mailer.send_mail("Subject", "Body", "prio3@example.com", ["r@example.com"],
-                             priority=PRIORITY_LOW)
-            mailer.send_mail("Subject", "Body", "prio4@example.com", ["r@example.com"],
-                             priority=PRIORITY_HIGH)
-            mailer.send_mail("Subject", "Body", "prio5@example.com", ["r@example.com"],
-                             priority=PRIORITY_HIGH)
-            mailer.send_mail("Subject", "Body", "prio6@example.com", ["r@example.com"],
-                             priority=PRIORITY_LOW)
-            mailer.send_mail("Subject", "Body", "prio7@example.com", ["r@example.com"],
-                             priority=PRIORITY_LOW)
-            mailer.send_mail("Subject", "Body", "prio8@example.com", ["r@example.com"],
-                             priority=PRIORITY_MEDIUM)
-            mailer.send_mail("Subject", "Body", "prio9@example.com", ["r@example.com"],
-                             priority=PRIORITY_MEDIUM)
-            mailer.send_mail("Subject", "Body", "prio10@example.com", ["r@example.com"],
-                             priority=PRIORITY_LOW)
-            mailer.send_mail("Subject", "Body", "prio11@example.com", ["r@example.com"],
-                             priority=PRIORITY_MEDIUM)
-            mailer.send_mail("Subject", "Body", "prio12@example.com", ["r@example.com"],
-                             priority=PRIORITY_HIGH)
-            mailer.send_mail("Subject", "Body", "prio13@example.com", ["r@example.com"],
-                             priority=PRIORITY_DEFERRED)
+            mailer.send_mail("Subject", "Body", "prio1@example.com", ["r@example.com"], priority=PRIORITY_HIGH)
+            mailer.send_mail("Subject", "Body", "prio2@example.com", ["r@example.com"], priority=PRIORITY_MEDIUM)
+            mailer.send_mail("Subject", "Body", "prio3@example.com", ["r@example.com"], priority=PRIORITY_LOW)
+            mailer.send_mail("Subject", "Body", "prio4@example.com", ["r@example.com"], priority=PRIORITY_HIGH)
+            mailer.send_mail("Subject", "Body", "prio5@example.com", ["r@example.com"], priority=PRIORITY_HIGH)
+            mailer.send_mail("Subject", "Body", "prio6@example.com", ["r@example.com"], priority=PRIORITY_LOW)
+            mailer.send_mail("Subject", "Body", "prio7@example.com", ["r@example.com"], priority=PRIORITY_LOW)
+            mailer.send_mail("Subject", "Body", "prio8@example.com", ["r@example.com"], priority=PRIORITY_MEDIUM)
+            mailer.send_mail("Subject", "Body", "prio9@example.com", ["r@example.com"], priority=PRIORITY_MEDIUM)
+            mailer.send_mail("Subject", "Body", "prio10@example.com", ["r@example.com"], priority=PRIORITY_LOW)
+            mailer.send_mail("Subject", "Body", "prio11@example.com", ["r@example.com"], priority=PRIORITY_MEDIUM)
+            mailer.send_mail("Subject", "Body", "prio12@example.com", ["r@example.com"], priority=PRIORITY_HIGH)
+            mailer.send_mail("Subject", "Body", "prio13@example.com", ["r@example.com"], priority=PRIORITY_DEFERRED)
             self.assertEqual(Message.objects.count(), 13)
             self.assertEqual(Message.objects.deferred().count(), 1)
             self.assertEqual(Message.objects.non_deferred().count(), 12)
@@ -606,7 +599,7 @@ class MessagesTest(TestCase):
 
             msg.save()
 
-            with patch('mailer.engine.logger.warning') as mock_warning:
+            with patch("mailer.engine.logger.warning") as mock_warning:
                 engine.send_all()
 
                 mock_warning.assert_called_once()
@@ -653,10 +646,10 @@ class MessagesTest(TestCase):
             msg = Message.objects.get()
             self.assertEqual(
                 str(msg),
-                'On {0}, "Subject Msg 中" to rec1@example.com'.format(msg.when_added),
+                f'On {msg.when_added}, "Subject Msg 中" to rec1@example.com',
             )
             msg.message_data = None
-            self.assertEqual(str(msg), '<Message repr unavailable>')
+            self.assertEqual(str(msg), "<Message repr unavailable>")
 
     def test_message_log_str(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
@@ -668,11 +661,11 @@ class MessagesTest(TestCase):
             log = MessageLog.objects.get()
             self.assertEqual(
                 str(log),
-                'On {0}, "Subject Log 中" to 1gol@example.com'.format(log.when_attempted),
+                f'On {log.when_attempted}, "Subject Log 中" to 1gol@example.com',
             )
 
             log.message_data = None
-            self.assertEqual(str(log), '<MessageLog repr unavailable>')
+            self.assertEqual(str(log), "<MessageLog repr unavailable>")
 
 
 class DbToEmailTest(TestCase):
@@ -711,43 +704,43 @@ def call_command_with_cron_arg(command, cron_value):
 
     # newer django; test parsing by passing argument as string
     # --cron/c command option is deprecated
-    return call_command(command, '--cron={}'.format(cron_value))
+    return call_command(command, f"--cron={cron_value}")
 
 
 class CommandHelperTest(TestCase):
     def test_send_mail_no_cron(self):
-        call_command('send_mail')
+        call_command("send_mail")
 
     def test_send_mail_cron_0(self):
         # deprecated
-        call_command_with_cron_arg('send_mail', 0)
+        call_command_with_cron_arg("send_mail", 0)
 
     def test_send_mail_cron_1(self):
         # deprecated
-        call_command_with_cron_arg('send_mail', 1)
+        call_command_with_cron_arg("send_mail", 1)
 
     def test_retry_deferred_no_cron(self):
-        call_command('retry_deferred')
+        call_command("retry_deferred")
 
     def test_retry_deferred_cron_0(self):
         # deprecated
-        call_command_with_cron_arg('retry_deferred', 0)
+        call_command_with_cron_arg("retry_deferred", 0)
 
     def test_retry_deferred_cron_1(self):
         # deprecated
-        call_command_with_cron_arg('retry_deferred', 1)
+        call_command_with_cron_arg("retry_deferred", 1)
 
 
 class EmailBackendSettingLoopTest(TestCase):
     def test_loop_detection(self):
-        with self.settings(EMAIL_BACKEND='mailer.backend.DbBackend',
-                           MAILER_EMAIL_BACKEND='mailer.backend.DbBackend'), \
-                self.assertRaises(ImproperlyConfigured) as catcher:
+        with self.settings(
+            EMAIL_BACKEND="mailer.backend.DbBackend", MAILER_EMAIL_BACKEND="mailer.backend.DbBackend"
+        ), self.assertRaises(ImproperlyConfigured) as catcher:
             engine.send_all()
 
-        self.assertIn('mailer.backend.DbBackend', str(catcher.exception))
-        self.assertIn('EMAIL_BACKEND', str(catcher.exception))
-        self.assertIn('MAILER_EMAIL_BACKEND', str(catcher.exception))
+        self.assertIn("mailer.backend.DbBackend", str(catcher.exception))
+        self.assertIn("EMAIL_BACKEND", str(catcher.exception))
+        self.assertIn("MAILER_EMAIL_BACKEND", str(catcher.exception))
 
 
 class UseFileLockTest(TestCase):
@@ -768,8 +761,9 @@ class UseFileLockTest(TestCase):
         self.mock_release_lock.assert_called_once()
 
     def test_mailer_use_file_lock_disabled(self):
-        with self.settings(MAILER_USE_FILE_LOCK=False,
-                           MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
+        with self.settings(
+            MAILER_USE_FILE_LOCK=False, MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"
+        ):
             engine.send_all()
         self.mock_acquire_lock.assert_not_called()
         self.mock_release_lock.assert_not_called()

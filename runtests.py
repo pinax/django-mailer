@@ -33,9 +33,9 @@ def runtests(*test_args):
     if not settings.configured:
         settings.configure(**DEFAULT_SETTINGS)
     if not test_args:
-        test_args = ['tests']
+        test_args = ["tests"]
 
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.settings'
+    os.environ["DJANGO_SETTINGS_MODULE"] = "tests.settings"
     django.setup()
     TestRunner = get_runner(settings)
     test_runner = TestRunner()

@@ -19,5 +19,6 @@ DEFAULT_SETTINGS = dict(
 if __name__ == "__main__":
     from django.conf import settings
     from django.core import management
+
     settings.configure(**DEFAULT_SETTINGS)
     management.execute_from_command_line()

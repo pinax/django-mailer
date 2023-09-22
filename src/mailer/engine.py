@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import contextlib
 import logging
 import smtplib
@@ -16,7 +14,7 @@ from django.core.mail.utils import DNS_NAME
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
 from django.utils.module_loading import import_string
 
-from mailer.models import (RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id)
+from mailer.models import RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id
 
 if DJANGO_VERSION[0] >= 2:
     NotSupportedFeatureException = NotSupportedError
@@ -43,8 +41,8 @@ def prioritize(queryset=None):
     Returns the messages in the queue in the order they should be sent.
     """
     if queryset:
-        return queryset.order_by('priority', 'when_added')
-    return Message.objects.non_deferred().order_by('priority', 'when_added')
+        return queryset.order_by("priority", "when_added")
+    return Message.objects.non_deferred().order_by("priority", "when_added")
 
 
 @contextlib.contextmanager
@@ -92,7 +90,7 @@ def get_messages_for_sending(queryset=None):
 def ensure_message_id(msg):
     if get_message_id(msg) is None:
         # Use cached DNS_NAME for performance
-        msg.extra_headers['Message-ID'] = make_msgid(domain=DNS_NAME)
+        msg.extra_headers["Message-ID"] = make_msgid(domain=DNS_NAME)
 
 
 def _limits_reached(sent, deferred):
@@ -101,8 +99,7 @@ def _limits_reached(sent, deferred):
     EMAIL_MAX_BATCH = getattr(settings, "MAILER_EMAIL_MAX_BATCH", None)
 
     if EMAIL_MAX_BATCH is not None and sent >= EMAIL_MAX_BATCH:
-        logger.info("EMAIL_MAX_BATCH (%s) reached, "
-                    "stopping for this round", EMAIL_MAX_BATCH)
+        logger.info("EMAIL_MAX_BATCH (%s) reached, " "stopping for this round", EMAIL_MAX_BATCH)
         return True
 
     # Stop sending emails in the current round if more than X emails get
@@ -110,8 +107,7 @@ def _limits_reached(sent, deferred):
     EMAIL_MAX_DEFERRED = getattr(settings, "MAILER_EMAIL_MAX_DEFERRED", None)
 
     if EMAIL_MAX_DEFERRED is not None and deferred >= EMAIL_MAX_DEFERRED:
-        logger.warning("EMAIL_MAX_DEFERRED (%s) reached, "
-                       "stopping for this round", EMAIL_MAX_DEFERRED)
+        logger.warning("EMAIL_MAX_DEFERRED (%s) reached, " "stopping for this round", EMAIL_MAX_DEFERRED)
         return True
 
 
@@ -121,23 +117,27 @@ def _throttle_emails():
     EMAIL_THROTTLE = getattr(settings, "MAILER_EMAIL_THROTTLE", 0)
 
     if EMAIL_THROTTLE:
-        logger.debug("Throttling email delivery. "
-                     "Sleeping %s seconds", EMAIL_THROTTLE)
+        logger.debug("Throttling email delivery. " "Sleeping %s seconds", EMAIL_THROTTLE)
         time.sleep(EMAIL_THROTTLE)
 
 
 def handle_delivery_exception(connection, message, exc):
-    if isinstance(exc, (smtplib.SMTPAuthenticationError,
-                        smtplib.SMTPDataError,
-                        smtplib.SMTPRecipientsRefused,
-                        smtplib.SMTPSenderRefused,
-                        socket_error)):
+    if isinstance(
+        exc,
+        (
+            smtplib.SMTPAuthenticationError,
+            smtplib.SMTPDataError,
+            smtplib.SMTPRecipientsRefused,
+            smtplib.SMTPSenderRefused,
+            socket_error,
+        ),
+    ):
         message.defer()
-        logger.info("message deferred due to failure: %s" % exc)
+        logger.info(f"message deferred due to failure: {exc}")
         MessageLog.objects.log(message, RESULT_FAILURE, log_message=str(exc))
 
         connection = None  # i.e. enforce creation of a new connection
-        status = 'deferred'
+        status = "deferred"
 
         return connection, status
 
@@ -174,11 +174,12 @@ def release_lock(lock):
 
 
 def _require_no_backend_loop(mailer_email_backend):
-    if mailer_email_backend == settings.EMAIL_BACKEND == 'mailer.backend.DbBackend':
-        raise ImproperlyConfigured('EMAIL_BACKEND and MAILER_EMAIL_BACKEND'
-                                   ' should not both be set to "{}"'
-                                   ' at the same time'
-                                   .format(settings.EMAIL_BACKEND))
+    if mailer_email_backend == settings.EMAIL_BACKEND == "mailer.backend.DbBackend":
+        raise ImproperlyConfigured(
+            "EMAIL_BACKEND and MAILER_EMAIL_BACKEND"
+            ' should not both be set to "{}"'
+            " at the same time".format(settings.EMAIL_BACKEND)
+        )
 
 
 def send_all(queryset=None):
@@ -187,19 +188,12 @@ def send_all(queryset=None):
     """
     # The actual backend to use for sending, defaulting to the Django default.
     # To make testing easier this is not stored at module level.
-    mailer_email_backend = getattr(
-        settings,
-        "MAILER_EMAIL_BACKEND",
-        "django.core.mail.backends.smtp.EmailBackend"
-    )
+    mailer_email_backend = getattr(settings, "MAILER_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 
     # allows disabling file locking. The default is True
     use_file_lock = getattr(settings, "MAILER_USE_FILE_LOCK", True)
 
-    error_handler = import_string(
-        getattr(settings, 'MAILER_ERROR_HANDLER',
-                'mailer.engine.handle_delivery_exception')
-    )
+    error_handler = import_string(getattr(settings, "MAILER_ERROR_HANDLER", "mailer.engine.handle_delivery_exception"))
 
     _require_no_backend_loop(mailer_email_backend)
 
@@ -210,7 +204,7 @@ def send_all(queryset=None):
 
     start_time = time.time()
 
-    counts = {'deferred': 0, 'sent': 0}
+    counts = {"deferred": 0, "sent": 0}
 
     try:
         connection = None
@@ -222,10 +216,7 @@ def send_all(queryset=None):
                 try:
                     if connection is None:
                         connection = get_connection(backend=mailer_email_backend)
-                    logger.info("sending message '{0}' to {1}".format(
-                        message.subject,
-                        ", ".join(map(str, message.to_addresses)))
-                    )
+                    logger.info(f"sending message '{message.subject}' to {', '.join(map(str, message.to_addresses))}")
                     email = message.email
                     if email is not None:
                         email.connection = connection
@@ -236,9 +227,12 @@ def send_all(queryset=None):
                         email.connection = None
                         message.email = email  # For the sake of MessageLog
                         MessageLog.objects.log(message, RESULT_SUCCESS)
-                        counts['sent'] += 1
+                        counts["sent"] += 1
                     else:
-                        logger.warning("message discarded due to failure in converting from DB. Added on '%s' with priority '%s'" % (message.when_added, message.priority))  # noqa
+                        logger.warning(
+                            f"message discarded due to failure in converting from DB. Added on "
+                            f"'{message.when_added}' with priority '{message.priority}'"
+                        )  # noqa
                     message.delete()
 
                 except Exception as err:
@@ -246,7 +240,7 @@ def send_all(queryset=None):
                     counts[action_taken] += 1
 
             # Check if we reached the limits for the current run
-            if _limits_reached(counts['sent'], counts['deferred']):
+            if _limits_reached(counts["sent"], counts["deferred"]):
                 break
 
             _throttle_emails()
@@ -255,11 +249,14 @@ def send_all(queryset=None):
         if use_file_lock:
             release_lock(lock)
 
-    logger.info("Sent", extra={
-        'sent': counts['sent'],
-        'deferred': counts['deferred'],
-        'duration': time.time() - start_time,
-    })
+    logger.info(
+        "Sent",
+        extra={
+            "sent": counts["sent"],
+            "deferred": counts["deferred"],
+            "duration": time.time() - start_time,
+        },
+    )
 
 
 def send_loop():
@@ -270,6 +267,6 @@ def send_loop():
 
     while True:
         while not Message.objects.non_deferred().exists():
-            logger.debug("sleeping for %s seconds before checking queue again" % EMPTY_QUEUE_SLEEP)
+            logger.debug(f"sleeping for {EMPTY_QUEUE_SLEEP} seconds before checking queue again")
             time.sleep(EMPTY_QUEUE_SLEEP)
         send_all()
