@@ -70,16 +70,16 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: '3.10'
     - uses: actions/cache@v2
       with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ '3.9' }}-${{ hashFiles('requirements*.txt') }}
+          key: ${{ runner.os }}-pip-${{ '3.10' }}-${{ hashFiles('requirements*.txt') }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -e .
-        pip install checkmanifest
+        pip install check-manifest
     - name: check-manifest
       run: |
         check-manifest

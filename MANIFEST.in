@@ -3,10 +3,11 @@ include LICENSE
 include *.rst
 include MANIFEST.in
 include .coveragerc
-include tox.ini
+include *.ini
 include *.py
 include *.sh
 include *.txt
+include *.yaml
 
 graft docs
 graft src
