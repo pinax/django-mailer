@@ -52,7 +52,7 @@ jobs:
         pip install -r requirements-test.txt
     - name: Test suite
       run: |
-        ./runtests.py
+        pytest
 
   pre-commit:
     runs-on: ubuntu-latest

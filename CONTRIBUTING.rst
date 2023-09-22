@@ -26,7 +26,7 @@ To set up your environment to be able to work on django-mailer, do the following
 
 4. Install test requirements::
 
-    $ pip install coverage mock
+    $ pip install -r requirements-test.txt
 
 5. Create a branch for local development::
 
@@ -34,7 +34,7 @@ To set up your environment to be able to work on django-mailer, do the following
 
 6. Now you can make your changes locally. Run the tests in the virtualenv using::
 
-    $ ./runtests.py
+    $ pytest
 
    To run the tests in all supported environments, do::
 
