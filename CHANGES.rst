@@ -1,14 +1,14 @@
 Change log
 ==========
 
-2.2.1 - unreleased
+2.2.1 - 2023-09-22
 ------------------
 
-* Add admin action to send messages
-* Add fix for email address that is a NoneType
-* Stop testing on unsupported Python (<3.7) and Django (<2.2) versions
-* Start testing on Python 3.11 and Django 4.1/4.2
-* Add setting to limit the amount of retries for deferred messages
+* Added admin action to send messages
+* Added fix for email address that is a ``NoneType``
+* Stopped testing on unsupported Python (<3.7) and Django (<2.2) versions
+* Started testing on Python 3.11 and Django 4.1/4.2
+* Added setting to limit the amount of retries for deferred messages
   (``MAILER_EMAIL_MAX_RETRIES``), defaults to ``None`` (unlimited)
   (See Issue `#161 <https://github.com/pinax/django-mailer/issues/161>`_)
 
