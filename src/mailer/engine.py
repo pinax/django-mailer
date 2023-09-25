@@ -117,7 +117,7 @@ def _throttle_emails():
     EMAIL_THROTTLE = getattr(settings, "MAILER_EMAIL_THROTTLE", 0)
 
     if EMAIL_THROTTLE:
-        logger.debug("Throttling email delivery. " "Sleeping %s seconds", EMAIL_THROTTLE)
+        logger.debug("Throttling email delivery. Sleeping %s seconds", EMAIL_THROTTLE)
         time.sleep(EMAIL_THROTTLE)
 
 
