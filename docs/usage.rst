@@ -98,19 +98,19 @@ Controlling the delivery process
 ================================
 
 If you wish to have a finer control over the delivery process, which defaults
-to deliver everything in the queue, you can use the following 3 variables
-(default values shown)::
+to deliver everything in the queue, you can use the following 3 settings:
 
-    MAILER_EMAIL_MAX_BATCH = None  # integer or None
-    MAILER_EMAIL_MAX_DEFERRED = None  # integer or None
-    MAILER_EMAIL_THROTTLE = 0  # passed to time.sleep()
+* ``MAILER_EMAIL_MAX_BATCH``: integer or ``None``, defaults to ``None`` - how
+  many emails are sent successfully before stopping the current run of ``send_all()``
 
-These control how many emails are sent successfully before stopping the
-current run ``MAILER_EMAIL_MAX_BATCH``, after how many failed/deferred emails
-should it stop ``MAILER_EMAIL_MAX_DEFERRED`` and how much time to wait between
-each email ``MAILER_EMAIL_THROTTLE``.
+* ``MAILER_EMAIL_MAX_DEFERRED``: integer or ``None``, defaults to ``None`` -
+  after how many failed/deferred emails ``send_all()`` should stop.
 
-Unprocessed emails will be evaluated in the following delivery iterations.
+* ``MAILER_EMAIL_THROTTLE``: integer, defaults to 0 - how many seconds to sleep
+  after sending an email.
+
+If limited by ``MAILER_EMAIL_MAX_BATCH`` or ``MAILER_EMAIL_MAX_DEFERRED``,
+unprocessed emails will be evaluated in the following delivery iterations.
 
 Error handling
 ==============
@@ -126,13 +126,12 @@ It marks the related message as deferred for any of these exceptions:
 - ``smtplib.SMTPSenderRefused``
 - ``socket.error``
 
-Any other exceptions is re-raised.
-That is done for backwards-compatibility as well as for flexibility:
-we would otherwise have to maintain an extensive and changing
-list of exception types, which does not scale, and you get
-the chance to do error handling that fits your environment like a glove.
+Any other exception is re-raised. This is done for backwards-compatibility as
+well as for flexibility: we would otherwise have to maintain an extensive and
+changing list of exception types, which does not scale, and you get the chance
+to do error handling that fits your needs.
 
-When the default behavior does not fit your environment, you can specify your
+When the default behavior does not fit your needs, you can specify your
 own custom delivery error handler through setting ``MAILER_ERROR_HANDLER``.
 The value should be a string for use with Django's ``import_string``,
 the default is ``"mailer.engine.handle_delivery_exception"``.
@@ -153,7 +152,7 @@ For an example of a custom error handler::
 
     def my_handler(connection, message, exc):
         if isinstance(exc, SomeDeliveryException):
-            # trying to re-send this very message desparately
+            # trying to re-send this very message desperately
             # (if you have good reason to)
             [..]
             status = 'sent'
