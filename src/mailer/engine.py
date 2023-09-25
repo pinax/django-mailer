@@ -241,6 +241,7 @@ def send_all(queryset=None):
 
             # Check if we reached the limits for the current run
             if _limits_reached(counts["sent"], counts["deferred"]):
+                _throttle_emails()
                 break
 
             _throttle_emails()
