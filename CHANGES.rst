@@ -5,6 +5,8 @@ Change log
 ----------------
 
 * Dropped Python 3.7 support.
+* Added ``runmailer_pg`` - advanced sending method for sending emails without delay
+  immediate, PostgreSQL only.
 
 2.2.1 - 2023-09-22
 ------------------

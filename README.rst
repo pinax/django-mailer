@@ -1,9 +1,6 @@
 Django Mailer
 -------------
 
-.. image:: http://slack.pinaxproject.com/badge.svg
-   :target: http://slack.pinaxproject.com/
-
 .. image:: https://github.com/pinax/django-mailer/actions/workflows/build.yml/badge.svg
    :target: https://github.com/pinax/django-mailer/actions/workflows/build.yml
 
@@ -23,29 +20,44 @@ Django Mailer
 django-mailer
 -------------
 
-``django-mailer`` is a reusable Django app for queuing the sending of email.
-It works by storing email in the database for later sending.
-The main reason for doing this is that for many apps, the database will be
-much more reliable and faster than other email sending backends which require
-3rd party services e.g. SMTP or an HTTP API. By storing and sending later, we can
-return succeed immediately, and then attempt actual email sending in the background,
-with retries if needed.
+``django-mailer`` is a reusable Django app for queuing the sending of email. It
+works by storing email in the database for later sending. This has a number of
+advantages:
 
-An additional use case is that if you are storing the mail in the same
-database as your normal application, the database call can participate in
-any ongoing transaction - that is, if the database transaction is rolled back,
-the email sending will also be rolled back. (In some cases this behaviour
-might not be desirable, so be careful).
+- **robustness** - if your email provider goes down or has a temporary error,
+  the email won’t be lost.
 
-Keep in mind that file attachments are also temporarily stored in the database, which means if you are sending files larger than several hundred KB in size, you are likely to run into database limitations on how large your query can be. If this happens, you'll either need to fall back to using Django's default mail backend, or increase your database limits (a procedure that depends on which database you are using).
+- **correctness** - when an outgoing email is created as part of a transaction,
+  since it is stored in the database it will participate in transactions. This
+  means it won’t be sent until the transaction is committed, and won’t be sent
+  at all if the transaction is rolled back.
 
-django-mailer was developed as part of the `Pinax ecosystem <http://pinaxproject.com>`_ but is just a Django app and can be used independently of other Pinax apps.
+
+In addition, if you want to ensure that mails are sent very quickly, and without
+heaving polling, django-mailer comes with a PostgreSQL specific ``runmailer_pg``
+command. This uses PostgresSQLs NOTIFY/LISTEN feature to be able to send emails
+as soon as they are added to the queue.
+
+
+Limitations
+-----------
+
+File attachments are also temporarily stored in the database, which means if you
+are sending files larger than several hundred KB in size, you are likely to run
+into database limitations on how large your query can be. If this happens,
+you'll either need to fall back to using Django's default mail backend, or
+increase your database limits (a procedure that depends on which database you
+are using).
+
+django-mailer was developed as part of the `Pinax ecosystem
+<http://pinaxproject.com>`_ but is just a Django app and can be used
+independently of other Pinax apps.
 
 
 Requirements
 ------------
 
-* Django >= 1.11
+* Django >= 2.2
 
 * Databases: django-mailer supports all databases that Django supports, with the following notes:
 
@@ -53,59 +65,29 @@ Requirements
     command runs when anything else is attempting to put items on the queue. For this reason
     SQLite is not recommended for use with django-mailer.
 
+  * MySQL: the developers don’t test against MySQL.
 
 
-Getting Started
----------------
+Usage
+-----
 
-Simple usage instructions:
+See `usage.rst
+<https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage>`_ in
+the docs.
 
-In ``settings.py``:
-::
 
-    INSTALLED_APPS = [
-        ...
-        "mailer",
-        ...
-    ]
+Support
+-------
 
-    EMAIL_BACKEND = "mailer.backend.DbBackend"
-
-Run database migrations to set up the needed database tables.
-
-Then send email in the normal way, as per the `Django email docs <https://docs.djangoproject.com/en/stable/topics/email/>`_, and they will be added to the queue.
-
-To actually send the messages on the queue, add this to a cron job file or equivalent::
-
-    *       * * * * (/path/to/your/python /path/to/your/manage.py send_mail >> ~/cron_mail.log 2>&1)
-    0,20,40 * * * * (/path/to/your/python /path/to/your/manage.py retry_deferred >> ~/cron_mail_deferred.log 2>&1)
-
-To prevent from the database filling up with the message log, you should clean it up every once in a while.
-
-To remove successful log entries older than a week, add this to a cron job file or equivalent::
-
-    0 0 * * * (/path/to/your/python /path/to/your/manage.py purge_mail_log 7 >> ~/cron_mail_purge.log 2>&1)
-
-Use the `-r failure` option to remove only failed log entries instead, or `-r all` to remove them all.
-
-Note that the ``send_mail`` cronjob can only run at a maximum frequency of once each minute. If a maximum
-delay of 60 seconds between creating an email and sending it is too much, an alternative is available.
-
-Use ``./manage.py runmailer`` to launch a long running process that will check the database
-for new emails every ``MAILER_EMPTY_QUEUE_SLEEP`` seconds (default: 30 seconds).
-
-Documentation and support
--------------------------
-
-See `usage.rst <https://github.com/pinax/django-mailer/blob/master/docs/usage.rst#usage>`_
-in the docs for more advanced use cases.
 The Pinax documentation is available at http://pinaxproject.com/pinax/.
 
-This is an Open Source project maintained by volunteers, and outside this documentation the maintainers
-do not offer other support. For cases where you have found a bug you can file a GitHub issue.
-In case of any questions we recommend you join the `Pinax Slack team <http://slack.pinaxproject.com>`_
-and ping the Pinax team there instead of creating an issue on GitHub. You may also be able to get help on
-other programming sites like `Stack Overflow <https://stackoverflow.com/>`_.
+This is an Open Source project maintained by volunteers, and outside this
+documentation the maintainers do not offer other support. For cases where you
+have found a bug you can file a GitHub issue. In case of any questions we
+recommend you join the `Pinax Slack team <http://slack.pinaxproject.com>`_ and
+ping the Pinax team there instead of creating an issue on GitHub. You may also
+be able to get help on other programming sites like `Stack Overflow
+<https://stackoverflow.com/>`_.
 
 
 Contribute

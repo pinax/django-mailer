@@ -117,7 +117,7 @@ def _throttle_emails():
     EMAIL_THROTTLE = getattr(settings, "MAILER_EMAIL_THROTTLE", 0)
 
     if EMAIL_THROTTLE:
-        logger.debug("Throttling email delivery. " "Sleeping %s seconds", EMAIL_THROTTLE)
+        logger.debug("Throttling email delivery. Sleeping %s seconds", EMAIL_THROTTLE)
         time.sleep(EMAIL_THROTTLE)
 
 
@@ -241,6 +241,7 @@ def send_all(queryset=None):
 
             # Check if we reached the limits for the current run
             if _limits_reached(counts["sent"], counts["deferred"]):
+                _throttle_emails()
                 break
 
             _throttle_emails()
