@@ -35,8 +35,10 @@ advantages:
 
 In addition, if you want to ensure that mails are sent very quickly, and without
 heaving polling, django-mailer comes with a PostgreSQL specific ``runmailer_pg``
-command. This uses PostgresSQLs NOTIFY/LISTEN feature to be able to send emails
-as soon as they are added to the queue.
+command. This uses PostgreSQL’s `NOTIFY
+<https://www.postgresql.org/docs/16/sql-notify.html>`_/`LISTEN
+<https://www.postgresql.org/docs/16/sql-listen.html>`_ feature to be able to
+send emails as soon as they are added to the queue.
 
 
 Limitations
