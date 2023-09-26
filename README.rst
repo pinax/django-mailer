@@ -25,7 +25,10 @@ works by storing email in the database for later sending. This has a number of
 advantages:
 
 - **robustness** - if your email provider goes down or has a temporary error,
-  the email won’t be lost.
+  the email won’t be lost. In addition, since the ``send_mail()`` call always
+  succeeds (unless your database is out of action), then the HTTP request that
+  triggered the email to be sent won’t crash, and any ongoing transaction won’t
+  be rolled back.
 
 - **correctness** - when an outgoing email is created as part of a transaction,
   since it is stored in the database it will participate in transactions. This
@@ -50,6 +53,10 @@ into database limitations on how large your query can be. If this happens,
 you'll either need to fall back to using Django's default mail backend, or
 increase your database limits (a procedure that depends on which database you
 are using).
+
+With django-mailer, you can’t know in a Django view function whether the email
+has actually been sent or not - the ``send_mail`` function just stores mail on
+the queue to be sent later.
 
 django-mailer was developed as part of the `Pinax ecosystem
 <http://pinaxproject.com>`_ but is just a Django app and can be used
