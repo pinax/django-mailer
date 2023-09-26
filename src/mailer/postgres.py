@@ -62,10 +62,13 @@ def postgres_send_loop():
             conn.poll()
             last = conn.notifies.pop()
             # We don't care about payload or how many NOTIFY there were,
-            # we'll just run once.
-            dropped = conn.notifies
-            if dropped:
-                logger.debug("Dropping notifications %r", dropped)
+            # we'll just run once, so drop the rest:
+            to_drop = conn.notifies
+            if to_drop:
+                # This happens if several messages were inserted in the same
+                # transaction - we get multiple items on `conn.notifies` after a
+                # single `conn.poll()`
+                logger.debug("Dropping notifications %r", to_drop)
             conn.notifies.clear()
 
             if notify_q.empty():
@@ -80,13 +83,13 @@ def postgres_send_loop():
                 # another item to the non-empty queue - this will just cause
                 # `send_all()` to run pointlessly.
 
-                # This is quite important for efficiency - if we have a
-                # transaction that inserts 100 items into the Message table,
-                # once it commits the NOTIFY gets sent 100 times. Each one is
-                # received individually by the `.poll()` call above. The first
-                # `send_all()` command will deal with them all - we don't want
-                # `send_all()` to thrash away doing nothing another 99 times
-                # afterwards.
+                # This could be important for efficiency: if 100 records are
+                # inserted into the Message table at the same time, this process
+                # will get NOTIFY sent 100 times (unless they were all part of
+                # the same transaction). The first `send_all()` command will
+                # deal with them all (or a large fraction of them, depending on
+                # timing). We don't want `send_all()` to thrash away doing
+                # nothing another 99 times afterwards.
                 logger.debug("Discarding item %r as work queue is not empty", last)
 
     # Clean up:
