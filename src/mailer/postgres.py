@@ -23,7 +23,7 @@ CHANNEL = "django_mailer_new_message"
 
 def postgres_send_loop():
     """
-    Loop indefinitely, checking queue using NOTIFY/LISTEN and running send_mail(),
+    Loop indefinitely, checking queue using NOTIFY/LISTEN and running send_all(),
     and additional running every MAILER_EMPTY_QUEUE_SLEEP seconds.
     """
     # See https://www.psycopg.org/docs/advanced.html#asynchronous-notifications
@@ -139,7 +139,7 @@ def worker():
 
 @dataclass
 class Scheduled:
-    now: datetime
+    now: datetime  # this is used for debugging only, we just need some object on the queue
 
 
 def beat():
