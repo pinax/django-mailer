@@ -60,7 +60,14 @@ def postgres_send_loop():
             pass
         else:
             conn.poll()
-            last = conn.notifies.pop()
+            try:
+                last = conn.notifies.pop()
+            except IndexError:
+                # Not entirely sure how this happens, but it could only happen
+                # if `notifies` is empty, because there are no more notifications
+                # to process.
+                continue
+
             # We don't care about payload or how many NOTIFY there were,
             # we'll just run once, so drop the rest:
             to_drop = conn.notifies
