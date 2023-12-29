@@ -4,9 +4,9 @@ Release process
 * Check that the master branching is passing all tests:
   https://github.com/pinax/django-mailer/actions/workflows/build.yml
 
-* In CHANGES.rst, change the 'Unreleased' heading to the new version, and commit.
+* In CHANGES.rst, change the 'Unreleased' heading to the new version.
 
-* Change the version in mailer/__init__.py, removing ``.dev1`` if necessary, and commit.
+* Change the version in mailer/__init__.py, removing ``.dev1`` if necessary, and commit with “Version bump …”
 
 * Release::
 

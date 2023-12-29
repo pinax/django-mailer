@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2.3.1 - unreleased
+2.3.1 - 2023-12-29
 ------------------
 
 * Fixed rare crasher in runmailer_pg when notifications list is empty.
