@@ -22,5 +22,5 @@ Post release
 
 * Add new section 'Unreleased' section at top of CHANGES.rst
 
-* Bump version in mailer/__init__.py (to what it is most likely to be next), and in setup.py
+* Bump version in mailer/__init__.py (to what it is most likely to be next)
   including ``.dev1``.
