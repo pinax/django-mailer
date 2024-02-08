@@ -17,7 +17,7 @@ class Command(CronArgMixin, BaseCommand):
     help = "Do one pass through the mail queue, attempting to send all mail."
 
     def handle(self, *args, **options):
-        if options["cron"] == 0:
+        if options["cron"]:
             warnings.warn(
                 "send_mail's -c/--cron option is no longer " "necessary and will be removed in a future release",
                 DeprecationWarning,
