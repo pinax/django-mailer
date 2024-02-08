@@ -15,7 +15,7 @@ class Command(CronArgMixin, BaseCommand):
     def handle(self, *args, **options):
         if options["cron"]:
             warnings.warn(
-                "retry_deferred's -c/--cron option is no longer " "necessary and will be removed in a future release",
+                "retry_deferred's -c/--cron option is no longer necessary and will be removed in a future release",
                 DeprecationWarning,
             )
         count = Message.objects.retry_deferred()  # @@@ new_priority not yet supported

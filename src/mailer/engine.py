@@ -99,7 +99,7 @@ def _limits_reached(sent, deferred):
     EMAIL_MAX_BATCH = getattr(settings, "MAILER_EMAIL_MAX_BATCH", None)
 
     if EMAIL_MAX_BATCH is not None and sent >= EMAIL_MAX_BATCH:
-        logger.info("EMAIL_MAX_BATCH (%s) reached, " "stopping for this round", EMAIL_MAX_BATCH)
+        logger.info("EMAIL_MAX_BATCH (%s) reached, stopping for this round", EMAIL_MAX_BATCH)
         return True
 
     # Stop sending emails in the current round if more than X emails get
@@ -107,7 +107,7 @@ def _limits_reached(sent, deferred):
     EMAIL_MAX_DEFERRED = getattr(settings, "MAILER_EMAIL_MAX_DEFERRED", None)
 
     if EMAIL_MAX_DEFERRED is not None and deferred >= EMAIL_MAX_DEFERRED:
-        logger.warning("EMAIL_MAX_DEFERRED (%s) reached, " "stopping for this round", EMAIL_MAX_DEFERRED)
+        logger.warning("EMAIL_MAX_DEFERRED (%s) reached, stopping for this round", EMAIL_MAX_DEFERRED)
         return True
 
 

@@ -19,7 +19,7 @@ class Command(CronArgMixin, BaseCommand):
     def handle(self, *args, **options):
         if options["cron"] == 0:
             warnings.warn(
-                "send_mail's -c/--cron option is no longer " "necessary and will be removed in a future release",
+                "send_mail's -c/--cron option is no longer necessary and will be removed in a future release",
                 DeprecationWarning,
             )
         logger.info("-" * 72)
