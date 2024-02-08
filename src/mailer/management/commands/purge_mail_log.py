@@ -18,7 +18,7 @@ class Command(BaseCommand):
             "-r",
             "--result",
             choices=RESULT_CODES.keys(),
-            help="Delete logs of messages with the given result code(s) " "(default: success)",
+            help="Delete logs of messages with the given result code(s) (default: success)",
         )
 
     def handle(self, *args, **options):
