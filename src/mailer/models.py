@@ -310,7 +310,7 @@ class MessageLog(BigAutoModel):
         if email is not None:
             return email.to
         else:
-            return []
+            return None
 
     @property
     def subject(self):
@@ -318,4 +318,4 @@ class MessageLog(BigAutoModel):
         if email is not None:
             return email.subject
         else:
-            return ""
+            return None

@@ -634,8 +634,8 @@ class MessagesTest(TestCase):
             # Fake a log entry without email
             log.message_data = ""
 
-            self.assertEqual(log.to_addresses, [])
-            self.assertEqual(log.subject, "")
+            self.assertEqual(log.to_addresses, None)
+            self.assertEqual(log.subject, None)
 
     def test_message_log_without_log_message_data(self):
         with self.settings(
@@ -659,8 +659,8 @@ class MessagesTest(TestCase):
 
             self.assertEqual(log.email, None)
             self.assertEqual(log.message_data, None)
-            self.assertEqual(log.to_addresses, [])
-            self.assertEqual(log.subject, "")
+            self.assertEqual(log.to_addresses, None)
+            self.assertEqual(log.subject, None)
             self.assertEqual(log.when_added, when_added)
 
     def test_message_str(self):
