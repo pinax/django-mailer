@@ -293,7 +293,10 @@ class MessageLog(BigAutoModel):
     def __str__(self):
         try:
             email = self.email
-            return f"On {self.when_attempted}, \"{email.subject}\" to {', '.join(email.to)}"
+            if email:
+                return f"On {self.when_attempted}, \"{email.subject}\" to {', '.join(email.to)}"
+            else:
+                return f'On {self.when_attempted}, "{self.message_id}"'
         except Exception:
             return "<MessageLog repr unavailable>"
 

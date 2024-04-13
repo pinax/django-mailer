@@ -1,7 +1,7 @@
 import datetime
 import pickle
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import django
 import lockfile
@@ -690,8 +690,12 @@ class MessagesTest(TestCase):
                 f'On {log.when_attempted}, "Subject Log 中" to 1gol@example.com',
             )
 
+            with patch.object(MessageLog, "when_attempted", new_callable=PropertyMock) as log_mock:
+                log_mock.side_effect = ValueError
+                self.assertEqual(str(log), "<MessageLog repr unavailable>")
+
             log.message_data = None
-            self.assertEqual(str(log), "<MessageLog repr unavailable>")
+            self.assertEqual(str(log), f'On {log.when_attempted}, "{log.message_id}"')
 
 
 class DbToEmailTest(TestCase):
