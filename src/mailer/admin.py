@@ -6,22 +6,20 @@ from mailer.models import DontSendEntry, Message, MessageLog
 
 
 def show_to(message):
-    to_addresses = message.to_addresses
-    if to_addresses:
+    if message.email:
         return ", ".join(message.to_addresses)
     else:
-        return "<Message logging disabled>"
+        return "<Message data unavailable>"
 
 
 show_to.short_description = "To"  # noqa: E305
 
 
 def show_subject(message):
-    subject = message.subject
-    if subject:
-        return subject
+    if message.email:
+        return message.subject
     else:
-        return "<Message logging disabled>"
+        return "<Message data unavailable>"
 
 
 show_subject.short_description = "Subject"  # noqa: E305
