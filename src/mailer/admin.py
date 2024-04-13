@@ -6,10 +6,25 @@ from mailer.models import DontSendEntry, Message, MessageLog
 
 
 def show_to(message):
-    return ", ".join(message.to_addresses)
+    to_addresses = message.to_addresses
+    if to_addresses:
+        return ", ".join(message.to_addresses)
+    else:
+        return "<Message logging disabled>"
 
 
 show_to.short_description = "To"  # noqa: E305
+
+
+def show_subject(message):
+    subject = message.subject
+    if subject:
+        return subject
+    else:
+        return "<Message logging disabled>"
+
+
+show_subject.short_description = "Subject"  # noqa: E305
 
 
 class MessageAdminMixin:
@@ -40,7 +55,7 @@ class DontSendEntryAdmin(admin.ModelAdmin):
 
 class MessageLogAdmin(MessageAdminMixin, admin.ModelAdmin):
 
-    list_display = ["id", show_to, "subject", "message_id", "when_attempted", "result"]
+    list_display = ["id", show_to, show_subject, "message_id", "when_attempted", "result"]
     list_filter = ["result"]
     date_hierarchy = "when_attempted"
     readonly_fields = ["plain_text_body", "message_id"]

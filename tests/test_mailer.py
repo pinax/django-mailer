@@ -637,6 +637,32 @@ class MessagesTest(TestCase):
             self.assertEqual(log.to_addresses, [])
             self.assertEqual(log.subject, "")
 
+    def test_message_log_without_log_message_data(self):
+        with self.settings(
+            MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+            MAILER_EMAIL_LOG_MESSAGE_DATA=False,
+        ):  # noqa
+            mailer.send_mail("Subject Log", "Body", "log1@example.com", ["1gol@example.com"])
+
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+            self.assertEqual(MessageLog.objects.count(), 0)
+            when_added = Message.objects.first().when_added
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 0)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+            self.assertEqual(MessageLog.objects.count(), 1)
+
+            log = MessageLog.objects.all()[0]
+
+            self.assertEqual(log.email, None)
+            self.assertEqual(log.message_data, None)
+            self.assertEqual(log.to_addresses, [])
+            self.assertEqual(log.subject, "")
+            self.assertEqual(log.when_added, when_added)
+
     def test_message_str(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
             mailer.send_mail("Subject Msg 中", "Body 中", "msg1@example.com", ["rec1@example.com"])
