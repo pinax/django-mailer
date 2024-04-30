@@ -244,8 +244,11 @@ class MessageLogManager(models.Manager):
         create a log entry for an attempt to send the given message and
         record the given result and (optionally) a log message
         """
+        log_message_data = getattr(settings, "MAILER_EMAIL_LOG_MESSAGE_DATA", True)
+        message_data = message.message_data if log_message_data else None
+
         return self.create(
-            message_data=message.message_data,
+            message_data=message_data,
             message_id=get_message_id(message.email),
             when_added=message.when_added,
             priority=message.priority,
@@ -271,7 +274,7 @@ class MessageLog(BigAutoModel):
     """
 
     # fields from Message
-    message_data = models.TextField()
+    message_data = models.TextField(null=True)
     message_id = models.TextField(editable=False, null=True)
     when_added = models.DateTimeField(db_index=True)
     priority = models.PositiveSmallIntegerField(choices=PRIORITIES, db_index=True)
@@ -290,7 +293,10 @@ class MessageLog(BigAutoModel):
     def __str__(self):
         try:
             email = self.email
-            return f"On {self.when_attempted}, \"{email.subject}\" to {', '.join(email.to)}"
+            if email:
+                return f"On {self.when_attempted}, \"{email.subject}\" to {', '.join(email.to)}"
+            else:
+                return f'On {self.when_attempted}, "{self.message_id}"'
         except Exception:
             return "<MessageLog repr unavailable>"
 
@@ -304,7 +310,7 @@ class MessageLog(BigAutoModel):
         if email is not None:
             return email.to
         else:
-            return []
+            return None
 
     @property
     def subject(self):
@@ -312,4 +318,4 @@ class MessageLog(BigAutoModel):
         if email is not None:
             return email.subject
         else:
-            return ""
+            return None

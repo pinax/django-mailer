@@ -264,6 +264,13 @@ that the message will be retried indefinitely. If you set this to a value of ``0
 the message will not be retried at all, any number greater than ``0`` will be the
 maximum number of retries (excluding the initial attempt).
 
+To not log the email contents after sending it, you can set ``MAILER_EMAIL_LOG_MESSAGE_DATA``
+to `False`. The default is ``True``, which means that the message will be stored with the full
+email content. If you set this to the value ``False``, only the message meta data and result
+status will be stored in the ``MessageLog`` table.
+Disabling storing the email content can be useful for privacy or performance reasons,
+it also helps to not increase the database size.
+
 Using the DontSendEntry table
 =============================
 

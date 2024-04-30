@@ -1,7 +1,7 @@
 import datetime
 import pickle
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 import django
 import lockfile
@@ -634,8 +634,34 @@ class MessagesTest(TestCase):
             # Fake a log entry without email
             log.message_data = ""
 
-            self.assertEqual(log.to_addresses, [])
-            self.assertEqual(log.subject, "")
+            self.assertEqual(log.to_addresses, None)
+            self.assertEqual(log.subject, None)
+
+    def test_message_log_without_log_message_data(self):
+        with self.settings(
+            MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+            MAILER_EMAIL_LOG_MESSAGE_DATA=False,
+        ):  # noqa
+            mailer.send_mail("Subject Log", "Body", "log1@example.com", ["1gol@example.com"])
+
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+            self.assertEqual(MessageLog.objects.count(), 0)
+            when_added = Message.objects.first().when_added
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 0)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+            self.assertEqual(MessageLog.objects.count(), 1)
+
+            log = MessageLog.objects.all()[0]
+
+            self.assertEqual(log.email, None)
+            self.assertEqual(log.message_data, None)
+            self.assertEqual(log.to_addresses, None)
+            self.assertEqual(log.subject, None)
+            self.assertEqual(log.when_added, when_added)
 
     def test_message_str(self):
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
@@ -664,8 +690,12 @@ class MessagesTest(TestCase):
                 f'On {log.when_attempted}, "Subject Log 中" to 1gol@example.com',
             )
 
+            with patch.object(MessageLog, "when_attempted", new_callable=PropertyMock) as log_mock:
+                log_mock.side_effect = ValueError
+                self.assertEqual(str(log), "<MessageLog repr unavailable>")
+
             log.message_data = None
-            self.assertEqual(str(log), "<MessageLog repr unavailable>")
+            self.assertEqual(str(log), f'On {log.when_attempted}, "{log.message_id}"')
 
 
 class DbToEmailTest(TestCase):
