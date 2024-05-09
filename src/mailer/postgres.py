@@ -9,12 +9,13 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from django.db import connections
+
 from mailer.engine import EMPTY_QUEUE_SLEEP, send_all
 from mailer.models import Message
 
 is_psycopg3_available = False
 try:
-    import psycopg  # this is psycopg3
+    import psycopg  # noqa: F401
 except ImportError:
     try:
         import psycopg2.extensions
