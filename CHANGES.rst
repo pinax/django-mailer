@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.3.2 - 2024-05-22
+------------------
+
+* Added ``MAILER_EMAIL_LOG_MESSAGE_DATA`` setting, thanks @eht16.
+* Added support for ``psycopg3`` for ``runmailer_pg``, thanks @jsmits.
+
 2.3.1 - 2023-12-29
 ------------------
 
