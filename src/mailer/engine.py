@@ -4,7 +4,6 @@ import smtplib
 import time
 from socket import error as socket_error
 
-import lockfile
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -13,6 +12,7 @@ from django.core.mail.message import make_msgid
 from django.core.mail.utils import DNS_NAME
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
 from django.utils.module_loading import import_string
+import filelock
 
 from mailer.models import RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id
 
@@ -153,14 +153,15 @@ def acquire_lock():
     else:
         lock_file_path = "send_mail"
 
-    lock = lockfile.FileLock(lock_file_path)
+    lock = filelock.FileLock(lock_file_path)
 
-    try:
-        lock.acquire(LOCK_WAIT_TIMEOUT)
-    except lockfile.AlreadyLocked:
+    if lock.is_locked:
         logger.error("lock already in place. quitting.")
         return False, lock
-    except lockfile.LockTimeout:
+
+    try:
+        lock.acquire(timeout=LOCK_WAIT_TIMEOUT)
+    except filelock.Timeout:
         logger.error("waiting for the lock timed out. quitting.")
         return False, lock
     logger.debug("acquired.")

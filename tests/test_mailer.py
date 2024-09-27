@@ -4,7 +4,7 @@ import time
 from unittest.mock import Mock, PropertyMock, patch
 
 import django
-import lockfile
+import filelock
 from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
@@ -438,8 +438,10 @@ class LockNormalTest(TestCase):
         self.CustomError = CustomError
 
         self.lock_mock = Mock()
+        is_locked = PropertyMock(return_value=False)
+        type(self.lock_mock).is_locked = is_locked
 
-        self.patcher_lock = patch("lockfile.FileLock", return_value=self.lock_mock)
+        self.patcher_lock = patch("filelock.FileLock", return_value=self.lock_mock)
         self.patcher_prio = patch("mailer.engine.prioritize", side_effect=CustomError)
 
         self.lock = self.patcher_lock.start()
@@ -447,7 +449,7 @@ class LockNormalTest(TestCase):
 
     def test(self):
         self.assertRaises(self.CustomError, engine.send_all)
-        self.lock_mock.acquire.assert_called_once_with(engine.LOCK_WAIT_TIMEOUT)
+        self.lock_mock.acquire.assert_called_once_with(timeout=engine.LOCK_WAIT_TIMEOUT)
         self.lock.assert_called_once_with("send_mail")
         self.prio.assert_called_once()
 
@@ -458,12 +460,11 @@ class LockNormalTest(TestCase):
 
 class LockLockedTest(TestCase):
     def setUp(self):
-        config = {
-            "acquire.side_effect": lockfile.AlreadyLocked,
-        }
-        self.lock_mock = Mock(**config)
+        lock_mock = Mock()
+        self.is_locked = PropertyMock(return_value=True)
+        type(lock_mock).is_locked = self.is_locked
 
-        self.patcher_lock = patch("lockfile.FileLock", return_value=self.lock_mock)
+        self.patcher_lock = patch("filelock.FileLock", return_value=lock_mock)
         self.patcher_prio = patch("mailer.engine.prioritize", side_effect=Exception)
 
         self.lock = self.patcher_lock.start()
@@ -471,8 +472,7 @@ class LockLockedTest(TestCase):
 
     def test(self):
         engine.send_all()
-        self.lock_mock.acquire.assert_called_once_with(engine.LOCK_WAIT_TIMEOUT)
-        self.lock.assert_called_once_with("send_mail")
+        self.is_locked.assert_called_once_with()
         self.prio.assert_not_called()
 
     def tearDown(self):
@@ -483,11 +483,13 @@ class LockLockedTest(TestCase):
 class LockTimeoutTest(TestCase):
     def setUp(self):
         config = {
-            "acquire.side_effect": lockfile.LockTimeout,
+            "acquire.side_effect": filelock.Timeout("send_mail"),
         }
         self.lock_mock = Mock(**config)
+        is_locked = PropertyMock(return_value=False)
+        type(self.lock_mock).is_locked = is_locked
 
-        self.patcher_lock = patch("lockfile.FileLock", return_value=self.lock_mock)
+        self.patcher_lock = patch("filelock.FileLock", return_value=self.lock_mock)
         self.patcher_prio = patch("mailer.engine.prioritize", side_effect=Exception)
 
         self.lock = self.patcher_lock.start()
@@ -495,7 +497,7 @@ class LockTimeoutTest(TestCase):
 
     def test(self):
         engine.send_all()
-        self.lock_mock.acquire.assert_called_once_with(engine.LOCK_WAIT_TIMEOUT)
+        self.lock_mock.acquire.assert_called_once_with(timeout=engine.LOCK_WAIT_TIMEOUT)
         self.lock.assert_called_once_with("send_mail")
         self.prio.assert_not_called()
 
