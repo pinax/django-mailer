@@ -1,6 +1,7 @@
 import logging
 import sys
 from argparse import ArgumentParser
+from contextlib import suppress
 from datetime import datetime
 
 from django.core.management import BaseCommand
@@ -28,4 +29,5 @@ class Command(BaseCommand):
         self.stdout.write("Starting django-mailer send loop.")
         quit_command = "CTRL-BREAK" if sys.platform == "win32" else "CONTROL-C"
         self.stdout.write(f"Quit the loop with {quit_command}.")
-        postgres_send_loop()
+        with suppress(KeyboardInterrupt):
+            postgres_send_loop()
