@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.3.3 - 2025-05-31
+------------------
+
+* Added ``purge_deferred`` management command to purge deferred messages, thanks @thorrak.
+
+
 2.3.2 - 2024-05-22
 ------------------
 

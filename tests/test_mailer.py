@@ -760,6 +760,49 @@ class CommandHelperTest(TestCase):
         # deprecated
         call_command_with_cron_arg("retry_deferred", 1)
 
+    def test_purge_deferred_manager_method(self):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend"):
+            mailer.send_mail("Subject1", "Body1", "sender1@example.com", ["recipient1@example.com"])
+            mailer.send_mail("Subject2", "Body2", "sender2@example.com", ["recipient2@example.com"])
+            mailer.send_mail("Subject3", "Body3", "sender3@example.com", ["recipient3@example.com"])
+            
+            engine.send_all()
+            
+            self.assertEqual(Message.objects.count(), 3)
+            self.assertEqual(Message.objects.deferred().count(), 3)
+            
+            count = Message.objects.purge_deferred()
+            
+            self.assertEqual(count, 3)
+            self.assertEqual(Message.objects.count(), 0)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+
+    def test_purge_deferred_command(self):
+        with self.settings(MAILER_EMAIL_BACKEND="tests.FailingMailerEmailBackend"):
+            mailer.send_mail("Subject1", "Body1", "sender1@example.com", ["recipient1@example.com"])
+            mailer.send_mail("Subject2", "Body2", "sender2@example.com", ["recipient2@example.com"])
+            
+            engine.send_all()
+            
+            self.assertEqual(Message.objects.count(), 2)
+            self.assertEqual(Message.objects.deferred().count(), 2)
+            
+            call_command("purge_deferred")
+            
+            self.assertEqual(Message.objects.count(), 0)
+            self.assertEqual(Message.objects.deferred().count(), 0)
+
+    def test_purge_deferred_no_cron(self):
+        call_command("purge_deferred")
+
+    def test_purge_deferred_cron_0(self):
+        # deprecated
+        call_command_with_cron_arg("purge_deferred", 0)
+
+    def test_purge_deferred_cron_1(self):
+        # deprecated
+        call_command_with_cron_arg("purge_deferred", 1)
+
 
 class EmailBackendSettingLoopTest(TestCase):
     def test_loop_detection(self):

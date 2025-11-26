@@ -81,6 +81,12 @@ class MessageManager(models.Manager):
             qs = qs.filter(retry_count__lt=settings.MAILER_EMAIL_MAX_RETRIES)
         return qs.update(priority=new_priority, retry_count=models.F("retry_count") + 1)
 
+    def purge_deferred(self):
+        qs = self.deferred()
+        count = qs.count()
+        qs.delete()
+        return count
+
 
 base64_encode = base64.encodebytes if hasattr(base64, "encodebytes") else base64.encodestring
 base64_decode = base64.decodebytes if hasattr(base64, "decodebytes") else base64.decodestring
