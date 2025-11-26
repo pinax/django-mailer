@@ -16,30 +16,29 @@ To set up your environment to be able to work on django-mailer, do the following
 
 2. Clone your fork locally::
 
-     $ git clone git@github.com:your_name_here/django-mailer.git
-     $ cd django-mailer/
+     git clone git@github.com:your_name_here/django-mailer.git
+     cd django-mailer/
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper::
+3. Set up a venv for development. We use `uv <https://docs.astral.sh/uv/>`_ and
+   recommend you do the same. With uv, the setup instructions are::
 
-    $ mkvirtualenv django-mailer
-    $ python setup.py develop
+     uv sync
 
-4. Install test requirements::
+4. Activate the venv::
 
-    $ pip install -r requirements-test.txt
+     . .venv/bin/activate
 
 5. Create a branch for local development::
 
-    $ git checkout -b name-of-your-bugfix-or-feature
+     git checkout -b name-of-your-bugfix-or-feature
 
 6. Now you can make your changes locally. Run the tests in the virtualenv using::
 
-    $ pytest
+     pytest
 
    To run the tests in all supported environments, do::
 
-    $ pip install tox
-    $ tox
+     tox
 
 7. When your changes are done, push the branch to GitHub, and create a pull
    request.
