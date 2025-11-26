@@ -11,8 +11,7 @@ def get_priority(priority):
 
     if priority in PRIORITY_MAPPING:
         warnings.warn(
-            "Please pass one of the PRIORITY_* constants to 'send_mail' "
-            "and 'send_html_mail', not '{}'.".format(priority),
+            f"Please pass one of the PRIORITY_* constants to 'send_mail' and 'send_html_mail', not '{priority}'.",
             DeprecationWarning,
         )
         priority = PRIORITY_MAPPING[priority]

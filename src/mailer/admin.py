@@ -35,7 +35,6 @@ class MessageAdminMixin:
 
 
 class MessageAdmin(MessageAdminMixin, admin.ModelAdmin):
-
     list_display = ["id", show_to, "subject", "when_added", "priority", "retry_count"]
     readonly_fields = ["plain_text_body"]
     date_hierarchy = "when_added"
@@ -47,12 +46,10 @@ class MessageAdmin(MessageAdminMixin, admin.ModelAdmin):
 
 
 class DontSendEntryAdmin(admin.ModelAdmin):
-
     list_display = ["to_address", "when_added"]
 
 
 class MessageLogAdmin(MessageAdminMixin, admin.ModelAdmin):
-
     list_display = ["id", show_to, show_subject, "message_id", "when_attempted", "result"]
     list_filter = ["result"]
     date_hierarchy = "when_attempted"

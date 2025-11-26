@@ -133,7 +133,7 @@ class Message(BigAutoModel):
     def __str__(self):
         try:
             email = self.email
-            return f"On {self.when_added}, \"{email.subject}\" to {', '.join(email.to)}"
+            return f'On {self.when_added}, "{email.subject}" to {", ".join(email.to)}'
         except Exception:
             return "<Message repr unavailable>"
 
@@ -215,7 +215,6 @@ class DontSendEntryManager(models.Manager):
 
 
 class DontSendEntry(BigAutoModel):
-
     to_address = models.EmailField(max_length=254)
     when_added = models.DateTimeField()
 
@@ -294,7 +293,7 @@ class MessageLog(BigAutoModel):
         try:
             email = self.email
             if email:
-                return f"On {self.when_attempted}, \"{email.subject}\" to {', '.join(email.to)}"
+                return f'On {self.when_attempted}, "{email.subject}" to {", ".join(email.to)}'
             else:
                 return f'On {self.when_attempted}, "{self.message_id}"'
         except Exception:

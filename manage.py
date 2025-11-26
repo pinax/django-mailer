@@ -3,6 +3,7 @@
 manage.py script used by django-mailer developers to create
 DB migrations or test management commands.
 """
+
 import os
 from copy import deepcopy
 

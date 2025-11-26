@@ -64,6 +64,8 @@ multi_line_output = 3
 [tool.ruff]
 line-length = 120
 target-version = 'py310'
+
+[tool.ruff.lint]
 select = ["E", "F", "I", "UP", "FLY"]
 
 [dependency-groups]
