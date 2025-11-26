@@ -177,8 +177,8 @@ def _require_no_backend_loop(mailer_email_backend):
     if mailer_email_backend == settings.EMAIL_BACKEND == "mailer.backend.DbBackend":
         raise ImproperlyConfigured(
             "EMAIL_BACKEND and MAILER_EMAIL_BACKEND"
-            ' should not both be set to "{}"'
-            " at the same time".format(settings.EMAIL_BACKEND)
+            f' should not both be set to "{settings.EMAIL_BACKEND}"'
+            " at the same time"
         )
 
 

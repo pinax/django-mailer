@@ -5,12 +5,13 @@ from unittest.mock import Mock, PropertyMock, patch
 
 import django
 import lockfile
-import mailer
 from django.core import mail
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
 from django.test import TestCase
 from django.utils.timezone import now as datetime_now
+
+import mailer
 from mailer import engine
 from mailer.models import (
     PRIORITY_DEFERRED,
@@ -81,7 +82,6 @@ class SendingTest(TestCase):
             self.assertEqual(MessageLog.objects.count(), 1)
 
         with self.settings(MAILER_EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"):
-
             engine.send_all()
             self.assertEqual(len(mail.outbox), 0)
             # Should not have sent the deferred ones
@@ -111,7 +111,7 @@ class SendingTest(TestCase):
                     self.assertEqual(
                         Message.objects.values_list("retry_count", flat=True).get(),
                         n + 1 if n < 2 else 2,
-                        msg="Expected retry_count to be at most 2, got %d" % n,
+                        msg=f"Expected retry_count to be at most 2, got {n}",
                     )
                     # Send all messages
                     engine.send_all()
@@ -119,7 +119,7 @@ class SendingTest(TestCase):
                     self.assertEqual(
                         MessageLog.objects.count(),
                         1 + (n + 1) if n < 2 else 3,
-                        msg="Expected at most 3 attempts (log entries), got %d" % n,
+                        msg=f"Expected at most 3 attempts (log entries), got {n}",
                     )
                     # Message remain deferred
                     self.assertEqual(Message.objects.deferred().count(), 1)
@@ -763,9 +763,10 @@ class CommandHelperTest(TestCase):
 
 class EmailBackendSettingLoopTest(TestCase):
     def test_loop_detection(self):
-        with self.settings(
-            EMAIL_BACKEND="mailer.backend.DbBackend", MAILER_EMAIL_BACKEND="mailer.backend.DbBackend"
-        ), self.assertRaises(ImproperlyConfigured) as catcher:
+        with (
+            self.settings(EMAIL_BACKEND="mailer.backend.DbBackend", MAILER_EMAIL_BACKEND="mailer.backend.DbBackend"),
+            self.assertRaises(ImproperlyConfigured) as catcher,
+        ):
             engine.send_all()
 
         self.assertIn("mailer.backend.DbBackend", str(catcher.exception))
