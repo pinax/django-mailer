@@ -4,15 +4,15 @@ import smtplib
 import time
 from socket import error as socket_error
 
+import fasteners
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import get_connection
-from django.core.mail.message import make_msgid
+from django.core.mail.message import make_msgid  # pyright: ignore[reportAttributeAccessIssue]
 from django.core.mail.utils import DNS_NAME
 from django.db import DatabaseError, NotSupportedError, OperationalError, transaction
 from django.utils.module_loading import import_string
-import filelock
 
 from mailer.models import RESULT_FAILURE, RESULT_SUCCESS, Message, MessageLog, get_message_id
 
@@ -27,7 +27,7 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 
 # lock timeout value. how long to wait for the lock to become available.
 # default behavior is to never wait for the lock to be available.
-LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
+LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", None)
 
 # allows for a different lockfile path. The default is a file
 # in the current working directory.
@@ -146,29 +146,29 @@ def handle_delivery_exception(connection, message, exc):
     raise exc
 
 
-def acquire_lock():
+def acquire_lock() -> tuple[bool, fasteners.InterProcessLock]:
     logger.debug("acquiring lock...")
     if LOCK_PATH is not None:
         lock_file_path = LOCK_PATH
     else:
         lock_file_path = "send_mail"
 
-    lock = filelock.FileLock(lock_file_path)
+    lock = fasteners.InterProcessLock(lock_file_path)
 
-    if lock.is_locked:
+    if lock.acquired:
         logger.error("lock already in place. quitting.")
         return False, lock
 
     try:
         lock.acquire(timeout=LOCK_WAIT_TIMEOUT)
-    except filelock.Timeout:
+    except (OSError, TimeoutError):
         logger.error("waiting for the lock timed out. quitting.")
         return False, lock
     logger.debug("acquired.")
     return True, lock
 
 
-def release_lock(lock):
+def release_lock(lock: fasteners.InterProcessLock):
     logger.debug("releasing lock...")
     lock.release()
     logger.debug("released.")
