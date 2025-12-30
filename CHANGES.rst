@@ -1,6 +1,12 @@
 Change log
 ==========
 
+2.3.3 - 2025-12-30
+------------------
+
+* Removed deprecated ``filelock``dependency and added ``fasteners`` for file locking, thanks @evilmonkey19.
+ 
+
 2.3.2 - 2024-05-22
 ------------------
 
