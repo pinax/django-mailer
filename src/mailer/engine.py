@@ -174,6 +174,9 @@ def release_lock(lock):
     logger.debug("released.")
 
 
+DB_BACKEND = "mailer.backend.DbBackend"
+
+
 def _require_no_backend_loop(mailer_email_backend):
     if mailer_email_backend == settings.EMAIL_BACKEND == "mailer.backend.DbBackend":
         raise ImproperlyConfigured(
@@ -181,6 +184,59 @@ def _require_no_backend_loop(mailer_email_backend):
             f' should not both be set to "{settings.EMAIL_BACKEND}"'
             " at the same time"
         )
+
+
+def _get_delivery_mailer_alias():
+    """
+    Return the MAILERS alias that delivers queued mail, or None if the project
+    still uses the EMAIL_* settings (always the case before Django 6.1).
+
+    The alias comes from the "using" option of the mailer that has DbBackend as
+    its backend. Without such a mailer, mail is put on the queue with the
+    functions in the mailer module, and the default mailer delivers it.
+    """
+    mailers_setting = getattr(settings, "MAILERS", None)
+    if mailers_setting is None:
+        return None
+
+    queueing = {
+        alias: config.get("OPTIONS", {}).get("using")
+        for alias, config in mailers_setting.items()
+        if config.get("BACKEND") == DB_BACKEND
+    }
+    if not queueing:
+        return "default"
+
+    targets = set(queueing.values())
+    if None in targets:
+        raise ImproperlyConfigured(
+            f'A mailer with "{DB_BACKEND}" as its BACKEND needs a "using" option'
+            " that names the mailer which delivers queued mail"
+        )
+    if len(targets) > 1:
+        # The queue does not record which mailer a message was queued through.
+        raise ImproperlyConfigured(
+            f'All mailers with "{DB_BACKEND}" as their BACKEND must have the same "using" option,'
+            f" found {', '.join(sorted(targets))}"
+        )
+    (target,) = targets
+    if target not in mailers_setting:
+        raise ImproperlyConfigured(f'"using" is "{target}", which is not an alias in MAILERS')
+    if target in queueing:
+        raise ImproperlyConfigured(
+            f'"using" is "{target}", a mailer with "{DB_BACKEND}" as its BACKEND.'
+            " It would put mail back on the queue instead of sending it"
+        )
+    return target
+
+
+def _get_delivery_connection(mailer_alias, mailer_email_backend):
+    if mailer_alias is None:
+        return get_connection(backend=mailer_email_backend)
+
+    from django.core.mail import mailers
+
+    return mailers[mailer_alias]
 
 
 def send_all(queryset=None):
@@ -196,7 +252,9 @@ def send_all(queryset=None):
 
     error_handler = import_string(getattr(settings, "MAILER_ERROR_HANDLER", "mailer.engine.handle_delivery_exception"))
 
-    _require_no_backend_loop(mailer_email_backend)
+    mailer_alias = _get_delivery_mailer_alias()
+    if mailer_alias is None:
+        _require_no_backend_loop(mailer_email_backend)
 
     if use_file_lock:
         acquired, lock = acquire_lock()
@@ -216,16 +274,19 @@ def send_all(queryset=None):
                     continue
                 try:
                     if connection is None:
-                        connection = get_connection(backend=mailer_email_backend)
+                        connection = _get_delivery_connection(mailer_alias, mailer_email_backend)
                     logger.info(f"sending message '{message.subject}' to {', '.join(map(str, message.to_addresses))}")
                     email = message.email
                     if email is not None:
-                        email.connection = connection
                         ensure_message_id(email)
-                        email.send()
+                        # Hand the message to the connection directly, because
+                        # setting email.connection is deprecated since Django
+                        # 6.1. Like EmailMessage.send(), skip a message that has
+                        # no recipients left (all of them are on the don't-send
+                        # list).
+                        if email.recipients():
+                            connection.send_messages([email])
 
-                        # connection can't be stored in the MessageLog
-                        email.connection = None
                         message.email = email  # For the sake of MessageLog
                         MessageLog.objects.log(message, RESULT_SUCCESS)
                         counts["sent"] += 1

@@ -45,6 +45,31 @@ For testing purposes, you could set this to
 ``"django.core.mail.backends.console.EmailBackend"`` to just print emails to the
 console.
 
+On Django 6.1 and later you can use the ``MAILERS`` setting instead of
+``EMAIL_BACKEND``. Give the mailer that uses ``mailer.backend.DbBackend`` a
+``using`` option that names the mailer which does the real sending:
+
+.. code-block:: python
+
+    MAILERS = {
+        "default": {
+            "BACKEND": "mailer.backend.DbBackend",
+            "OPTIONS": {
+                "using": "smtp",
+            },
+        },
+        "smtp": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {
+                "host": "smtp.example.com",
+            },
+        },
+    }
+
+``using`` replaces ``MAILER_EMAIL_BACKEND``, which is not used when ``MAILERS``
+is defined. The queue does not record which mailer a message came through, so
+if several mailers use ``DbBackend`` they must all have the same ``using``.
+
 Now, just use the normal `Django mail functions
 <https://docs.djangoproject.com/en/stable/topics/email/>`_ for sending email. These
 functions will store mail on a queue in the database, which must be sent as
