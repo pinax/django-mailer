@@ -1,6 +1,8 @@
 import datetime
 import pickle
 import time
+import unittest
+import warnings
 from unittest.mock import Mock, PropertyMock, patch
 
 import django
@@ -774,6 +776,68 @@ class EmailBackendSettingLoopTest(TestCase):
         self.assertIn("mailer.backend.DbBackend", str(catcher.exception))
         self.assertIn("EMAIL_BACKEND", str(catcher.exception))
         self.assertIn("MAILER_EMAIL_BACKEND", str(catcher.exception))
+
+
+@unittest.skipIf(django.VERSION < (6, 1), "MAILERS was added in Django 6.1")
+class MailersSettingTest(TestCase):
+    """Sending the queue when the project uses MAILERS (Django 6.1+)."""
+
+    LOCMEM = {"BACKEND": "django.core.mail.backends.locmem.EmailBackend"}
+    MAILERS = {
+        "default": {"BACKEND": "mailer.backend.DbBackend", "OPTIONS": {"using": "delivery"}},
+        "delivery": LOCMEM,
+    }
+
+    def assert_send_all_improperly_configured(self, mailers, text):
+        with self.settings(MAILERS=mailers), self.assertRaises(ImproperlyConfigured) as catcher:
+            engine.send_all()
+        self.assertIn(text, str(catcher.exception))
+
+    def test_queue_and_send(self):
+        with self.settings(MAILERS=self.MAILERS):
+            mail.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
+            self.assertEqual(Message.objects.count(), 1)
+            self.assertEqual(len(mail.outbox), 0)
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("error")
+                engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 0)
+            self.assertEqual(MessageLog.objects.count(), 1)
+            self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].subject, "Subject")
+
+    def test_default_mailer_delivers_without_db_backend(self):
+        with self.settings(MAILERS={"default": self.LOCMEM}):
+            mailer.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
+            self.assertEqual(len(mail.outbox), 0)
+
+            engine.send_all()
+
+            self.assertEqual(Message.objects.count(), 0)
+            self.assertEqual(len(mail.outbox), 1)
+
+    def test_using_required(self):
+        mailers = {"default": {"BACKEND": "mailer.backend.DbBackend"}, "delivery": self.LOCMEM}
+        self.assert_send_all_improperly_configured(mailers, '"using"')
+        with self.settings(MAILERS=mailers), self.assertRaises(ImproperlyConfigured):
+            mail.send_mail("Subject", "Body", "sender@example.com", ["recipient@example.com"])
+
+    def test_unknown_using(self):
+        mailers = {"default": {"BACKEND": "mailer.backend.DbBackend", "OPTIONS": {"using": "missing"}}}
+        self.assert_send_all_improperly_configured(mailers, "missing")
+
+    def test_conflicting_using(self):
+        mailers = self.MAILERS | {
+            "other": {"BACKEND": "mailer.backend.DbBackend", "OPTIONS": {"using": "delivery2"}},
+            "delivery2": self.LOCMEM,
+        }
+        self.assert_send_all_improperly_configured(mailers, "delivery, delivery2")
+
+    def test_loop_detection(self):
+        mailers = {"default": {"BACKEND": "mailer.backend.DbBackend", "OPTIONS": {"using": "default"}}}
+        self.assert_send_all_improperly_configured(mailers, "back on the queue")
 
 
 class UseFileLockTest(TestCase):
